@@ -68,6 +68,7 @@ namespace KIPIPhotoFramesEditor
             Scene * m_scene;
             LayersModel * m_model;
             LayersSelectionModel * m_selmodel;
+            QGraphicsItemGroup * m_items_group;
     };
 }
 

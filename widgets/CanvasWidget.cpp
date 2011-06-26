@@ -40,11 +40,12 @@ CanvasWidget::CanvasWidget(QWidget *parent) :
 void CanvasWidget::setupGUI()
 {
     this->setAcceptDrops(true);
-    this->setAutoFillBackground(false);
+    this->setAutoFillBackground(true);
     this->viewport()->setAutoFillBackground(false);
     this->setCacheMode(QGraphicsView::CacheBackground);
-    this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);
-    this->setRenderHint(QPainter::Antialiasing);
+    this->setBackgroundBrush(QPalette().brush(QPalette::Window));
+    /*this->setRenderHint(QPainter::Antialiasing);*/                                /// It causes worst quality!
+    /*this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);*/  /// It causes worst quality!
 }
 
 void CanvasWidget::setGridVisible(bool visible)

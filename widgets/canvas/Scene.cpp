@@ -31,18 +31,20 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     grid_item(0),
     grid_changed(true)
 {
-    if (1)
+    if (1) // TODO :
     {
         shadow = new QGraphicsRectItem(dimension, 0,this);
         shadow->setZValue(zIndex++);
-        ((QGraphicsRectItem*)shadow)->setBrush(Qt::white);
-        //QGraphicsDropShadowEffect * effect = new QGraphicsDropShadowEffect();
-        //effect->setBlurRadius(20);
-        //effect->setOffset(5);
-        //shadow->setGraphicsEffect(effect);
+        shadow->setBrush(Qt::white);
+        shadow->setPen(QPen(Qt::white));
     }
 
+    selectionRectItem.setPen(QPen(Qt::black, 1, Qt::DotLine));
+    this->QGraphicsScene::addItem(&selectionRectItem);
+
     this->editingMode = WidgetsMoving;
+
+    connect(this, SIGNAL(selectionChanged()), this, SLOT(calcSelectionBoundingRect()));
 
     // Create default grid
     setGrid(25,25);
@@ -117,10 +119,12 @@ void Scene::keyPressEvent(QKeyEvent * event)
 {
     switch(event->key())
     {
-    case Qt::Key_Delete:    if (this->removeItems(selectedItems()))
-            event->accept();
-        break;
-    case Qt::Key_Escape:    disableitemsDrawing();
+        case Qt::Key_Delete:
+            if (this->removeItems(selectedItems()))
+                event->accept();
+            break;
+        case Qt::Key_Escape:
+            disableitemsDrawing();
     }
     if (event->isAccepted())
         return;
@@ -133,8 +137,8 @@ bool Scene::event(QEvent * event)
 {
     switch(event->type())
     {
-    default:
-        return QGraphicsScene::event(event);
+        default:
+            return QGraphicsScene::event(event);
     }
 }
 
@@ -146,17 +150,23 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
     {
         switch(this->editingMode)
         {
-        case WidgetsMoving: QGraphicsScene::mousePressEvent(event);
-            break;
-        case LineDrawing:
-        {
-            if (temp_path.elementCount())
-                temp_path.lineTo(event->scenePos());
-            else
-                temp_path.moveTo(event->scenePos());
-            temp_widget->setPath(temp_path);
-        }
-            break;
+            case WidgetsMoving:
+                {
+                    QPointF copyOfButtonDownScenePos = event->buttonDownScenePos(Qt::LeftButton);  // ! Probably Qt Bug!
+                    QGraphicsScene::mousePressEvent(event);                                        // <= IN THIS METHOD: buttonDownScenePos() is changed to previous value buttonDownScenePos() ??!!
+                    calcSelectionBoundingRect();
+                    m_sel_bounds_btn_down = copyOfButtonDownScenePos-m_sel_bounds.topLeft();
+                }
+                break;
+            case LineDrawing:
+                {
+                    if (temp_path.elementCount())
+                        temp_path.lineTo(event->scenePos());
+                    else
+                        temp_path.moveTo(event->scenePos());
+                    temp_widget->setPath(temp_path);
+                }
+                break;
         }
     }
     else
@@ -165,24 +175,42 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
 //#####################################################################################################
 
-void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
         switch(this->editingMode)
         {
-        case WidgetsMoving: QGraphicsScene::mouseDoubleClickEvent(event);
-            break;
-        case LineDrawing:
-        {
-            temp_path.closeSubpath();
-            PolygonWidget * tempItem = new PolygonWidget(temp_path, this);
-            this->addItem(tempItem);
-            QPointF p = temp_path.boundingRect().topLeft();
-            tempItem->moveBy(p.rx(),p.ry());
-            disableitemsDrawing();
+            case WidgetsMoving:
+                QGraphicsScene::mouseReleaseEvent(event);
+                break;
         }
-            break;
+    }
+    else
+        QGraphicsScene::mouseReleaseEvent(event);
+}
+
+// #####################################################################################################
+
+void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+{
+    if (event->buttons() & Qt::LeftButton)
+    {
+        switch(this->editingMode)
+        {
+            case WidgetsMoving:
+                QGraphicsScene::mouseDoubleClickEvent(event);
+                break;
+            case LineDrawing:
+                {
+                    temp_path.closeSubpath();
+                    PolygonWidget * tempItem = new PolygonWidget(temp_path, this);
+                    this->addItem(tempItem);
+                    QPointF p = temp_path.boundingRect().topLeft();
+                    tempItem->moveBy(p.rx(),p.ry());
+                    disableitemsDrawing();
+                }
+                break;
         }
         event->accept();
     }
@@ -194,21 +222,26 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    switch(this->editingMode)
+    if (event->buttons() & Qt::LeftButton)
     {
-    case WidgetsMoving:
+        switch(this->editingMode)
+        {
+            case WidgetsMoving:
+                moveSelectedItems(event);
+                break;
+            case LineDrawing:
+                {
+                    if (temp_path.elementCount() == 0)
+                        break;
+                    QPainterPath path = temp_path;
+                    path.lineTo(event->scenePos());
+                    temp_widget->setPath(path);
+                }
+                break;
+        }
+    }
+    else
         QGraphicsScene::mouseMoveEvent(event);
-        break;
-    case LineDrawing:
-    {
-        if (temp_path.elementCount() == 0)
-            break;
-        QPainterPath path = temp_path;
-        path.lineTo(event->scenePos());
-        temp_widget->setPath(path);
-    }
-        break;
-    }
 }
 
 //#####################################################################################################
@@ -341,4 +374,55 @@ void Scene::addItem(AbstractPhoto * item)
     this->children.append(item);
     item->setZValue(zIndex++);
     emit newItemAdded(item);
+}
+
+//#####################################################################################################
+
+void Scene::moveSelectedItems(QGraphicsSceneMouseEvent * event)
+{
+    QPointF p;
+    QList<QGraphicsItem*> items = this->selectedItems();
+    foreach (QGraphicsItem * item, items)
+        if (!(item->flags() & QGraphicsItem::ItemIsMovable))
+            return;
+    if (event->modifiers() & Qt::ShiftModifier)
+    {
+        p = event->scenePos()-m_sel_bounds_btn_down;
+        p.setX(x_grid*round(p.rx()/x_grid));
+        p.setY(y_grid*round(p.ry()/y_grid));
+        foreach (QGraphicsItem * item, items)
+            item->setPos(p-m_sel_bounds.topLeft()+item->scenePos());
+        m_sel_bounds.moveTopLeft(p);
+    }
+    else
+    {
+        p = event->scenePos()-event->lastScenePos();
+        foreach (QGraphicsItem * item, items)
+            item->setPos(item->pos()+p);
+        m_sel_bounds.moveTopLeft(p+m_sel_bounds.topLeft());
+    }
+    selectionRectItem.setRect(m_sel_bounds);
+}
+
+//#####################################################################################################
+
+void Scene::calcSelectionBoundingRect()
+{
+    // Selection bounding rect calculation
+    m_sel_bounds = QRectF();
+    QRectF tempRect;
+    QList<QGraphicsItem*> items = this->selectedItems();
+    foreach (QGraphicsItem * item, items)
+    {
+        tempRect = item->boundingRect();
+        tempRect.moveTo(item->scenePos());
+        m_sel_bounds = tempRect.unite(m_sel_bounds);
+    }
+
+    // Selection visualization
+    if (m_sel_bounds.width() == 0 || m_sel_bounds.height() == 0)
+        selectionRectItem.setVisible(false);
+    else
+        selectionRectItem.setVisible(true);
+    selectionRectItem.setRect(m_sel_bounds);
 }

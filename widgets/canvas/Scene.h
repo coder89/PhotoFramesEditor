@@ -82,17 +82,23 @@ namespace KIPIPhotoFramesEditor
             virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
             virtual void keyPressEvent(QKeyEvent * event);
             virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
+            virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
+
+        private Q_SLOTS:
+
+            void calcSelectionBoundingRect();
 
         private:
 
             void updateChildernsGrid(qreal x, qreal y);
+            void moveSelectedItems(QGraphicsSceneMouseEvent * event);
 
             EditMode editingMode;
             static const EditMode DEFAULT_EDITING_MODE = WidgetsMoving;
 
-            QGraphicsItem * shadow;
+            QGraphicsRectItem * shadow;
 
             QGraphicsPathItem * temp_widget;
             QPainterPath temp_path;
@@ -105,6 +111,11 @@ namespace KIPIPhotoFramesEditor
             bool  grid_visible;
             QGraphicsItemGroup * grid_item;
             bool grid_changed;
+
+            // Selection items
+            QRectF m_sel_bounds;
+            QPointF m_sel_bounds_btn_down;
+            QGraphicsRectItem selectionRectItem;
 
             friend class CanvasWidget;
             friend class Canvas;

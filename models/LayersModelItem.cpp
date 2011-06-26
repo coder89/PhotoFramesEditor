@@ -26,7 +26,6 @@ LayersModelItem::LayersModelItem() :
 
 LayersModelItem::~LayersModelItem()
 {
-    qDeleteAll(childItems);
 }
 
 void LayersModelItem::removeChild(LayersModelItem * child)
@@ -69,6 +68,7 @@ void LayersModelItem::setParent(LayersModelItem * parent)
     this->parentItem = parent;
     if (parent && !parent->childItems.contains(this))
         parent->childItems.prepend(this);
+    this->QObject::setParent(parent);
 }
 
 void LayersModelItem::setData(const QList<QVariant> & data)

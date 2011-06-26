@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui console
 
 TARGET = photoframeseditor
 TEMPLATE = app

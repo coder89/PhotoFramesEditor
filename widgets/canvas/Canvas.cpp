@@ -8,7 +8,8 @@
 using namespace KIPIPhotoFramesEditor;
 
 Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    m_items_group(0)
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
     m_model = new LayersModel(this);
@@ -22,9 +23,6 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
 
 Canvas::~Canvas()
 {
-    delete m_selmodel;
-    delete m_model;
-    delete m_scene;
 }
 
 void Canvas::addImage(const QImage & image)

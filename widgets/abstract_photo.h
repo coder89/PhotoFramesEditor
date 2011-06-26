@@ -15,6 +15,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class Scene;
     class WidgetsFactory;
     class LayersModelItem;
 
@@ -120,6 +121,8 @@ namespace KIPIPhotoFramesEditor
 
             qreal x_grid;
             qreal y_grid;
+
+            friend class Scene;
     };
 }
 

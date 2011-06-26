@@ -120,18 +120,18 @@ void LayersTree::rowsInserted(const QModelIndex & parent, int start, int end)
 
 void LayersTree::setRowWidgets(const QModelIndex & parent, int row)
 {
-    QModelIndex child1 = model()->index(row, 1, parent);
-    QVariant data1 = model()->data(child1, LayersModel::VisibilityIcon);
-    SwitchableIcon * l1 = new SwitchableIcon(data1.value<QIcon>(), static_cast<LayersModelItem*>(child1.internalPointer()));
-    connect(l1, SIGNAL(clicked(SwitchableIcon*)), this, SLOT(hide(SwitchableIcon*)));
-    this->setIndexWidget(child1, l1);
+    //QModelIndex child1 = model()->index(row, 1, parent);
+    //QVariant data1 = model()->data(child1, LayersModel::VisibilityIcon);
+    //SwitchableIcon * l1 = new SwitchableIcon(data1.value<QIcon>(), static_cast<LayersModelItem*>(child1.internalPointer()));
+    //connect(l1, SIGNAL(clicked(SwitchableIcon*)), this, SLOT(hide(SwitchableIcon*)));
+    //this->setIndexWidget(child1, l1);
 
-    QModelIndex child2 = model()->index(row, 2, parent);
-    QVariant data2 = model()->data(child2, LayersModel::LockIcon);
-    SwitchableIcon * l2 = new SwitchableIcon(data2.value<QIcon>(), static_cast<LayersModelItem*>(child2.internalPointer()));
-    l2->toggle();
-    connect(l2, SIGNAL(clicked(SwitchableIcon*)), this, SLOT(lock(SwitchableIcon*)));
-    this->setIndexWidget(model()->index(row, 2, parent), l2);
+    //QModelIndex child2 = model()->index(row, 2, parent);
+    //QVariant data2 = model()->data(child2, LayersModel::LockIcon);
+    //SwitchableIcon * l2 = new SwitchableIcon(data2.value<QIcon>(), static_cast<LayersModelItem*>(child2.internalPointer()));
+    //l2->toggle();
+    //connect(l2, SIGNAL(clicked(SwitchableIcon*)), this, SLOT(lock(SwitchableIcon*)));
+    //this->setIndexWidget(model()->index(row, 2, parent), l2);
 }
 
 void LayersTree::hide(SwitchableIcon * icon)

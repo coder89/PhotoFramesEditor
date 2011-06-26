@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>eye.png</file>
+        <file>padlock.png</file>
+    </qresource>
+</RCC>

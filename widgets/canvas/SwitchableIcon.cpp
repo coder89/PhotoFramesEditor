@@ -1,4 +1,5 @@
 #include "SwitchableIcon.h"
+#include "LayersModelItem.h"
 
 // Qt
 #include <QMouseEvent>
@@ -6,14 +7,15 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-SwitchableIcon::SwitchableIcon(const QIcon & icon, QWidget * parent) :
+SwitchableIcon::SwitchableIcon(const QIcon & icon, LayersModelItem * item, QWidget * parent) :
     QWidget(parent),
+    m_item(item),
     toggled(false)
 {
     m_pixmap = icon.pixmap(icon.actualSize(QSize(16,16)));
 }
 
-void SwitchableIcon::paintEvent(QPaintEvent *)
+void SwitchableIcon::paintEvent(QPaintEvent * /*event*/)
 {
     QPainter painter(this);
     if (toggled)

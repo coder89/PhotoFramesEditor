@@ -27,8 +27,8 @@ namespace KIPIPhotoFramesEditor
 
         public Q_SLOTS:
 
-            void hide(SwitchableIcon * item);
-            void lock(SwitchableIcon * item);
+            void hide(SwitchableIcon * icon);
+            void lock(SwitchableIcon * icon);
             void headerSectionClicked(int section);
 
         signals:

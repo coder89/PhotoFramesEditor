@@ -9,12 +9,14 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class LayersModelItem;
+
     class SwitchableIcon : public QWidget
     {
             Q_OBJECT;
 
         public:
-            SwitchableIcon(const QIcon & icon, QWidget * parent = 0);
+            SwitchableIcon(const QIcon & icon, LayersModelItem * item, QWidget * parent = 0);
             virtual void paintEvent(QPaintEvent *);
             virtual void mousePressEvent(QMouseEvent * event);
 
@@ -27,12 +29,18 @@ namespace KIPIPhotoFramesEditor
                 emit clicked(this);
             }
 
+            LayersModelItem * item()
+            {
+                return m_item;
+            }
+
         Q_SIGNALS:
 
             void clicked(SwitchableIcon*);
 
         private:
             QPixmap m_pixmap;
+            LayersModelItem * m_item;
             bool toggled;
     };
 }

@@ -31,24 +31,29 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     grid_item(0),
     grid_changed(true)
 {
-    if (1) // TODO :
+    if (1)                                                                  /// TODO : personalization of default canvas background
     {
         shadow = new QGraphicsRectItem(dimension, 0,this);
         shadow->setZValue(zIndex++);
         shadow->setBrush(Qt::white);
-        shadow->setPen(QPen(Qt::white));
+        shadow->setPen(QPen(Qt::white, 0));
     }
 
-    selectionRectItem.setPen(QPen(Qt::black, 1, Qt::DotLine));
+    // Selection rectangle
     this->QGraphicsScene::addItem(&selectionRectItem);
+    selectionRectItem.setVisible(false);
+    selectionRectItem.setPen(QPen(Qt::black, 1, Qt::DotLine));
+    selectionRectItem.setZValue((1.0/0.0));
 
+    // Mouse interaction mode
     this->editingMode = WidgetsMoving;
-
-    connect(this, SIGNAL(selectionChanged()), this, SLOT(calcSelectionBoundingRect()));
 
     // Create default grid
     setGrid(25,25);
     setGridVisible(false);
+
+    // Signal connections
+    connect(this, SIGNAL(selectionChanged()), this, SLOT(calcSelectionBoundingRect()));
 }
 
 //#####################################################################################################

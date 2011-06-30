@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     models/LayersModelItem.cpp \
     widgets/canvas/Scene.cpp \
     widgets/canvas/Canvas.cpp \
-    models/LayersSelectionModel.cpp
+    models/LayersSelectionModel.cpp \
+    widgets/canvas/QGraphicsSelectionItem.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -46,7 +47,8 @@ HEADERS  += plugin/photoframeseditor.h \
     models/LayersModelItem.h \
     widgets/canvas/Scene.h \
     widgets/canvas/Canvas.h \
-    models/LayersSelectionModel.h
+    models/LayersSelectionModel.h \
+    widgets/canvas/QGraphicsSelectionItem.h
 
 LIBS += \
     -L/usr \

@@ -41,7 +41,7 @@ void Canvas::addImage(const QImage & image)
     m_model->prependItem(it);
 }
 
-void Canvas::addItemToModel(AbstractPhoto * item)
+void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 {
 }
 

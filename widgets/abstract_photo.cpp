@@ -33,7 +33,7 @@ AbstractPhoto::AbstractPhoto(QGraphicsScene * parent) :
     LayersModelItem::setData(data);
 
     //this->setAcceptDrops(true);
-    this->setFlag(QGraphicsItem::ItemIsMovable, true);
+    this->setAcceptHoverEvents(true);
 }
 
 void AbstractPhoto::setupWidget(const QPainterPath & path)
@@ -101,20 +101,49 @@ void AbstractPhoto::dropEvent(QGraphicsSceneDragDropEvent * event)
 
 void AbstractPhoto::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
+    QGraphicsPixmapItem::mouseMoveEvent(event);
     if (QGraphicsItem::flags() & ItemIsMovable)
     {
-        event->accept();
-        QPointF p;
         if (event->modifiers() & Qt::ShiftModifier)
         {
+            QPointF p;
+            event->accept();
             p = event->scenePos() - event->buttonDownPos(Qt::LeftButton);
             p.setX(x_grid*round(p.rx()/x_grid));
             p.setY(y_grid*round(p.ry()/y_grid));
+            this->setPos(p.rx(),p.ry());
         }
         else
-            p = this->pos() + event->pos() - event->lastPos();
-        this->setPos(p.rx(),p.ry());
+            QGraphicsPixmapItem::mouseMoveEvent(event);
+//            p = this->pos() + event->pos() - event->lastPos();
     }
+}
+
+void AbstractPhoto::mousePressEvent(QGraphicsSceneMouseEvent * event)
+{
+    QGraphicsPixmapItem::mousePressEvent(event);
+    if (this->isSelected())
+        this->setCursor(QCursor(Qt::ClosedHandCursor));
+}
+
+void AbstractPhoto::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+{
+    QGraphicsPixmapItem::mouseReleaseEvent(event);
+    if (this->isSelected())
+        this->setCursor(QCursor(Qt::OpenHandCursor));
+}
+
+void AbstractPhoto::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
+{
+    QGraphicsPixmapItem::hoverEnterEvent(event);
+    if (this->isSelected())
+        this->setCursor(QCursor(Qt::OpenHandCursor));
+}
+
+void AbstractPhoto::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
+{
+    QGraphicsPixmapItem::hoverLeaveEvent(event);
+    this->unsetCursor();
 }
 
 void AbstractPhoto::updateIcon()

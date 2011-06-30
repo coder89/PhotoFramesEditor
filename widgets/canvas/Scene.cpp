@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "QGraphicsSelectionItem.h"
 
 // Qt
 #include <QGraphicsTextItem>
@@ -14,6 +15,7 @@
 #include <QGraphicsSceneDragDropEvent>
 #include <QStyleOptionGraphicsItem>
 #include <QMap>
+#include <QGraphicsWidget>
 #include <qmath.h>
 
 // KDE
@@ -21,8 +23,110 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+namespace KIPIPhotoFramesEditor
+{
+    class ScenePrivate : public QObject
+    {
+
+        enum Mode
+        {
+            Rotation,Moving
+        };
+
+        ScenePrivate(Scene * parent) :
+            m_parent(parent),
+            m_sel_widget(new QGraphicsSelectionItem),
+            m_group(new QGraphicsItemGroup),
+            m_sel_item(new QGraphicsRectItem),
+            m_rot_item(new QGraphicsItemGroup)
+        {
+            parent->QGraphicsScene::addItem(m_sel_widget);
+            m_sel_widget->setZValue(1.0/0.0);
+
+//            m_group->setHandlesChildEvents(false);
+//            m_group->setVisible(false);
+//            m_group->setZValue((1.0/0.0));
+//            m_group->addToGroup(m_sel_item);
+//            m_group->addToGroup(m_rot_item);
+//            m_rot_item->addToGroup(m_rot_hand);
+//            m_rot_item->setHandlesChildEvents(false);
+//            m_sel_item->setPen(QPen(Qt::black, 1, Qt::DotLine));
+//            m_rot_hand->setPos(-10,-10);
+        }
+
+        ~ScenePrivate()
+        {
+            delete m_group;
+        }
+
+        void setSelectionBounds(const QRectF & bounds)
+        {
+            m_sel_bounds = bounds;
+            m_sel_item->setRect(m_sel_bounds);
+            m_rot_item->setPos(m_sel_bounds.center());
+            if (m_sel_bounds.width() == 0 || m_sel_bounds.height() == 0)
+            {
+                m_group->setVisible(false);
+                allow_moving = false;
+            }
+            else
+            {
+                m_group->setVisible(true);
+                allow_moving = true;
+            }
+        }
+
+        void moveTo(const QPointF & point)
+        {
+            m_sel_bounds.moveTopLeft(point);
+            m_rot_item->setPos(m_sel_bounds.center());
+            m_sel_item->setRect(m_sel_bounds);
+        }
+
+        void moveBy(const QPointF & point)
+        {
+            m_sel_bounds.moveTopLeft(point+m_sel_bounds.topLeft());
+            m_rot_item->setPos(m_sel_bounds.center());
+            m_sel_item->setRect(m_sel_bounds);
+        }
+
+        void setMode(Mode mode)
+        {
+            switch(mode)
+            {
+                case Rotation:
+                    m_sel_widget->setRotationVisible(true);
+                    break;
+                case Moving:
+                    m_sel_widget->setRotationVisible(false);
+                    break;
+            }
+        }
+
+        // LMB click point
+        QPointF m_sel_bounds_btn_down;
+
+        // Current selected items bounds
+        QGraphicsItemGroup * m_group;
+        QRectF m_sel_bounds;
+        QGraphicsRectItem * m_sel_item;
+        bool allow_moving;
+
+        // Rotation widget
+        QGraphicsItemGroup * m_rot_item;
+
+        QGraphicsSelectionItem * m_sel_widget;
+
+        // Parent scene
+        QGraphicsScene * m_parent;
+
+        friend class Scene;
+    };
+}
+
 Scene::Scene(const QRectF & dimension, QObject * parent) :
     QGraphicsScene(dimension, parent),
+    d(new ScenePrivate(this)),
     zIndex(0),
     shadow(0),
     x_grid(0),
@@ -39,14 +143,8 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
         shadow->setPen(QPen(Qt::white, 0));
     }
 
-    // Selection rectangle
-    this->QGraphicsScene::addItem(&selectionRectItem);
-    selectionRectItem.setVisible(false);
-    selectionRectItem.setPen(QPen(Qt::black, 1, Qt::DotLine));
-    selectionRectItem.setZValue((1.0/0.0));
-
     // Mouse interaction mode
-    this->editingMode = WidgetsMoving;
+    setMode(Rotating);
 
     // Create default grid
     setGrid(25,25);
@@ -54,6 +152,13 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
 
     // Signal connections
     connect(this, SIGNAL(selectionChanged()), this, SLOT(calcSelectionBoundingRect()));
+}
+
+//#####################################################################################################
+
+Scene::~Scene()
+{
+    delete d;
 }
 
 //#####################################################################################################
@@ -153,28 +258,26 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        switch(this->editingMode)
+        if (d->m_sel_widget->contains(event->scenePos()))
         {
-            case WidgetsMoving:
-                {
-                    QPointF copyOfButtonDownScenePos = event->buttonDownScenePos(Qt::LeftButton);  // ! Probably Qt Bug!
-                    QGraphicsScene::mousePressEvent(event);                                        // <= IN THIS METHOD: buttonDownScenePos() is changed to previous value buttonDownScenePos() ??!!
-                    calcSelectionBoundingRect();
-                    m_sel_bounds_btn_down = copyOfButtonDownScenePos-m_sel_bounds.topLeft();
-                }
-                break;
-            case LineDrawing:
-                {
-                    if (temp_path.elementCount())
-                        temp_path.lineTo(event->scenePos());
-                    else
-                        temp_path.moveTo(event->scenePos());
-                    temp_widget->setPath(temp_path);
-                }
-                break;
+            qDebug() << "contains";
+            goto press_others;
         }
+        QGraphicsItem * clickedItem = this->itemAt(event->scenePos());
+        if (!clickedItem)
+        {
+            qDebug() << "null";
+            goto press_others;
+        }
+        if (!(event->modifiers() & Qt::ControlModifier) && d->m_sel_widget != clickedItem)
+        {
+            this->setSelectionArea(QPainterPath());
+            clickedItem->setSelected(true);
+        }
+        this->calcSelectionBoundingRect();
+        d->m_sel_widget->setSelected(true);
     }
-    else
+    press_others:
         QGraphicsScene::mousePressEvent(event);
 }
 
@@ -182,17 +285,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
 void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (event->button() == Qt::LeftButton)
-    {
-        switch(this->editingMode)
-        {
-            case WidgetsMoving:
-                QGraphicsScene::mouseReleaseEvent(event);
-                break;
-        }
-    }
-    else
-        QGraphicsScene::mouseReleaseEvent(event);
+    QGraphicsScene::mouseReleaseEvent(event);
 }
 
 // #####################################################################################################
@@ -216,11 +309,16 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
                     disableitemsDrawing();
                 }
                 break;
+            default:
+                goto    others;
         }
         event->accept();
     }
     else
-        QGraphicsScene::mouseDoubleClickEvent(event);
+    {
+        others:
+            QGraphicsScene::mouseDoubleClickEvent(event);
+    }
 }
 
 //#####################################################################################################
@@ -231,8 +329,11 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     {
         switch(this->editingMode)
         {
+            case Rotating:
+                QGraphicsScene::mouseMoveEvent(event);
+                return;
             case WidgetsMoving:
-                moveSelectedItems(event);
+                //moveSelectedItems(event);
                 break;
             case LineDrawing:
                 {
@@ -243,10 +344,15 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
                     temp_widget->setPath(path);
                 }
                 break;
+            default:
+                goto    others;
         }
     }
     else
-        QGraphicsScene::mouseMoveEvent(event);
+    {
+        others:
+            QGraphicsScene::mouseMoveEvent(event);
+    }
 }
 
 //#####################################################################################################
@@ -368,11 +474,40 @@ void Scene::setGridVisible(bool visible)
 
 //#####################################################################################################
 
+void Scene::setMode(EditMode mode)
+{
+    switch(mode)
+    {
+        case Rotating:
+            editingMode = mode;
+            d->setMode(ScenePrivate::Rotation);
+            break;
+        case WidgetsMoving:
+        default:
+            editingMode = DEFAULT_EDITING_MODE;
+    }
+}
+
+//#####################################################################################################
+
+void Scene::setRotationWidgetVisible(bool visible)
+{
+    if (visible)
+    {
+        QPointF center = d->m_sel_bounds.center();
+        this->addLine(QLine(center.toPoint(), center.toPoint()+QPoint(100,0)), QPen(Qt::black))->setZValue(1.0/0.0);
+    }
+}
+
+//#####################################################################################################
+
 void Scene::updateChildernsGrid(qreal x, qreal y)
 {
     foreach(AbstractPhoto * p ,this->children)
         p->setGridLines(x,y);
 }
+
+//#####################################################################################################
 
 void Scene::addItem(AbstractPhoto * item)
 {
@@ -385,49 +520,57 @@ void Scene::addItem(AbstractPhoto * item)
 
 void Scene::moveSelectedItems(QGraphicsSceneMouseEvent * event)
 {
+    if (!d->allow_moving)
+        return;
     QPointF p;
     QList<QGraphicsItem*> items = this->selectedItems();
-    foreach (QGraphicsItem * item, items)
-        if (!(item->flags() & QGraphicsItem::ItemIsMovable))
-            return;
     if (event->modifiers() & Qt::ShiftModifier)
     {
-        p = event->scenePos()-m_sel_bounds_btn_down;
+        p = event->scenePos()-d->m_sel_bounds_btn_down;
         p.setX(x_grid*round(p.rx()/x_grid));
         p.setY(y_grid*round(p.ry()/y_grid));
         foreach (QGraphicsItem * item, items)
-            item->setPos(p-m_sel_bounds.topLeft()+item->scenePos());
-        m_sel_bounds.moveTopLeft(p);
+            item->setPos(p-d->m_sel_bounds.topLeft()+item->scenePos());
+        d->moveTo(p);
     }
     else
     {
         p = event->scenePos()-event->lastScenePos();
         foreach (QGraphicsItem * item, items)
             item->setPos(item->pos()+p);
-        m_sel_bounds.moveTopLeft(p+m_sel_bounds.topLeft());
+        d->moveBy(p);
     }
-    selectionRectItem.setRect(m_sel_bounds);
 }
 
 //#####################################################################################################
 
 void Scene::calcSelectionBoundingRect()
 {
-    // Selection bounding rect calculation
-    m_sel_bounds = QRectF();
-    QRectF tempRect;
-    QList<QGraphicsItem*> items = this->selectedItems();
-    foreach (QGraphicsItem * item, items)
-    {
-        tempRect = item->boundingRect();
-        tempRect.moveTo(item->scenePos());
-        m_sel_bounds = tempRect.unite(m_sel_bounds);
-    }
+    d->m_sel_widget->setSelection(this->selectedItems());
+//    QList<QGraphicsItem*> children = d->m_sel_group->childItems();
+//    foreach (QGraphicsItem * child, children)
+//        d->m_sel_group->removeFromGroup(child);
+//    QList<QGraphicsItem*> items = this->selectedItems();
+//    foreach (QGraphicsItem * item, items)
+//        d->m_sel_group->addToGroup(item);
+////    // Selection bounding rect calculation
+////    QRectF bounds, tempRect;
+////    QList<QGraphicsItem*> items = this->selectedItems();
+////    foreach (QGraphicsItem * item, items)
+////    {
+////        tempRect = item->boundingRect();
+////        tempRect.moveTo(item->scenePos());
+////        bounds = tempRect.unite(bounds);
+////    }
+////    foreach (QGraphicsItem * item, items)
+////        if (!(item->flags() & QGraphicsItem::ItemIsMovable))
+////        {
+////            d->setSelectionBounds(QRectF());
+////            return;
+////        }
+////    // Selection visualization
+//    QRectF bounds = d->m_sel_group->boundingRect();
+//    d->setSelectionBounds(bounds);
 
-    // Selection visualization
-    if (m_sel_bounds.width() == 0 || m_sel_bounds.height() == 0)
-        selectionRectItem.setVisible(false);
-    else
-        selectionRectItem.setVisible(true);
-    selectionRectItem.setRect(m_sel_bounds);
+//    qDebug() << d->m_group->opaqueArea();
 }

@@ -106,16 +106,16 @@ void CanvasWidget::dragEnterEvent(QDragEnterEvent * event)
 
 void CanvasWidget::keyPressEvent(QKeyEvent * event)
 {
-    if (event->modifiers() & Qt::ControlModifier)
-        this->setDragMode(QGraphicsView::ScrollHandDrag);
     QGraphicsView::keyPressEvent(event);
+    //if (event->modifiers() & Qt::ControlModifier)
+    //    this->setDragMode(QGraphicsView::ScrollHandDrag);
 }
 
 void CanvasWidget::keyReleaseEvent(QKeyEvent * event)
 {
-    if (event->modifiers() == 0)
-        this->setDragMode(QGraphicsView::NoDrag);
     QGraphicsView::keyReleaseEvent(event);
+    //if (event->modifiers() == 0)
+    //    this->setDragMode(QGraphicsView::NoDrag);
 }
 
 void CanvasWidget::wheelEvent(QWheelEvent * event)

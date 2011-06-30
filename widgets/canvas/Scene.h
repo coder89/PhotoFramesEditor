@@ -17,24 +17,30 @@ namespace KIPIPhotoFramesEditor
 {
     class CanvasWidget;
     class Canvas;
+    class ScenePrivate;
 
     class Scene : protected QGraphicsScene
     {
 
             Q_OBJECT
 
-            int zIndex;
+            ScenePrivate * d;
 
             enum EditMode
             {
                 Disabled,
+                WidgetsMoving,
+                Rotating,
                 LineDrawing,
-                WidgetsMoving
             };
+
+            int zIndex;
 
         public:
 
             explicit Scene(const QRectF & dimension, QObject * parent = 0);
+            ~Scene();
+
             bool removeItems(const QList<QGraphicsItem *> & items);
             void addItem(AbstractPhoto * item);
 
@@ -57,6 +63,8 @@ namespace KIPIPhotoFramesEditor
                 rect->setZValue(zIndex++);
                 rect->moveBy(190,190);
             }
+
+            void setMode(EditMode mode);
 
         Q_SIGNALS:
 
@@ -93,6 +101,7 @@ namespace KIPIPhotoFramesEditor
         private:
 
             void updateChildernsGrid(qreal x, qreal y);
+            void setRotationWidgetVisible(bool visible);
             void moveSelectedItems(QGraphicsSceneMouseEvent * event);
 
             EditMode editingMode;
@@ -112,13 +121,9 @@ namespace KIPIPhotoFramesEditor
             QGraphicsItemGroup * grid_item;
             bool grid_changed;
 
-            // Selection items
-            QRectF m_sel_bounds;
-            QPointF m_sel_bounds_btn_down;
-            QGraphicsRectItem selectionRectItem;
-
             friend class CanvasWidget;
             friend class Canvas;
+            friend class ScenePrivate;
     };
 
 }

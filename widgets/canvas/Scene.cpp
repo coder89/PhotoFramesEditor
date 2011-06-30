@@ -209,8 +209,11 @@ void Scene::removeSelectedItems()
 
 //#####################################################################################################
 
-void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 {
+    QGraphicsScene::contextMenuEvent(event);
+    if (event->isAccepted())
+        return;
     QMenu menu;
     QMenu * add = menu.addMenu("Add item");
     QAction * polygon = add->addAction("Polygon");

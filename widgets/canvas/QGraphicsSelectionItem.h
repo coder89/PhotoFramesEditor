@@ -13,6 +13,7 @@
 namespace KIPIPhotoFramesEditor
 {
     class RotationPoint;
+    class RotationWidget;
 
     class QGraphicsSelectionItem : public QGraphicsWidget
     {
@@ -38,8 +39,6 @@ namespace KIPIPhotoFramesEditor
                 }
             }
 
-            void setRotationVisible(bool visible);
-
             virtual QRectF boundingRect() const;
             virtual bool contains(const QPointF & point) const;
             virtual QPainterPath opaqueArea() const;
@@ -51,6 +50,7 @@ namespace KIPIPhotoFramesEditor
                 painter->drawPath(m_shape);
             }
 
+            virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
             virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
@@ -58,6 +58,8 @@ namespace KIPIPhotoFramesEditor
             virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent * event);
 
         public Q_SLOTS:
+
+            void setRotationVisible(bool visible = true);
 
             void removeItem(QGraphicsItem * item)
             {
@@ -78,7 +80,7 @@ namespace KIPIPhotoFramesEditor
 
             QSet<QGraphicsItem*> m_itemsList;
             QPainterPath m_shape;
-            RotationPoint * m_rot_point;
+            RotationWidget * m_rot_widget;
     };
 }
 

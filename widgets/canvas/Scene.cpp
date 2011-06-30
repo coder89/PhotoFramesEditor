@@ -258,17 +258,12 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        if (d->m_sel_widget->contains(event->scenePos()))
-        {
-            qDebug() << "contains";
+        qDebug() << "isContains:" << event->scenePos() << d->m_sel_widget->contains(event->scenePos()-d->m_sel_widget->pos()) << d->m_sel_widget->shape();
+        if (d->m_sel_widget->contains(event->scenePos()-d->m_sel_widget->pos()))
             goto press_others;
-        }
         QGraphicsItem * clickedItem = this->itemAt(event->scenePos());
         if (!clickedItem)
-        {
-            qDebug() << "null";
             goto press_others;
-        }
         if (!(event->modifiers() & Qt::ControlModifier) && d->m_sel_widget != clickedItem)
         {
             this->setSelectionArea(QPainterPath());

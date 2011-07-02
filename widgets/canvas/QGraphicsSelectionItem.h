@@ -19,6 +19,12 @@ namespace KIPIPhotoFramesEditor
     {
             Q_OBJECT
 
+            enum
+            {
+                Default = 1,
+                Rotation = 2,
+            };
+
         public:
 
             QGraphicsSelectionItem(QGraphicsItem * parent = 0);
@@ -26,18 +32,6 @@ namespace KIPIPhotoFramesEditor
         public:
 
             void setSelection(const QList<QGraphicsItem*> & items);
-
-            void addItem(QGraphicsItem * item)
-            {
-                if (item == this)
-                    return;
-                if (*(m_itemsList.insert(item)) == item)
-                {
-                    QPainterPath temp = item->shape();
-                    temp.translate(item->pos());
-                    addToShape(temp);
-                }
-            }
 
             virtual QRectF boundingRect() const;
             virtual bool contains(const QPointF & point) const;
@@ -61,26 +55,46 @@ namespace KIPIPhotoFramesEditor
 
             void setRotationVisible(bool visible = true);
 
-            void removeItem(QGraphicsItem * item)
-            {
-                if (item == this)
-                    return;
-                if (m_itemsList.remove(item))
-                {
-                    QPainterPath temp = item->shape();
-                    temp.translate(item->pos());
-                    removeFromShape(temp);
-                }
-            }
+//            void addItem(QGraphicsItem * item)
+//            {
+//                if (item == this)
+//                    return;
+//                if (*(m_itemsList.insert(item)) == item)
+//                {
+//                    QPainterPath temp = item->shape();
+//                    temp.translate(item->pos());
+//                    //addToShape(temp);
+//                }
+//            }
+
+//            void removeItem(QGraphicsItem * item)
+//            {
+//                if (item == this)
+//                    return;
+//                if (m_itemsList.remove(item))
+//                {
+//                    QPainterPath temp = item->shape();
+//                    temp.translate(item->pos());
+//                    //removeFromShape(temp);
+//                }
+//            }
+
+        protected Q_SLOTS:
+
+            void setRotation(qreal angle, bool round);
 
         private:
 
             void addToShape(const QPainterPath & path);
             void removeFromShape(const QPainterPath & path);
 
+            QPainterPath calcShape() const;
+            void setupWidget();
+
             QSet<QGraphicsItem*> m_itemsList;
-            QPainterPath m_shape;
             RotationWidget * m_rot_widget;
+            QPainterPath m_shape;
+            int m_flags;
     };
 }
 

@@ -12,18 +12,9 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class RotationPoint;
-    class RotationWidget;
-
     class QGraphicsSelectionItem : public QGraphicsWidget
     {
             Q_OBJECT
-
-            enum
-            {
-                Default = 1,
-                Rotation = 2,
-            };
 
         public:
 
@@ -53,7 +44,7 @@ namespace KIPIPhotoFramesEditor
 
         public Q_SLOTS:
 
-            void setRotationVisible(bool visible = true);
+            //void setRotationVisible(bool visible = true);
 
 //            void addItem(QGraphicsItem * item)
 //            {
@@ -81,7 +72,7 @@ namespace KIPIPhotoFramesEditor
 
         protected Q_SLOTS:
 
-            void setRotation(qreal angle, bool round);
+           // void setRotation(qreal angle, bool round);
 
         private:
 
@@ -92,7 +83,6 @@ namespace KIPIPhotoFramesEditor
             void setupWidget();
 
             QSet<QGraphicsItem*> m_itemsList;
-            RotationWidget * m_rot_widget;
             QPainterPath m_shape;
             int m_flags;
     };

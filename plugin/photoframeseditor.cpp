@@ -14,6 +14,7 @@
 #include <QDockWidget>
 #include <QHeaderView>
 #include <QLabel>
+#include <QApplication>
 
 // KDE
 #include <kmenubar.h>
@@ -34,7 +35,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
     m_canvas(0),
     d(new PhotoFramesEditorPriv)
 {
-    setXMLFile("/home/coder89/KDE/photoframeseditor/plugin/photoframeseditorui.rc");
+    setXMLFile(QApplication::applicationDirPath()+"/plugin/photoframeseditorui.rc");
 
     setObjectName("Photo Frames Editor");
 

@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     widgets/canvas/Canvas.cpp \
     models/LayersSelectionModel.cpp \
     widgets/canvas/QGraphicsSelectionItem.cpp \
-    widgets/canvas/QGraphicsSelectionItem_p.cpp
+    widgets/canvas/QGraphicsRotationItem.cpp \
+    widgets/canvas/QGraphicsEditionWidget.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -50,7 +51,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/canvas/Canvas.h \
     models/LayersSelectionModel.h \
     widgets/canvas/QGraphicsSelectionItem.h \
-    widgets/canvas/QGraphicsSelectionItem_p.h
+    widgets/canvas/QGraphicsRotationItem.h \
+    widgets/canvas/QGraphicsEditionWidget.h
 
 LIBS += \
     -L/usr \

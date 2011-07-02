@@ -102,7 +102,6 @@ namespace KIPIPhotoFramesEditor
 
             void updateChildernsGrid(qreal x, qreal y);
             void setRotationWidgetVisible(bool visible);
-            void moveSelectedItems(QGraphicsSceneMouseEvent * event);
 
             EditMode editingMode;
             static const EditMode DEFAULT_EDITING_MODE = WidgetsMoving;

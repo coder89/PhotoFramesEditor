@@ -52,22 +52,28 @@ namespace KIPIPhotoFramesEditor
 
 // ####################################################################################################################
 
-    class RotationWidget : public QGraphicsWidget
+    class QGraphicsRotationItem : public QGraphicsWidget
     {
             Q_OBJECT
 
             QPainterPath m_path;
             QPainterPath m_elipse_path;
+            QPointF m_initial_position;
 
             RotationHandler * m_handler;
 
         public:
 
-            RotationWidget(QGraphicsItem * parent);
+            QGraphicsRotationItem(QGraphicsItem * parent = 0);
             virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
             virtual QPainterPath shape() const;
             virtual QPainterPath opaqueArea() const;
             virtual QRectF boundingRect() const;
+            virtual bool contains(const QPointF &point) const
+            {
+                qDebug() << "contains: " << QGraphicsWidget::contains(point);
+                return QGraphicsWidget::contains(point);
+            }
             QPointF rotationPoint() const
             {
                 return this->pos()+QPoint(10,10);
@@ -75,6 +81,11 @@ namespace KIPIPhotoFramesEditor
             void reset()
             {
                 m_handler->setPos(100,5);
+            }
+            void center(const QRectF & bounds)
+            {
+                qDebug() << "center";
+                this->setPos(bounds.center()-QPoint(10,10));
             }
 
         protected:

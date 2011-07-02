@@ -15,13 +15,28 @@ namespace KIPIPhotoFramesEditor
             QGraphicsRotationItem * m_rot;
             QGraphicsSelectionItem * m_sel;
 
+            bool m_rot_visibility;
+
         public:
 
             explicit QGraphicsEditionWidget(QGraphicsItem * parent = 0);
+            void setSelection(const QList<QGraphicsItem*> & itemList);
+            void setRotationVisible(bool visible);
+            virtual QRectF boundingRect() const;
+            virtual bool contains(const QPointF & point) const;
+            virtual QPainterPath opaqueArea() const;
+            virtual QPainterPath shape() const;
+            void reset();
 
         signals:
 
         public slots:
+
+            void setRotation(qreal angle, bool round);
+
+        protected Q_SLOTS:
+
+            virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
 
     };
 }

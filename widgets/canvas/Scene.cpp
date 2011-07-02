@@ -1,6 +1,5 @@
 #include "Scene.h"
-#include "QGraphicsRotationItem.h"
-#include "QGraphicsSelectionItem.h"
+#include "QGraphicsEditionWidget.h"
 
 // Qt
 #include <QGraphicsTextItem>
@@ -37,11 +36,9 @@ namespace KIPIPhotoFramesEditor
 
         ScenePrivate(Scene * parent) :
             m_parent(parent),
-            m_sel_widget(new QGraphicsSelectionItem),
-            m_rot_widget(new QGraphicsRotationItem)
+            m_edit_widget(new QGraphicsEditionWidget)
         {
-            m_sel_widget->setZValue(1.0/0.0);
-            m_rot_widget->setZValue(1.0/0.0);
+            m_edit_widget->setZValue(1.0/0.0);
             setMode(0);
         }
 
@@ -52,25 +49,12 @@ namespace KIPIPhotoFramesEditor
         void setMode(int mode)
         {
             m_mode = mode;
-            if (mode & Rotation)
-            {
-                m_rot_widget->setVisible(true && m_sel_widget->shape().boundingRect().isValid());
-                m_rot_widget->center(m_sel_widget->shape().boundingRect().translated(m_sel_widget->pos()));
-            }
+            m_edit_widget->setRotationVisible(mode & Rotation);
+            m_edit_widget->reset();
         }
 
-        void refreshWidgets()
-        {
-            setMode(m_mode);
-        }
-
-        // LMB click point
-        QPointF m_sel_bounds_btn_down;
-
-        // Rotation widget
-        QGraphicsSelectionItem * m_sel_widget;
-        QGraphicsRotationItem * m_rot_widget;
-
+        // Edition widget
+        QGraphicsEditionWidget * m_edit_widget;
         // Parent scene
         QGraphicsScene * m_parent;
 
@@ -99,8 +83,8 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
         shadow->setPen(QPen(Qt::white, 0));
     }
 
-    QGraphicsScene::addItem(d->m_sel_widget);
-    QGraphicsScene::addItem(d->m_rot_widget);
+    QGraphicsScene::addItem(d->m_edit_widget);
+    d->m_edit_widget->setZValue(1.0/0.0);
 
     // Mouse interaction mode
     setMode(Rotating);
@@ -220,19 +204,21 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        qDebug() << "isContains:" << event->scenePos() << d->m_sel_widget->contains(event->scenePos()-d->m_sel_widget->pos()) << d->m_sel_widget->shape();
-        if (d->m_sel_widget->contains(event->scenePos()-d->m_sel_widget->pos()))
+        qDebug() << "isContains:" << event->scenePos() << d->m_edit_widget->contains(event->scenePos()-d->m_edit_widget->pos()) << d->m_edit_widget->shape();
+        if (d->m_edit_widget->contains(event->scenePos()-d->m_edit_widget->pos()) && (!(event->modifiers() & Qt::ControlModifier)))
             goto press_others;
+        d->m_edit_widget->setVisible(false);
         QGraphicsItem * clickedItem = this->itemAt(event->scenePos());
         if (!clickedItem)
             goto press_others;
-        if (!(event->modifiers() & Qt::ControlModifier) && d->m_sel_widget != clickedItem)
+        if (!(event->modifiers() & Qt::ControlModifier))
         {
             this->setSelectionArea(QPainterPath());
-            clickedItem->setSelected(true);
+            clickedItem->setSelected(!clickedItem->isSelected());
         }
         this->calcSelectionBoundingRect();
-        d->m_sel_widget->setSelected(true);
+        d->m_edit_widget->setVisible(true);
+        d->m_edit_widget->setSelected(true);
     }
     press_others:
         QGraphicsScene::mousePressEvent(event);
@@ -460,6 +446,5 @@ void Scene::addItem(AbstractPhoto * item)
 
 void Scene::calcSelectionBoundingRect()
 {
-    d->m_sel_widget->setSelection(this->selectedItems());
-    d->refreshWidgets();
+    d->m_edit_widget->setSelection(this->selectedItems());
 }

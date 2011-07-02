@@ -15,7 +15,6 @@ QGraphicsSelectionItem::QGraphicsSelectionItem(QGraphicsItem * parent) :
     m_shape()
 {
     this->setAcceptHoverEvents(true);
-    setFlag(QGraphicsItem::ItemIsMovable);
     //setRotationVisible(true);
 }
 
@@ -29,10 +28,10 @@ QGraphicsSelectionItem::QGraphicsSelectionItem(QGraphicsItem * parent) :
 //    m_rot_widget->setVisible(visible && m_shape.boundingRect().isValid());
 //}
 
-void QGraphicsSelectionItem::setSelection(const QList<QGraphicsItem*> & items)
+QPointF QGraphicsSelectionItem::setSelection(const QSet<QGraphicsItem*> & items)
 {
-    this->m_itemsList = items.toSet();
-    setupWidget();
+    this->m_itemsList = items;
+    return setupWidget();
 }
 
 void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
@@ -55,7 +54,6 @@ void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent * e
 void QGraphicsSelectionItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     QPointF p = event->pos()-event->lastPos();
-    moveBy(p.rx(),p.ry());
     foreach (QGraphicsItem * item, m_itemsList)
         item->moveBy(p.rx(), p.ry());
     event->accept();
@@ -106,19 +104,6 @@ QPainterPath QGraphicsSelectionItem::shape() const
     return result;
 }
 
-//void QGraphicsSelectionItem::setRotation(qreal angle, bool round)
-//{
-//    QPointF rotBase = m_rot_widget->rotationPoint();
-//    foreach (QGraphicsItem * item, m_itemsList)
-//    {
-//        QPointF rotPoint = rotBase;
-//        qreal x = rotPoint.rx();
-//        qreal y = rotPoint.ry();
-//        item->setTransform(item->transform()*QTransform().translate(x,y).rotate(angle).translate(-x,-y));
-//    }
-//    setupWidget();
-//}
-
 QPainterPath QGraphicsSelectionItem::calcShape() const
 {
     QPainterPath result;
@@ -132,14 +117,27 @@ QPainterPath QGraphicsSelectionItem::calcShape() const
     return result;
 }
 
-void QGraphicsSelectionItem::setupWidget()
+QPointF QGraphicsSelectionItem::setupWidget()
 {
     m_shape = calcShape();
     QPointF offset = m_shape.boundingRect().topLeft();
-    QPointF p = pos();
-    setPos(offset);
     m_shape.translate(-offset);
     resize(m_shape.boundingRect().size());
+    return offset;
+}
+
+QPointF QGraphicsSelectionItem::setRotation(qreal angle, const QPointF & rotPoint, bool round)
+{
+    QPointF point = rotPoint;
+    foreach (QGraphicsItem * item, m_itemsList)
+    {
+        QPointF temp = point;
+        qDebug() << "item: " << item->pos();
+        qreal x = temp.rx();
+        qreal y = temp.ry();
+        item->setTransform(item->transform()*QTransform().translate(x,y).rotate(angle).translate(-x,-y));
+    }
+    return setupWidget();
 }
 
 //void QGraphicsSelectionItem::addToShape(const QPainterPath & path)

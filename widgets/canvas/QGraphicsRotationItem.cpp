@@ -102,6 +102,7 @@ QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
     this->setAcceptHoverEvents(true);
     this->setHandlesChildEvents(false);
     this->setFlag(QGraphicsItem::ItemIsMovable);
+    this->setFlag(QGraphicsItem::ItemIsSelectable, false);
     setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
     reset();
@@ -117,13 +118,11 @@ void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphics
 
 QPainterPath QGraphicsRotationItem::shape() const
 {
-    qDebug() << "shape: ";
     return m_path + m_handler->shape().translated(m_handler->pos());
 }
 
 QPainterPath QGraphicsRotationItem::opaqueArea() const
 {
-    qDebug() << "opaqueArea: ";
     return m_path + m_handler->shape().translated(m_handler->pos());
 }
 QRectF QGraphicsRotationItem::boundingRect() const
@@ -172,6 +171,7 @@ void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         lastParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->lastScreenPos())));
         buttonDownParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->buttonDownScreenPos(Qt::LeftButton))));
         QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
+        m_rot_point += currentPos-pos();
         setPos(currentPos.rx(),currentPos.ry());
         return;
     }

@@ -11,6 +11,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class QGraphicsEditingWidget;
 
     class RotationHandler : public QGraphicsWidget
     {
@@ -56,6 +57,8 @@ namespace KIPIPhotoFramesEditor
     {
             Q_OBJECT
 
+            QPointF m_rot_point;
+
             QPainterPath m_path;
             QPainterPath m_elipse_path;
             QPointF m_initial_position;
@@ -76,15 +79,15 @@ namespace KIPIPhotoFramesEditor
             }
             QPointF rotationPoint() const
             {
-                return this->pos()+QPoint(10,10);
+                return m_rot_point+QPoint(10,10);
             }
             void reset()
             {
                 m_handler->setPos(100,5);
+                m_rot_point = pos();
             }
             void center(const QRectF & bounds)
             {
-                qDebug() << "center";
                 this->setPos(bounds.center()-QPoint(10,10));
             }
 
@@ -103,6 +106,8 @@ namespace KIPIPhotoFramesEditor
         protected Q_SLOTS:
 
             void emitRotationChanges(qreal deg, bool round);
+
+        friend class QGraphicsEditingWidget;
     };
 
 }

@@ -11,8 +11,11 @@ QGraphicsEditionWidget::QGraphicsEditionWidget(QGraphicsItem * parent) :
 {
     this->setFlag(QGraphicsItem::ItemIsMovable);
     this->setFlag(QGraphicsItem::ItemIsSelectable, false);
-    m_rot->setZValue(2);
+    this->setHandlesChildEvents(false);
+    m_sel->setParent(this);
     m_sel->setZValue(1);
+    m_rot->setParent(this);
+    m_rot->setZValue(2);
     connect(m_rot,SIGNAL(rotationChanged(qreal,bool)),this,SLOT(setRotation(qreal,bool)));
     setRotationVisible(false);
 }
@@ -71,8 +74,17 @@ QPainterPath QGraphicsEditionWidget::shape() const
 
 void QGraphicsEditionWidget::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsWidget::mouseMoveEvent(event);
-    m_sel->mouseMoveEvent(event);
+    if (m_sel->contains(event->pos()))
+    {
+        m_sel->mouseMoveEvent(event);
+        QGraphicsWidget::mouseMoveEvent(event);
+    }
+    else if (m_rot->contains(event->pos()-m_rot->pos()))
+    {
+        QGraphicsWidget::mouseMoveEvent(event);
+    }
+    else
+        event->setAccepted(false);
 }
 
 void QGraphicsEditionWidget::setRotation(qreal angle, bool round)
@@ -80,7 +92,7 @@ void QGraphicsEditionWidget::setRotation(qreal angle, bool round)
     QPointF p = m_sel->setRotation(angle, m_rot->rotationPoint(), round);
     qDebug() << m_rot->rotationPoint();
     QPointF lp = pos();
-    setPos(p);
+    //setPos(p);
     qDebug() << p;
-    m_rot->setPos(m_rot->pos()+lp-p);
+    //m_rot->setPos(m_rot->pos()+lp-p);
 }

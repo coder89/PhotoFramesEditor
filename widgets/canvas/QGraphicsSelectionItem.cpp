@@ -53,6 +53,7 @@ void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent * e
 
 void QGraphicsSelectionItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "mouseMoveEvent: " << event->isAccepted();
     QPointF p = event->pos()-event->lastPos();
     foreach (QGraphicsItem * item, m_itemsList)
         item->moveBy(p.rx(), p.ry());
@@ -63,6 +64,7 @@ void QGraphicsSelectionItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     setCursor(QCursor(Qt::ClosedHandCursor));
     QGraphicsWidget::mousePressEvent(event);
+    qDebug() << "mousePessEvent: " << event->isAccepted();
 }
 
 void QGraphicsSelectionItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
@@ -128,11 +130,12 @@ QPointF QGraphicsSelectionItem::setupWidget()
 
 QPointF QGraphicsSelectionItem::setRotation(qreal angle, const QPointF & rotPoint, bool round)
 {
-    QPointF point = rotPoint;
+    QPointF point = mapToScene(rotPoint);
     foreach (QGraphicsItem * item, m_itemsList)
     {
-        QPointF temp = point;
+        QPointF temp = point - item->pos();
         qDebug() << "item: " << item->pos();
+        qDebug() << "rot : " << rotPoint;
         qreal x = temp.rx();
         qreal y = temp.ry();
         item->setTransform(item->transform()*QTransform().translate(x,y).rotate(angle).translate(-x,-y));

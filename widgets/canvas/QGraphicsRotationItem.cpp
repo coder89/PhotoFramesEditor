@@ -80,7 +80,7 @@ void RotationHandler::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     else
         m_rotation_angle = 180*qAcos(cos)/M_PI;
     setPos(currentPos.rx()*scale,currentPos.ry()*scale);
-    emit rotationChanged(m_rotation_angle,event->modifiers()&Qt::ShiftModifier);
+    emit rotationAngleChanged(m_rotation_angle,event->modifiers()&Qt::ShiftModifier);
 }
 
 
@@ -92,7 +92,7 @@ QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
 {
     m_handler->setParent(this);
     m_handler->setPos(100,5);
-    connect(m_handler,SIGNAL(rotationChanged(qreal,bool)),this,SLOT(emitRotationChanges(qreal,bool)));
+    connect(m_handler,SIGNAL(rotationAngleChanged(qreal,bool)),this,SLOT(emitRotationChanges(qreal,bool)));
 
     m_elipse_path.addEllipse(0,0,20,20);
     m_path += m_elipse_path;
@@ -155,7 +155,6 @@ void QGraphicsRotationItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 
 void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "moveRot";
     if (m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton)))
     {
         QGraphicsView *view = 0;
@@ -173,6 +172,7 @@ void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
         m_rot_point += currentPos-pos();
         setPos(currentPos.rx(),currentPos.ry());
+        emit rotationPointChanged(m_rot_point+QPoint(10,10));
         return;
     }
     else if (m_handler->contains(event->buttonDownPos(Qt::LeftButton)))
@@ -187,5 +187,5 @@ void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 void QGraphicsRotationItem::emitRotationChanges(qreal deg, bool round)
 {
     this->update();
-    emit rotationChanged(deg, round);
+    emit rotationAngleChanged(deg, round);
 }

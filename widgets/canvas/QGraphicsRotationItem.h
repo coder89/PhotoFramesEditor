@@ -43,7 +43,7 @@ namespace KIPIPhotoFramesEditor
 
         Q_SIGNALS:
 
-            void rotationChanged(qreal angle, bool round);
+            void rotationAngleChanged(qreal angle, bool round);
 
         private:
 
@@ -85,10 +85,13 @@ namespace KIPIPhotoFramesEditor
             {
                 m_handler->setPos(100,5);
                 m_rot_point = pos();
+                emit rotationPointChanged(m_rot_point+QPoint(10,10));
             }
             void center(const QRectF & bounds)
             {
                 this->setPos(bounds.center()-QPoint(10,10));
+                m_rot_point = this->pos();
+                emit rotationPointChanged(m_rot_point+QPoint(10,10));
             }
 
         protected:
@@ -101,7 +104,8 @@ namespace KIPIPhotoFramesEditor
 
         Q_SIGNALS:
 
-            void rotationChanged(qreal angle, bool round);
+            void rotationAngleChanged(qreal angle, bool round);
+            void rotationPointChanged(const QPointF & point);
 
         protected Q_SLOTS:
 

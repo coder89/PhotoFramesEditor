@@ -2,7 +2,7 @@
 #define QGRAPHICSEDITIONWIDGET_H
 
 #include <QGraphicsWidget>
-
+#include <QPainter>
 namespace KIPIPhotoFramesEditor
 {
     class QGraphicsRotationItem;
@@ -11,6 +11,8 @@ namespace KIPIPhotoFramesEditor
     class QGraphicsEditionWidget : public QGraphicsWidget
     {
             Q_OBJECT
+
+            QPointF m_rot_point;
 
             QGraphicsRotationItem * m_rot;
             QGraphicsSelectionItem * m_sel;
@@ -27,12 +29,18 @@ namespace KIPIPhotoFramesEditor
             virtual QPainterPath opaqueArea() const;
             virtual QPainterPath shape() const;
             void reset();
+            virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+            {
+                painter->setPen(Qt::red);
+                painter->drawPath(shape());
+            }
 
         signals:
 
         public slots:
 
-            void setRotation(qreal angle, bool round);
+            void setRotationAngle(qreal angle, bool round);
+            void setRotationPoint(const QPointF & point);
 
         protected Q_SLOTS:
 

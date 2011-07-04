@@ -25,9 +25,8 @@ using namespace KIPIPhotoFramesEditor;
 
 namespace KIPIPhotoFramesEditor
 {
-    class ScenePrivate : public QObject
+    class ScenePrivate
     {
-
         enum
         {
             Rotation = 1,
@@ -40,10 +39,6 @@ namespace KIPIPhotoFramesEditor
         {
             m_edit_widget->setZValue(1.0/0.0);
             setMode(0);
-        }
-
-        ~ScenePrivate()
-        {
         }
 
         void setMode(int mode)

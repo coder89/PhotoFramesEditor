@@ -15,7 +15,8 @@ QGraphicsSelectionItem::QGraphicsSelectionItem(QGraphicsItem * parent) :
     m_shape()
 {
     this->setAcceptHoverEvents(true);
-    //setRotationVisible(true);
+    this->setFlag(QGraphicsItem::ItemIsMovable);
+    this->setFlag(QGraphicsItem::ItemIsSelectable, false);
 }
 
 //void QGraphicsSelectionItem::setRotationVisible(bool visible)
@@ -53,11 +54,11 @@ void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent * e
 
 void QGraphicsSelectionItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "mouseMoveEvent: " << event->isAccepted();
-    QPointF p = event->pos()-event->lastPos();
+    QPointF p = event->scenePos()-event->lastScenePos();
     foreach (QGraphicsItem * item, m_itemsList)
         item->moveBy(p.rx(), p.ry());
-    event->accept();
+    event->setAccepted(true);
+    qDebug() << "mouseMoveEvent: " << event->isAccepted();
 }
 
 void QGraphicsSelectionItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
@@ -133,13 +134,14 @@ QPointF QGraphicsSelectionItem::setRotation(qreal angle, const QPointF & rotPoin
     QPointF point = mapToScene(rotPoint);
     foreach (QGraphicsItem * item, m_itemsList)
     {
+        qDebug() <<"item"<< point << item->pos() << item->scenePos();
         QPointF temp = point - item->pos();
-        qDebug() << "item: " << item->pos();
-        qDebug() << "rot : " << rotPoint;
         qreal x = temp.rx();
         qreal y = temp.ry();
         item->setTransform(item->transform()*QTransform().translate(x,y).rotate(angle).translate(-x,-y));
     }
+    //this->setTransform(transform()*QTransform().translate(point.rx(),point.ry()).rotate(angle).translate(-point.rx(),-point.ry()));
+   // return QPointF();
     return setupWidget();
 }
 

@@ -50,9 +50,6 @@ namespace KIPIPhotoFramesEditor
             QStandardItemModel * m_model;
             QSet<AbstractPhoto*> currentSelectedList;
             Canvas * m_canvas;
-
-            // Widgets factory
-            const WidgetsFactory & m_widgetsFactory;
     };
 
 }

@@ -3,8 +3,8 @@
 
 // Qt
 #include <QObject>
-#include <QAbstractItemModel>
 #include <QModelIndex>
+#include <QAbstractItemModel>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -19,7 +19,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit LayersModel(QObject *parent = 0);
-            ~LayersModel();
+            virtual ~LayersModel();
 
             QModelIndex index( int row, int column, const QModelIndex & parent ) const;
             QModelIndex parent( const QModelIndex & index ) const;
@@ -36,6 +36,7 @@ namespace KIPIPhotoFramesEditor
             QModelIndex findIndex(LayersModelItem * item, const QModelIndex & parent = QModelIndex()) const;
             bool insertRows(int row, int count, const QModelIndex  & parent);
             LayersModelItem * getItem(const QModelIndex &index) const;
+            bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
             enum ModelRoles
             {

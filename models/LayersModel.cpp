@@ -22,6 +22,7 @@ LayersModel::LayersModel(QObject *parent) :
     root = new LayersModelItem(
                                 (QList<QVariant>() << "sfa" << QIcon(":eye.png") << QIcon(":padlock.png") << "Name")
                               );
+    this->setSupportedDragActions(Qt::MoveAction);
 }
 
 LayersModel::~LayersModel()
@@ -106,12 +107,13 @@ bool LayersModel::setData(const QModelIndex & index, const QVariant & value, int
 
 Qt::ItemFlags LayersModel::flags(const QModelIndex &index) const
 {
-    if (!index.isValid())
-        return 0;
-    Qt::ItemFlags result;
-    if (index.column() == LayersModelItem::NameString)
-        result = Qt::ItemIsEditable;
-    result |= Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+    Qt::ItemFlags result = Qt::ItemIsDropEnabled | this->QAbstractItemModel::flags(index);
+    if (index.isValid())
+    {
+        if (index.column() == LayersModelItem::NameString)
+            result |= Qt::ItemIsEditable;
+        result |= Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+    }
     return result;
 }
 
@@ -159,7 +161,9 @@ bool LayersModel::appendItems(const QList<AbstractPhoto*> & items, const QModelI
 
 bool LayersModel::insertRows(int position, int count, const QModelIndex  &parent)
 {
-    return false;
+    beginInsertRows(parent,position,position+count-1);
+    endInsertRows();
+    return true;
 }
 
 void LayersModel::addNewItem(AbstractPhoto * item, const QModelIndex & parent)
@@ -208,4 +212,13 @@ QModelIndex LayersModel::findIndex(LayersModelItem * item, const QModelIndex & p
             return temp;
     }
     return QModelIndex();
+}
+
+bool LayersModel::removeRows(int row, int count, const QModelIndex & parent)
+{
+    LayersModelItem * parentItem = getItem(parent);
+    beginRemoveRows(parent, row, row+count-1);
+    bool result = parentItem->removeChildren(row, count);
+    endRemoveRows();
+    return result;
 }

@@ -19,21 +19,22 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addItemToModel(AbstractPhoto*)));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
-}
-
-Canvas::~Canvas()
-{
+   // connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT())
 }
 
 void Canvas::addImage(const QImage & image)
 {
     QSize s = image.size();
     QRect r = image.rect();
-    s.scale(400, s.height()*400/s.width(), Qt::KeepAspectRatio);
-    r.setSize(s);
-    QPixmap p3(s);
-    QPainter paint(&p3);
-    paint.drawImage(r, image);
+    QSize sceneSize = m_scene->sceneRect().size().toSize();
+    if (sceneSize.width()<s.width() || sceneSize.height()<s.height())
+    {
+        s.scale(m_scene->sceneRect().size().toSize()*0.8, Qt::KeepAspectRatio);
+        r.setSize(s);
+    }
+    QPixmap pixmap(s);
+    QPainter painter(&pixmap);
+    painter.drawImage(r, image);
     QPainterPath asf;
     asf.addRect(QRectF(r));
     PolygonWidget * it = new PolygonWidget(asf,0,m_scene);

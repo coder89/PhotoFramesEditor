@@ -11,76 +11,61 @@
 #include <QIcon>
 #include <QMouseEvent>
 #include <QGraphicsItem>
+#include <QContextMenuEvent>
 
 using namespace KIPIPhotoFramesEditor;
 
-class CanvasItemSelectionModel : public QItemSelectionModel
+class KIPIPhotoFramesEditor::LayersTreeMenu : public QMenu
 {
     public:
 
-        explicit CanvasItemSelectionModel(QStandardItemModel * model, QObject * parent) :
-            QItemSelectionModel(model,parent)
+        LayersTreeMenu(LayersTree * parent) :
+            QMenu(parent)
         {
+            moveUpItems = this->addAction("Move up");
+            connect(moveUpItems, SIGNAL(triggered()), parent, SLOT(moveSelectedRowsUp()));
+            moveDownItems = this->addAction("Move down");
+            connect(moveDownItems, SIGNAL(triggered()), parent, SLOT(moveSelectedRowsDown()));
+            this->addSeparator();
+            deleteItems = this->addAction("Delete selected");
+            connect(deleteItems, SIGNAL(triggered()), parent, SLOT(removeSelectedRows()));
         }
-
-    public Q_SLOTS:
-
-        virtual void select(const QModelIndex & index, QItemSelectionModel::SelectionFlags command)
+        void setMoveUpEnabled(bool enabled)
         {
-            if (index.isValid())
-            {
-                QItemSelection selection(index, index);
-                select(selection, command);
-            }
+            moveUpItems->setEnabled(enabled);
         }
-
-        virtual void select(const QItemSelection & selection, QItemSelectionModel::SelectionFlags command)
+        void setMoveDownEnabled(bool enabled)
         {
-            if (command == NoUpdate)
-                return;
-            if (command & QItemSelectionModel::Clear || !(command & command & QItemSelectionModel::Current))
-            {
-                QItemSelection sel = QItemSelectionModel::selection();
-                setSelection(sel, false);
-            }
-            if (command & QItemSelectionModel::Select)
-                setSelection(selection, true);
-            if (command & QItemSelectionModel::Deselect)
-                setSelection(selection, false);
-            if (command & QItemSelectionModel::Rows)
-            {}
-            if (command &  QItemSelectionModel::Columns)
-            {}
-            QItemSelectionModel::select(selection,command);
+            moveDownItems->setEnabled(enabled);
+        }
+        void setDeleteEnabled(bool enabled)
+        {
+            deleteItems->setEnabled(enabled);
         }
 
     private:
 
-        void setSelection(const QItemSelection & selection, bool isSelected)
-        {
-            QModelIndexList list = selection.indexes();
-            foreach(QModelIndex index , list)
-            {
-                QStandardItem * item = (static_cast<const QStandardItemModel*>(index.model()))->itemFromIndex(index);
-                AbstractPhoto * g_item = dynamic_cast<AbstractPhoto*>(item);
-                if (g_item)
-                {
-                    g_item->setSelected(isSelected);
-                }
-            }
-        }
+        QAction * moveUpItems;
+        QAction * moveDownItems;
+        QAction * deleteItems;
 };
 
-LayersTree::LayersTree(QWidget *parent) :
-    QTreeView(parent)
+LayersTree::LayersTree(QWidget * parent) :
+    QTreeView(parent),
+    m_menu(new LayersTreeMenu(this))
 {
     this->setSelectionMode(QAbstractItemView::ExtendedSelection);
     this->header()->setShown(true);
     this->header()->setMovable(false);
     this->header()->setClickable(true);
     this->setDragEnabled(true);
+    this->setAcceptDrops(true);
+    this->setDropIndicatorShown(true);
+    this->setDragDropMode(QAbstractItemView::DragDrop);
+    this->setDefaultDropAction(Qt::MoveAction);
     connect(this->header(), SIGNAL(sectionClicked(int)), this, SLOT(headerSectionClicked(int)));
-    //this->header()->setResizeMode(QHeaderView::ResizeToContents);
+    this->header()->setResizeMode(QHeaderView::ResizeToContents);
+    this->setContextMenuPolicy(Qt::DefaultContextMenu);
 }
 
 void LayersTree::setModel(QAbstractItemModel * model)
@@ -151,4 +136,64 @@ void LayersTree::headerSectionClicked(int section)
     qDebug() << this->verticalOffset() << this->horizontalOffset();
     // TODO : Selection of hide/lock icons from header
     qDebug() << section;
+}
+
+void LayersTree::contextMenuEvent(QContextMenuEvent * event)
+{
+    if (this->selectedIndexes().count())
+    {
+        QModelIndexList indexList = this->selectedIndexes();
+        m_menu->setDeleteEnabled(true);
+        m_menu->setMoveDownEnabled(true);
+        m_menu->setMoveUpEnabled(true);
+        foreach (QModelIndex index, indexList)
+        {
+            if (index.isValid())
+            {
+                if (index.column() == 0)
+                {
+                    if (index.row() == 0)
+                        m_menu->setMoveUpEnabled(false);
+                    if (index.row()+1 >= this->model()->rowCount(index.parent()))
+                        m_menu->setMoveDownEnabled(false);
+                }
+            }
+            else
+                m_menu->setDeleteEnabled(false);
+        }
+        m_menu->exec(event->globalPos());
+    }
+}
+
+void LayersTree::removeSelectedRows()
+{
+    QModelIndexList indexList = this->selectedIndexes();
+    QMap<QModelIndex,QList<int> > map;
+    foreach (QModelIndex index, indexList)
+    {
+        if (index.isValid() && index.column() == 0)
+        {
+            QList<int> list = map.value(index.parent());
+            list.append(index.row());
+            map.insert(index.parent(),list);
+        }
+    }
+    QList<QModelIndex> parents = map.keys();
+    foreach (QModelIndex parent, parents)
+    {
+        QList<int> list = map.value(parent);
+        qSort(list);
+        for (int i = list.size()-1; i >= 0; --i)
+            this->model()->removeRow(list[i], parent);
+    }
+}
+
+void LayersTree::moveSelectedRowsUp()
+{
+    QModelIndexList indexList = this->selectedIndexes();
+    qDebug() << showDropIndicator();
+}
+
+void LayersTree::moveSelectedRowsDown()
+{
 }

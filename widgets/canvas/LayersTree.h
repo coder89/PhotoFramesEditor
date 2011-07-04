@@ -2,7 +2,9 @@
 #define LAYERSTREE_H
 
 // Qt
+#include <QMenu>
 #include <QWidget>
+#include <QAction>
 #include <QTreeView>
 #include <QAbstractItemModel>
 
@@ -13,7 +15,8 @@ class QGraphicsItem;
 
 namespace KIPIPhotoFramesEditor
 {
-    class CanvasItemSelectionModel;
+    class LayersTree;
+    class LayersTreeMenu;
     class SwitchableIcon;
 
     class LayersTree : public QTreeView
@@ -33,15 +36,22 @@ namespace KIPIPhotoFramesEditor
 
         signals:
 
+        protected:
+
+            void contextMenuEvent(QContextMenuEvent * event);
+
         protected Q_SLOTS:
 
             void rowsInserted(const QModelIndex & parent, int start, int end);
             void setRowWidgets(const QModelIndex & parent, int row);
             void setupRowsWidgets(const QModelIndex & parent = QModelIndex());
+            void removeSelectedRows();
+            void moveSelectedRowsUp();
+            void moveSelectedRowsDown();
 
         private:
 
-            friend class CanvasItemSelectionModel;
+            LayersTreeMenu * m_menu;
     };
 }
 

@@ -16,7 +16,6 @@ SOURCES += main.cpp\
     widgets/abstract_photo_resizer.cpp \
     widgets/photo_context_menu.cpp \
     widgets/polygon_widget.cpp \
-    widgets/widgets_factory.cpp \
     events/canvasmouseevent.cpp \
     widgets/CanvasWidget.cpp \
     widgets/canvas/SwitchableIcon.cpp \
@@ -36,7 +35,6 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
     widgets/photo_context_menu.h \
     widgets/polygon_widget.h \
-    widgets/widgets_factory.h \
     events/canvasmouseevent.h \
     plugin/photoframeseditor_p.h \
     utils/global.h \

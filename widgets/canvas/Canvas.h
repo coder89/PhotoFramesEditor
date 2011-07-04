@@ -22,7 +22,6 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit Canvas(const QSizeF & dimension, QObject * parent = 0);
-            ~Canvas();
 
             Scene * scene() const
             {
@@ -53,8 +52,6 @@ namespace KIPIPhotoFramesEditor
             {
                 return m_selmodel;
             }
-
-        signals:
 
         public slots:
 

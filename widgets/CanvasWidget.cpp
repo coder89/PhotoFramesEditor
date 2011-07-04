@@ -1,7 +1,6 @@
 // Local
 #include "CanvasWidget.h"
 #include "polygon_widget.h"
-#include "widgets_factory.h"
 #include "canvasmouseevent.h"
 #include <abstract_photo.h>
 
@@ -31,8 +30,7 @@ using namespace KIPIPhotoFramesEditor;
 
 CanvasWidget::CanvasWidget(QWidget *parent) :
     QGraphicsView(parent),
-    m_model(new QStandardItemModel(this)),
-    m_widgetsFactory(WidgetsFactory(this))
+    m_model(new QStandardItemModel(this))
 {
     setupGUI();
 }

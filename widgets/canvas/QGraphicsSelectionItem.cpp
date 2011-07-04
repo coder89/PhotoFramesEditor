@@ -1,4 +1,5 @@
 #include "QGraphicsSelectionItem.h"
+#include "abstract_photo.h"
 
 #include <QGraphicsWidget>
 #include <QGraphicsScene>
@@ -15,7 +16,7 @@ QGraphicsSelectionItem::QGraphicsSelectionItem(QGraphicsItem * parent) :
     m_shape()
 {
     this->setAcceptHoverEvents(true);
-    this->setFlag(QGraphicsItem::ItemIsMovable);
+    this->setFlag(QGraphicsItem::ItemIsMovable, false);
     this->setFlag(QGraphicsItem::ItemIsSelectable, false);
 }
 
@@ -35,26 +36,17 @@ QPointF QGraphicsSelectionItem::setSelection(const QSet<QGraphicsItem*> & items)
     return setupWidget();
 }
 
-void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
+void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-//    QMenu menu;
-//    if (m_rot_widget->contains(event->pos()-m_rot_widget->pos()))
-//    {
-//        QAction * center = menu.addAction("Center position");
-//        connect(center,SIGNAL(triggered()),this,SLOT(setRotationVisible()));
-//    }
-//    if (menu.actions().count())
-//    {
-//        menu.exec(event->screenPos());
-//        event->setAccepted(true);
-//    }
-//    else
-//        event->setAccepted(false);
+    QMenu menu;
+    QAction * deleteItems = menu.addAction("Delete selected");
+    connect(deleteItems,SIGNAL(triggered()),this,SLOT(deleteSelected()));
+    menu.exec(event->screenPos());
 }
 
 void QGraphicsSelectionItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QPointF p = event->scenePos()-event->lastScenePos();
+    QPointF p = event->pos()-event->lastPos();
     foreach (QGraphicsItem * item, m_itemsList)
         item->moveBy(p.rx(), p.ry());
     event->setAccepted(true);
@@ -70,7 +62,7 @@ void QGraphicsSelectionItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
 void QGraphicsSelectionItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    setCursor(QCursor(Qt::OpenHandCursor));
+    unsetCursor();
     QGraphicsWidget::mouseReleaseEvent(event);
 }
 
@@ -122,6 +114,7 @@ QPainterPath QGraphicsSelectionItem::calcShape() const
 
 QPointF QGraphicsSelectionItem::setupWidget()
 {
+    this->resetTransform();
     m_shape = calcShape();
     QPointF offset = m_shape.boundingRect().topLeft();
     m_shape.translate(-offset);
@@ -129,44 +122,28 @@ QPointF QGraphicsSelectionItem::setupWidget()
     return offset;
 }
 
-QPointF QGraphicsSelectionItem::setRotation(qreal angle, const QPointF & rotPoint, bool round)
+void QGraphicsSelectionItem::setRotation(qreal angle, const QPointF & rotPoint, bool round)
 {
-    QPointF point = mapToScene(rotPoint);
+    QPointF point = (rotPoint);
     foreach (QGraphicsItem * item, m_itemsList)
     {
-        qDebug() <<"item"<< point << item->pos() << item->scenePos();
-        QPointF temp = point - item->pos();
+        QPointF temp = point;
         qreal x = temp.rx();
         qreal y = temp.ry();
-        item->setTransform(item->transform()*QTransform().translate(x,y).rotate(angle).translate(-x,-y));
+        item->setTransform(item->transform()*(QTransform().translate(x,y).rotate(angle).translate(-x,-y)));
     }
-    //this->setTransform(transform()*QTransform().translate(point.rx(),point.ry()).rotate(angle).translate(-point.rx(),-point.ry()));
-   // return QPointF();
-    return setupWidget();
+    m_shape = this->calcShape();
+    m_shape.translate(-this->scenePos());
 }
 
-//void QGraphicsSelectionItem::addToShape(const QPainterPath & path)
-//{
-//    m_shape.translate(pos());
-//    m_shape = m_shape.united(path);
-//    setPos(m_shape.boundingRect().topLeft());
-//    resize(m_shape.boundingRect().size());
-//    m_shape.translate(-pos());
-//    QRectF tempRect = m_shape.boundingRect();
-//    m_rot_widget->setPos(m_shape.boundingRect().center()-QPointF(10,10));
-//    m_rot_widget->setVisible(tempRect.isValid());
-//    m_rot_widget->reset();
-//}
-
-//void QGraphicsSelectionItem::removeFromShape(const QPainterPath & path)
-//{
-//    m_shape.translate(pos());
-//    m_shape = m_shape.subtracted(path);
-//    setPos(m_shape.boundingRect().topLeft());
-//    resize(m_shape.boundingRect().size());
-//    m_shape.translate(-pos());
-//    QRectF tempRect = m_shape.boundingRect();
-//    m_rot_widget->setPos(m_shape.boundingRect().center()-QPointF(10,10));
-//    m_rot_widget->setVisible(tempRect.isValid());
-//    m_rot_widget->reset();
-//}
+void KIPIPhotoFramesEditor::QGraphicsSelectionItem::deleteSelected()
+{
+    foreach(QGraphicsItem * item, m_itemsList)
+    {
+        AbstractPhoto * temp =  (AbstractPhoto*)item;
+        temp->setSelected(false);
+        temp->parent()->removeChild(temp);
+        //this->scene()->removeItem(temp);
+    }
+    m_itemsList.clear();
+}

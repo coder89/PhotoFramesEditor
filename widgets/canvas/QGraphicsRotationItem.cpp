@@ -172,7 +172,7 @@ void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
         m_rot_point += currentPos-pos();
         setPos(currentPos.rx(),currentPos.ry());
-        emit rotationPointChanged(m_rot_point+QPoint(10,10));
+        emit rotationPointChanged(m_rot_point);
         return;
     }
     else if (m_handler->contains(event->buttonDownPos(Qt::LeftButton)))

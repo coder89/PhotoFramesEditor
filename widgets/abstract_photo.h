@@ -48,13 +48,7 @@ namespace KIPIPhotoFramesEditor
             static const QColor SELECTED_ITEM_COLOR;
 
             void setGridLines(qreal x, qreal y)
-            {
-                if (x && y)
-                {
-                    x_grid = x;
-                    y_grid = y;
-                }
-            }
+            {}
 
         protected:
 
@@ -62,9 +56,9 @@ namespace KIPIPhotoFramesEditor
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }
-            virtual void mouseDoubleClicked(const QPointF & point) = 0;
-            virtual void mouseMoved(const QPointF & point) = 0;
-            virtual void mousePressed(const QPointF & point) = 0;
+//            virtual void mouseDoubleClicked(const QPointF & point) = 0;
+//            virtual void mouseMoved(const QPointF & point) = 0;
+//            virtual void mousePressed(const QPointF & point) = 0;
 
             // Mouse events
             virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);

@@ -72,26 +72,12 @@ namespace KIPIPhotoFramesEditor
             virtual QPainterPath shape() const;
             virtual QPainterPath opaqueArea() const;
             virtual QRectF boundingRect() const;
-            virtual bool contains(const QPointF &point) const
-            {
-                qDebug() << "contains: " << QGraphicsWidget::contains(point);
-                return QGraphicsWidget::contains(point);
-            }
-            QPointF rotationPoint() const
-            {
-                return m_rot_point+QPoint(10,10);
-            }
             void reset()
             {
+                this->setPos(-QPoint(10,10));
                 m_handler->setPos(100,5);
-                m_rot_point = pos();
-                emit rotationPointChanged(m_rot_point+QPoint(10,10));
-            }
-            void center(const QRectF & bounds)
-            {
-                this->setPos(bounds.center()-QPoint(10,10));
-                m_rot_point = this->pos();
-                emit rotationPointChanged(m_rot_point+QPoint(10,10));
+                m_rot_point = QPointF();
+                emit rotationPointChanged(m_rot_point);
             }
 
         protected:

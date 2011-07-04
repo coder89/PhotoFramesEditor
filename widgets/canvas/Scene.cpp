@@ -70,7 +70,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     grid_item(0),
     grid_changed(true)
 {
-    if (1)                                                                  /// TODO : personalization of default canvas background
+    if (1)                                            /// TODO : personalization of default canvas background
     {
         shadow = new QGraphicsRectItem(dimension, 0,this);
         shadow->setZValue(zIndex++);
@@ -156,11 +156,6 @@ void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
     QMenu * add = menu.addMenu("Add item");
     QAction * polygon = add->addAction("Polygon");
     connect(polygon,SIGNAL(triggered()),this,SLOT(enableItemsDrawing()));
-    if (selectedItems().count())
-    {
-        QAction * deleteSelected = menu.addAction("Delete item(s)");
-        connect(deleteSelected, SIGNAL(triggered()),this, SLOT(removeSelectedItems()));
-    }
     menu.exec(event->screenPos());
 }
 

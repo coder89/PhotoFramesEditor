@@ -17,21 +17,30 @@ LayersModelItem::LayersModelItem(const QList<QVariant> & data, LayersModelItem *
             parent->childItems.append(this);
     }
     this->itemData = data;
+    qDebug() << "LayersModelItem" << (long)this;
 }
 
 LayersModelItem::LayersModelItem() :
     parentItem(0)
 {
+    qDebug() << "LayersModelItem" << (long)this;
 }
 
 LayersModelItem::~LayersModelItem()
 {
+    if (parentItem)
+        parentItem->removeChild(this);
+    qDebug() << "LayersModelItem parent" << (long)parentItem;
+    qDebug() << "LayersModelItem" << (long)this;
 }
 
 void LayersModelItem::removeChild(LayersModelItem * child)
 {
-    if (child->parent() == this)
+    if (child && child->parent() == this)
+    {
+        this->childItems.removeAll(child);
         child->setParent(0);
+    }
 }
 
 LayersModelItem * LayersModelItem::parent() const
@@ -41,6 +50,7 @@ LayersModelItem * LayersModelItem::parent() const
 
 int LayersModelItem::row() const
 {
+    qDebug() << "LayersModelItem" << (long)this;
     if (parentItem)
         return parentItem->childItems.indexOf(const_cast<LayersModelItem*>(this));
     return 0;

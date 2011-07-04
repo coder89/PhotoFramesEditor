@@ -17,7 +17,7 @@ namespace KIPIPhotoFramesEditor
             };
 
             LayersModelItem(const QList<QVariant> & data, LayersModelItem * parent = 0);
-            ~LayersModelItem();
+            virtual ~LayersModelItem();
             void removeChild(LayersModelItem * child);
             LayersModelItem * parent() const;
             void setParent(LayersModelItem * parent);

@@ -2,6 +2,8 @@
 #include "QGraphicsRotationItem.h"
 #include "QGraphicsSelectionItem.h"
 
+#include <QMenu>
+
 using namespace KIPIPhotoFramesEditor;
 
 QGraphicsEditionWidget::QGraphicsEditionWidget(QGraphicsItem * parent) :
@@ -20,6 +22,8 @@ QGraphicsEditionWidget::QGraphicsEditionWidget(QGraphicsItem * parent) :
     connect(m_rot,SIGNAL(rotationPointChanged(QPointF)),this,SLOT(setRotationPoint(QPointF)));
     setRotationVisible(false);
 }
+
+//#####################################################################################################
 
 void QGraphicsEditionWidget::setSelection(const QList<QGraphicsItem*> & itemList)
 {
@@ -41,8 +45,8 @@ void QGraphicsEditionWidget::setRotationVisible(bool visible)
 {
     m_rot_visibility = visible;
     m_rot->setVisible(m_rot_visibility && m_sel->boundingRect().isValid());
-    m_rot->center(m_sel->shape().boundingRect());
     m_rot->reset();
+    m_rot->setPos(m_sel->boundingRect().center());
 }
 
 void QGraphicsEditionWidget::reset()
@@ -68,37 +72,23 @@ QPainterPath QGraphicsEditionWidget::opaqueArea() const
 QPainterPath QGraphicsEditionWidget::shape() const
 {
     QPainterPath result = m_sel->shape();
-//    if (m_rot->isVisible())
-//    {
-//        QGraphicsView *view = 0;
-//            view = qobject_cast<QGraphicsView *>(this->scene()->views()[0]);
-//        QTransform itemTransform;
-//        itemTransform = this->transform();
-//        QTransform viewToParentTransform = itemTransform * sceneTransform();
-//        result = result.united(viewToParentTransform.inverted().map(m_rot->shape()).translated(m_rot->pos()));
-//    }
+    if (m_rot->isVisible())
+    {
+        result += m_rot->shape().translated(m_rot->pos());
+    }
     return result;
 }
 
 void QGraphicsEditionWidget::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     QGraphicsWidget::mouseMoveEvent(event);
-    if(event->isAccepted())
-    {
-        qDebug() << this->pos();
-        this->setPos(this->pos()+event->scenePos()-event->lastScenePos());
-        qDebug() << this->pos();
-    }
+    if (event->buttons() & Qt::LeftButton)
+        m_sel->mouseMoveEvent(event);
 }
 
 void QGraphicsEditionWidget::setRotationAngle(qreal angle, bool round)
 {
-    QPointF p = m_sel->setRotation(angle, m_rot_point, round);
-    qDebug() << m_rot->rotationPoint();
-    QPointF lp = pos();
-    //setPos(p);
-    qDebug() << p;
-    //m_rot->setPos(m_rot->pos()+lp-p);
+    m_sel->setRotation(angle, m_rot_point, round);
 }
 
 void KIPIPhotoFramesEditor::QGraphicsEditionWidget::setRotationPoint(const QPointF & point)

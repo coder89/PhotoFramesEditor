@@ -12,6 +12,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class AbstractPhoto;
     class QGraphicsEditionWidget;
 
     class QGraphicsSelectionItem : public QGraphicsWidget
@@ -34,6 +35,7 @@ namespace KIPIPhotoFramesEditor
             virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
             {
                 painter->setPen(QPen(Qt::black, 1, Qt::DotLine));
+                painter->drawRect(m_shape.boundingRect());
                 painter->drawPath(m_shape);
             }
 
@@ -46,33 +48,12 @@ namespace KIPIPhotoFramesEditor
 
         public Q_SLOTS:
 
-            //void setRotationVisible(bool visible = true);
+            void setRotation(qreal angle, const QPointF & rotPoint, bool round);
+            void deleteSelected();
 
-//            void addItem(QGraphicsItem * item)
-//            {
-//                if (item == this)
-//                    return;
-//                if (*(m_itemsList.insert(item)) == item)
-//                {
-//                    QPainterPath temp = item->shape();
-//                    temp.translate(item->pos());
-//                    //addToShape(temp);
-//                }
-//            }
+        Q_SIGNALS:
 
-//            void removeItem(QGraphicsItem * item)
-//            {
-//                if (item == this)
-//                    return;
-//                if (m_itemsList.remove(item))
-//                {
-//                    QPainterPath temp = item->shape();
-//                    temp.translate(item->pos());
-//                    //removeFromShape(temp);
-//                }
-//            }
-
-            QPointF setRotation(qreal angle, const QPointF & rotPoint, bool round);
+            void selectionChanged();
 
         private:
 

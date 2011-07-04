@@ -17,21 +17,17 @@ LayersModelItem::LayersModelItem(const QList<QVariant> & data, LayersModelItem *
             parent->childItems.append(this);
     }
     this->itemData = data;
-    qDebug() << "LayersModelItem" << (long)this;
 }
 
 LayersModelItem::LayersModelItem() :
     parentItem(0)
 {
-    qDebug() << "LayersModelItem" << (long)this;
 }
 
 LayersModelItem::~LayersModelItem()
 {
     if (parentItem)
         parentItem->removeChild(this);
-    qDebug() << "LayersModelItem parent" << (long)parentItem;
-    qDebug() << "LayersModelItem" << (long)this;
 }
 
 void LayersModelItem::removeChild(LayersModelItem * child)
@@ -122,7 +118,7 @@ bool LayersModelItem::removeChildren(int position, int count)
         return false;
 
     for (int row = 0; row < count; ++row)
-        delete childItems.takeAt(position);
+        childItems.removeAt(position);
 
     return true;
 }

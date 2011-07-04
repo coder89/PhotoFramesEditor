@@ -36,14 +36,6 @@ QPointF QGraphicsSelectionItem::setSelection(const QSet<QGraphicsItem*> & items)
     return setupWidget();
 }
 
-void QGraphicsSelectionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-    QMenu menu;
-    QAction * deleteItems = menu.addAction("Delete selected");
-    connect(deleteItems,SIGNAL(triggered()),this,SLOT(deleteSelected()));
-    menu.exec(event->screenPos());
-}
-
 void QGraphicsSelectionItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     QPointF p = event->pos()-event->lastPos();
@@ -136,14 +128,3 @@ void QGraphicsSelectionItem::setRotation(qreal angle, const QPointF & rotPoint, 
     m_shape.translate(-this->scenePos());
 }
 
-void KIPIPhotoFramesEditor::QGraphicsSelectionItem::deleteSelected()
-{
-    foreach(QGraphicsItem * item, m_itemsList)
-    {
-        AbstractPhoto * temp =  (AbstractPhoto*)item;
-        temp->setSelected(false);
-        temp->parent()->removeChild(temp);
-        //this->scene()->removeItem(temp);
-    }
-    m_itemsList.clear();
-}

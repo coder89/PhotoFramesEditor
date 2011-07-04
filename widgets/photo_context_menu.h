@@ -10,7 +10,7 @@
 namespace KIPIPhotoFramesEditor
 {
 
-    class AbstractPhoto::QContextMenu : public QMenu
+    class QContextMenu : public QMenu
     {
         public:
 

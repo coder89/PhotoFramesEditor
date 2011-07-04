@@ -39,7 +39,6 @@ namespace KIPIPhotoFramesEditor
                 painter->drawPath(m_shape);
             }
 
-            virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
             virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
@@ -49,7 +48,6 @@ namespace KIPIPhotoFramesEditor
         public Q_SLOTS:
 
             void setRotation(qreal angle, const QPointF & rotPoint, bool round);
-            void deleteSelected();
 
         Q_SIGNALS:
 

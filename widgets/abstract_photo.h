@@ -47,7 +47,7 @@ namespace KIPIPhotoFramesEditor
 
             static const QColor SELECTED_ITEM_COLOR;
 
-            void setGridLines(qreal x, qreal y)
+            void setGridLines(qreal /*x*/, qreal/* y*/)
             {}
 
         protected:
@@ -61,7 +61,6 @@ namespace KIPIPhotoFramesEditor
 //            virtual void mousePressed(const QPointF & point) = 0;
 
             // Mouse events
-            virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragMoveEvent(QGraphicsSceneDragDropEvent * event);
@@ -96,10 +95,6 @@ namespace KIPIPhotoFramesEditor
 
             // Widget path
             QPainterPath m_path;
-
-            // Widgets popup menu
-            class QContextMenu;
-            static QContextMenu * menu;
 
             // Photo resizer class
             class AbstractPhotoResizer;

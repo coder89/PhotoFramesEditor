@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     models/LayersSelectionModel.cpp \
     widgets/canvas/QGraphicsSelectionItem.cpp \
     widgets/canvas/QGraphicsRotationItem.cpp \
-    widgets/canvas/QGraphicsEditionWidget.cpp
+    widgets/canvas/QGraphicsEditionWidget.cpp \
+    undo/UndoRemoveItem.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -50,7 +51,8 @@ HEADERS  += plugin/photoframeseditor.h \
     models/LayersSelectionModel.h \
     widgets/canvas/QGraphicsSelectionItem.h \
     widgets/canvas/QGraphicsRotationItem.h \
-    widgets/canvas/QGraphicsEditionWidget.h
+    widgets/canvas/QGraphicsEditionWidget.h \
+    undo/UndoRemoveItem.h
 
 LIBS += \
     -L/usr \
@@ -63,10 +65,11 @@ INCLUDEPATH += \
     widgets/canvas \
     events \
     utils \
-    models
+    models \
+    undo
 
 OTHER_FILES += \
-    plugin/photoframeseditorui.rc
+    resources/photoframeseditorui.rc
 
 RESOURCES += \
     resources/icons.qrc

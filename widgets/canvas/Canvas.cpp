@@ -1,15 +1,15 @@
 #include "Canvas.h"
-
-// Local
 #include "Scene.h"
 #include "LayersModel.h"
 #include "LayersSelectionModel.h"
+#include "UndoRemoveItem.h"
 
 using namespace KIPIPhotoFramesEditor;
 
 Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     QObject(parent),
-    m_items_group(0)
+    m_items_group(0),
+    m_undo_stack(new QUndoStack(this))
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
     m_model = new LayersModel(this);
@@ -18,6 +18,7 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     // Signals connection
     connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addItemToModel(AbstractPhoto*)));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
+    connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
    // connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT())
 }
@@ -48,10 +49,7 @@ void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 
 void Canvas::selectionChanged()
 {
-    QList<QGraphicsItem*> tempList = m_scene->selectedItems();
-    QList<AbstractPhoto*> selectedItems;
-    foreach(QGraphicsItem * temp, tempList)
-        selectedItems.append(static_cast<AbstractPhoto*>(temp));
+    QList<AbstractPhoto*> selectedItems = m_scene->selectedItems();
     QModelIndexList newSelected = m_model->itemsToIndexes(selectedItems);
     QModelIndexList oldSelected = m_selmodel->selectedIndexes();
     foreach (QModelIndex index, oldSelected)
@@ -88,5 +86,14 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
         temp = static_cast<LayersModelItem*>(index.internalPointer());
         if (!static_cast<AbstractPhoto*>(temp)->isSelected())
             static_cast<AbstractPhoto*>(temp)->setSelected(true);
+    }
+}
+
+void Canvas::removeItems(const QList<AbstractPhoto*> & items)
+{
+    foreach (AbstractPhoto * item, items)
+    {
+        UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
+        m_undo_stack->push(undo);
     }
 }

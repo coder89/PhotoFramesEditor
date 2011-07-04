@@ -20,6 +20,7 @@
 
 // KDE
 #include <kapplication.h>
+#include <kmessagebox.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -39,6 +40,7 @@ namespace KIPIPhotoFramesEditor
         {
             m_edit_widget->setZValue(1.0/0.0);
             setMode(0);
+            QObject::connect(m_edit_widget, SIGNAL(deleteSelectedItems()), parent, SLOT(removeSelectedItems()));
         }
 
         void setMode(int mode)
@@ -101,18 +103,21 @@ Scene::~Scene()
 
 //#####################################################################################################
 
-bool Scene::removeItems(const QList<QGraphicsItem *> & items)
+void Scene::removeItem(AbstractPhoto * item)
+{
+    QGraphicsScene::removeItem(item);
+}
+
+//#####################################################################################################
+
+bool Scene::removeItems(const QList<AbstractPhoto *> & items)
 {
     if (items.count() == 0)
         return false;
-    int result = QMessageBox::question(KApplication::activeWindow(),QString("Items deleting"),QString("Are you sure you want delete selected items?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-    if (result == QMessageBox::Yes)
+    int result = KMessageBox::questionYesNo(KApplication::activeWindow(),"Are you sure you want to delete selected items?",QString("Items deleting"));
+    if (result == KMessageBox::Yes)
     {
-        foreach(QGraphicsItem * item, items)
-        {
-            this->removeItem(item);
-            delete item;
-        }
+        emit itemsAboutToBeRemoved(items);
     }
     return true;
 }
@@ -132,7 +137,7 @@ void Scene::enableItemsDrawing()
 
 void Scene::disableitemsDrawing()
 {
-    this->removeItem(temp_widget);
+    this->QGraphicsScene::removeItem(temp_widget);
     delete temp_widget;
     temp_widget = 0;
     editingMode = DEFAULT_EDITING_MODE;
@@ -427,6 +432,8 @@ void Scene::updateChildernsGrid(qreal x, qreal y)
 
 void Scene::addItem(AbstractPhoto * item)
 {
+    if (item->scene() != this)
+        this->QGraphicsScene::addItem(item);
     this->children.append(item);
     item->setZValue(zIndex++);
     emit newItemAdded(item);
@@ -434,7 +441,18 @@ void Scene::addItem(AbstractPhoto * item)
 
 //#####################################################################################################
 
+QList<AbstractPhoto*> Scene::selectedItems() const
+{
+    QList<AbstractPhoto*> result;
+    const QList<QGraphicsItem*> & list = QGraphicsScene::selectedItems();
+    foreach (QGraphicsItem * item, list)
+        result << static_cast<AbstractPhoto*>(item);
+    return result;
+}
+
+//#####################################################################################################
+
 void Scene::calcSelectionBoundingRect()
 {
-    d->m_edit_widget->setSelection(this->selectedItems());
+    d->m_edit_widget->setSelection(this->QGraphicsScene::selectedItems());
 }

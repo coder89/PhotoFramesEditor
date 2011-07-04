@@ -25,6 +25,16 @@ QGraphicsEditionWidget::QGraphicsEditionWidget(QGraphicsItem * parent) :
 
 //#####################################################################################################
 
+void QGraphicsEditionWidget::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    QMenu menu;
+    QAction * deleteItems = menu.addAction("Delete selected");
+    connect(deleteItems,SIGNAL(triggered()),this,SLOT(deleteSelected()));
+    menu.exec(event->screenPos());
+}
+
+//#####################################################################################################
+
 void QGraphicsEditionWidget::setSelection(const QList<QGraphicsItem*> & itemList)
 {
     qDebug() << "--------------------------------------";
@@ -91,7 +101,15 @@ void QGraphicsEditionWidget::setRotationAngle(qreal angle, bool round)
     m_sel->setRotation(angle, m_rot_point, round);
 }
 
-void KIPIPhotoFramesEditor::QGraphicsEditionWidget::setRotationPoint(const QPointF & point)
+void QGraphicsEditionWidget::setRotationPoint(const QPointF & point)
 {
     m_rot_point = point;
+}
+
+void QGraphicsEditionWidget::deleteSelected()
+{
+    if(m_sel->boundingRect().isValid())
+    {
+        emit deleteSelectedItems();
+    }
 }

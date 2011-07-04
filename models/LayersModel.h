@@ -35,6 +35,7 @@ namespace KIPIPhotoFramesEditor
             QModelIndexList itemsToIndexes(const QList<AbstractPhoto*> & items) const;
             QModelIndex findIndex(LayersModelItem * item, const QModelIndex & parent = QModelIndex()) const;
             bool insertRows(int row, int count, const QModelIndex  & parent);
+            bool insertRow(int row, LayersModelItem * item, const QModelIndex  & parent);
             LayersModelItem * getItem(const QModelIndex &index) const;
             bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
@@ -50,8 +51,6 @@ namespace KIPIPhotoFramesEditor
             void rowsInserted(const QModelIndex & parent, int first, int last);
 
         public slots:
-
-            void addNewItem(AbstractPhoto * item, const QModelIndex & parent = QModelIndex());
 
         private:
 

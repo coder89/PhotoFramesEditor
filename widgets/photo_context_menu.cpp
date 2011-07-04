@@ -3,7 +3,7 @@
 #include <QDebug>
 namespace KIPIPhotoFramesEditor
 {
-    AbstractPhoto::QContextMenu::QContextMenu(AbstractPhoto * parent) :
+    QContextMenu::QContextMenu(AbstractPhoto * parent) :
         m_parent(0)
     {
         resize = addAction("Resize");
@@ -15,7 +15,7 @@ namespace KIPIPhotoFramesEditor
         stack_bottom = stackMenu->addAction("Bottom");
     }
 
-    void AbstractPhoto::QContextMenu::exec(AbstractPhoto * parent, const QPoint & pos)
+    void QContextMenu::exec(AbstractPhoto * parent, const QPoint & pos)
     {
         this->m_parent = parent;
         QAction * result = QMenu::exec(pos);
@@ -23,7 +23,7 @@ namespace KIPIPhotoFramesEditor
             enableResize();
     }
 
-    void AbstractPhoto::QContextMenu::enableResize()
+    void QContextMenu::enableResize()
     {
         //m_parent->map.fill(Qt::blue);
         //m_parent->setPixmap(m_parent->map);

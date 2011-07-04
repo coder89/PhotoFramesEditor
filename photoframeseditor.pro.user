@@ -36,7 +36,20 @@
       <valuelist key="Qt4ProjectManager.MakeStep.MakeArguments" type="QVariantList"/>
       <value key="Qt4ProjectManager.MakeStep.MakeCommand" type="QString"></value>
      </valuemap>
-     <value key="ProjectExplorer.BuildStepList.StepsCount" type="int">2</value>
+     <valuemap key="ProjectExplorer.BuildStepList.Step.2" type="QVariantMap">
+      <valuelist key="ProjectExplorer.ProcessStep.Arguments" type="QVariantList">
+       <value type="QString">-R</value>
+       <value type="QString">./resources</value>
+       <value type="QString">$BUILDDIR</value>
+      </valuelist>
+      <value key="ProjectExplorer.ProcessStep.Command" type="QString">cp</value>
+      <value key="ProjectExplorer.ProcessStep.Enabled" type="bool">true</value>
+      <value key="ProjectExplorer.ProcessStep.WorkingDirectory" type="QString">$SOURCEDIR</value>
+      <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Własny krok procesu</value>
+      <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
+      <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">ProjectExplorer.ProcessStep</value>
+     </valuemap>
+     <value key="ProjectExplorer.BuildStepList.StepsCount" type="int">3</value>
      <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Budowanie</value>
      <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
      <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">ProjectExplorer.BuildSteps.Build</value>

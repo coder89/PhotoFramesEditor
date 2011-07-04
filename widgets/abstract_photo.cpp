@@ -16,7 +16,6 @@
 #include <QTime>
 using namespace KIPIPhotoFramesEditor;
 
-AbstractPhoto::QContextMenu * AbstractPhoto::menu = 0;
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
 AbstractPhoto::AbstractPhoto(QGraphicsScene * parent) :
@@ -25,9 +24,6 @@ AbstractPhoto::AbstractPhoto(QGraphicsScene * parent) :
     x_grid(1),
     y_grid(1)
 {
-    if (menu == 0)
-        menu = new QContextMenu();
-
     QList<QVariant> data;
     data << "sfa" << QIcon(":eye.png") << QIcon(":padlock.png") << QString().append("Name=").append(QString::number(QTime::currentTime().msec()));
     LayersModelItem::setData(data);
@@ -68,11 +64,6 @@ void AbstractPhoto::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         painter->fillPath(m_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
     }
 
-}
-
-void AbstractPhoto::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
-{
-    menu->exec(this, event->screenPos());
 }
 
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)

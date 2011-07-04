@@ -33,6 +33,8 @@ namespace KIPIPhotoFramesEditor
                 printAction(0),
                 closeAction(0),
                 quitAction(0),
+                undoAction(0),
+                redoAction(0),
                 gridActionMenu(0),
                 showGridToggleAction(0),
                 gridConfigAction(0),
@@ -53,6 +55,10 @@ namespace KIPIPhotoFramesEditor
                 Q_DELETE(printAction)
                 Q_DELETE(closeAction)
                 Q_DELETE(quitAction)
+
+                // Edit menu
+                Q_DELETE(undoAction)
+                Q_DELETE(redoAction)
 
                 // View menu
                 Q_DELETE(gridActionMenu)
@@ -75,6 +81,10 @@ namespace KIPIPhotoFramesEditor
             KAction *   printAction;
             KAction *   closeAction;
             KAction *   quitAction;
+
+            // Edit menu
+            KAction *   undoAction;
+            KAction *   redoAction;
 
             // View menu
             KActionMenu * gridActionMenu;

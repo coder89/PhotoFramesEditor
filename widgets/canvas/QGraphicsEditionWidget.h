@@ -5,6 +5,7 @@
 #include <QPainter>
 namespace KIPIPhotoFramesEditor
 {
+    class ScenePrivate;
     class QGraphicsRotationItem;
     class QGraphicsSelectionItem;
 
@@ -37,15 +38,20 @@ namespace KIPIPhotoFramesEditor
 
         signals:
 
+            void deleteSelectedItems();
+
         public slots:
 
+            virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             void setRotationAngle(qreal angle, bool round);
             void setRotationPoint(const QPointF & point);
+            void deleteSelected();
 
         protected Q_SLOTS:
 
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
 
+            friend class ScenePrivate;
     };
 }
 

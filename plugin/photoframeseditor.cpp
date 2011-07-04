@@ -35,7 +35,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
     m_canvas(0),
     d(new PhotoFramesEditorPriv)
 {
-    setXMLFile(QApplication::applicationDirPath()+"/plugin/photoframeseditorui.rc");
+    setXMLFile(QApplication::applicationDirPath()+"/resources/photoframeseditorui.rc");
 
     setObjectName("Photo Frames Editor");
 
@@ -106,6 +106,14 @@ void PhotoFramesEditor::setupActions()
     d->quitAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_Q));
     actionCollection()->addAction("quit", d->quitAction);
     //------------------------------------------------------------------------
+    d->undoAction = KStandardAction::undo(0, 0, this);
+    d->undoAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_Z));
+    actionCollection()->addAction("undo", d->undoAction);
+    //------------------------------------------------------------------------
+    d->redoAction = KStandardAction::redo(0, 0, this);
+    d->redoAction->setShortcut(KShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Z));
+    actionCollection()->addAction("redo", d->redoAction);
+    //------------------------------------------------------------------------
     d->gridActionMenu = new KActionMenu(i18nc("Grid lines", "Grid lines"), this);
     d->gridActionMenu->setDelayed(false);
     actionCollection()->addAction("grid_lines", d->gridActionMenu);
@@ -136,6 +144,8 @@ void PhotoFramesEditor::refreshActions()
     d->printPreviewAction->setEnabled(isEnabledForCanvas);
     d->printAction->setEnabled(isEnabledForCanvas);
     d->closeAction->setEnabled(isEnabledForCanvas);
+    d->undoAction->setEnabled(isEnabledForCanvas);
+    d->redoAction->setEnabled(isEnabledForCanvas);
     d->gridActionMenu->setEnabled(isEnabledForCanvas);
 }
 
@@ -159,13 +169,23 @@ void PhotoFramesEditor::createWidgets()
 void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
 {
     if (m_canvas)
+    {
+        disconnect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),this,0);
+        disconnect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),this,0);
+        disconnect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
+        disconnect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
         m_canvas->deleteLater();
+    }
     m_canvas = new Canvas(dimension, this);
     m_canvas_widget->setCanvas(m_canvas);
     d->tree->setModel(m_canvas->model());
     d->tree->setSelectionModel(m_canvas->selectionModel());
     for (int i = d->tree->model()->columnCount()-1; i >= 0; --i)
         d->tree->resizeColumnToContents(i);
+    connect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),d->redoAction,SLOT(setEnabled(bool)));
+    connect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),d->undoAction,SLOT(setEnabled(bool)));
+    connect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(undo()));
+    connect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(redo()));
 }
 
 void PhotoFramesEditor::open()

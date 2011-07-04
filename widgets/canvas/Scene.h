@@ -41,36 +41,19 @@ namespace KIPIPhotoFramesEditor
             explicit Scene(const QRectF & dimension, QObject * parent = 0);
             ~Scene();
 
-            bool removeItems(const QList<QGraphicsItem *> & items);
+            void removeItem(AbstractPhoto * item);
+            bool removeItems(const QList<AbstractPhoto*> & items);
             void addItem(AbstractPhoto * item);
-
-            void newItem()
-            {
-                AbstractPhoto * rect;// = new AbstractPhoto(this);
-                //rect->moveBy(19,19);
-                QPainterPath mypath;
-                mypath.closeSubpath();
-                mypath.moveTo(0,0);
-                mypath.lineTo(0,600);
-                mypath.lineTo(160,300);
-                mypath.lineTo(160,600);
-                mypath.lineTo(100,200);
-                mypath.lineTo(10,100);
-                mypath.lineTo(160,400);
-                rect = new PolygonWidget(mypath, this);
-                emit newItemAdded(rect);
-                this->children.append(rect);
-                rect->setZValue(zIndex++);
-                rect->moveBy(190,190);
-            }
+            QList<AbstractPhoto*> selectedItems() const;
 
             void setMode(EditMode mode);
 
         Q_SIGNALS:
 
-            void finishEditing(const QPainterPath &);
-            void gridChanged(qreal,qreal);
-            void newItemAdded(AbstractPhoto*);
+            void finishEditing(const QPainterPath & path);
+            void gridChanged(qreal x, qreal y);
+            void newItemAdded(AbstractPhoto * item);
+            void itemsAboutToBeRemoved(const QList<AbstractPhoto*> & items);
 
         public Q_SLOTS:
 

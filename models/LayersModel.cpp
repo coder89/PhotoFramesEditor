@@ -159,16 +159,24 @@ bool LayersModel::appendItems(const QList<AbstractPhoto*> & items, const QModelI
     return true;
 }
 
-bool LayersModel::insertRows(int position, int count, const QModelIndex  &parent)
+bool LayersModel::insertRows(int position, int count, const QModelIndex  & parent)
 {
     beginInsertRows(parent,position,position+count-1);
+    LayersModelItem * parentItem = getItem(parent);
+    parentItem->insertChildren(position, 0);
     endInsertRows();
     return true;
 }
 
-void LayersModel::addNewItem(AbstractPhoto * item, const QModelIndex & parent)
+bool LayersModel::insertRow(int row, LayersModelItem * item, const QModelIndex & parent)
 {
-    insertRow(1, QModelIndex());
+    bool result = QAbstractItemModel::insertRow(row, parent);
+    if (result)
+    {
+        QModelIndex itemIndex = index(row,parent);
+        /// TODO: LAST
+    }
+    return result;
 }
 
 LayersModelItem * LayersModel::getItem(const QModelIndex &index) const
@@ -222,3 +230,4 @@ bool LayersModel::removeRows(int row, int count, const QModelIndex & parent)
     endRemoveRows();
     return result;
 }
+

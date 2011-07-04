@@ -7,6 +7,7 @@
 #include <QRectF>
 #include <QGraphicsScene>
 #include <QItemSelection>
+#include <QUndoStack>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -38,6 +39,11 @@ namespace KIPIPhotoFramesEditor
                 return m_selmodel;
             }
 
+            QUndoStack * undoStack() const
+            {
+                return m_undo_stack;
+            }
+
             operator Scene*()
             {
                 return m_scene;
@@ -46,6 +52,11 @@ namespace KIPIPhotoFramesEditor
             operator LayersModel*()
             {
                 return m_model;
+            }
+
+            operator QUndoStack*()
+            {
+                return m_undo_stack;
             }
 
             operator LayersSelectionModel*()
@@ -59,6 +70,7 @@ namespace KIPIPhotoFramesEditor
             void addItemToModel(AbstractPhoto * item);
             void selectionChanged();
             void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
+            void removeItems(const QList<AbstractPhoto*> & items);
 
         private:
 
@@ -66,6 +78,7 @@ namespace KIPIPhotoFramesEditor
             LayersModel * m_model;
             LayersSelectionModel * m_selmodel;
             QGraphicsItemGroup * m_items_group;
+            QUndoStack * m_undo_stack;
     };
 }
 

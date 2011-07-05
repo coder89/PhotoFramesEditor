@@ -34,25 +34,32 @@ namespace KIPIPhotoFramesEditor
                 LineDrawing,
             };
 
-            int zIndex;
-
         public:
 
             explicit Scene(const QRectF & dimension, QObject * parent = 0);
             ~Scene();
 
             void removeItem(AbstractPhoto * item);
-            bool removeItems(const QList<AbstractPhoto*> & items);
+            void removeItems(const QList<AbstractPhoto*> & items);
             void addItem(AbstractPhoto * item);
             QList<AbstractPhoto*> selectedItems() const;
-
             void setMode(EditMode mode);
+            const QGraphicsScene * toGraphicsScene() const
+            {
+                return this;
+            }
+            QGraphicsScene * toGraphicsScene()
+            {
+                return this;
+            }
+
 
         Q_SIGNALS:
 
             void finishEditing(const QPainterPath & path);
             void gridChanged(qreal x, qreal y);
             void newItemAdded(AbstractPhoto * item);
+            void itemAboutToBeRemoved(AbstractPhoto * item);
             void itemsAboutToBeRemoved(const QList<AbstractPhoto*> & items);
 
         public Q_SLOTS:

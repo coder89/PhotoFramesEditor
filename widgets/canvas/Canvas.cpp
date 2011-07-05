@@ -5,6 +5,9 @@
 #include "LayersSelectionModel.h"
 #include "UndoRemoveItem.h"
 
+#include <kapplication.h>
+#include <kmessagebox.h>
+
 using namespace KIPIPhotoFramesEditor;
 
 Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
@@ -19,6 +22,7 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     // Signals connection
     connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addItemToModel(AbstractPhoto*)));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
+    connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
     //connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT());
@@ -26,6 +30,7 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
 
 void Canvas::addImage(const QImage & image)
 {
+    // Read image and create pixmap
     QSize s = image.size();
     QRect r = image.rect();
     QSize sceneSize = m_scene->sceneRect().size().toSize();
@@ -37,30 +42,81 @@ void Canvas::addImage(const QImage & image)
     QPixmap pixmap(s);
     QPainter painter(&pixmap);
     painter.drawImage(r, image);
+
+    /// TODO: REMOVE AFTER TESTS!
     QPainterPath asf;
     asf.addRect(QRectF(r));
+
+    // Create & setup item
     PolygonWidget * it = new PolygonWidget(asf,0,m_scene);  /// TODO : Change to image item - NOT POLYGON!!!!
-    it->setName(image.text("File"));
+    it->setName(image.text("File"));        
     it->setZValue(m_model->rowCount());
+
+    // Add item to scene & model
     m_scene->addItem(it);
     m_model->prependItem(it);
+
+    if (m_selmodel->hasSelection())
+    {} /// TODO: add above selected
 }
 
 void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 {
 }
 
+void Canvas::removeComand(AbstractPhoto * item)
+{
+    UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
+    m_undo_stack->push(undo);
+}
+
+void Canvas::removeItem(AbstractPhoto * item)
+{
+    if (item && askAboutRemoving(1))
+        this->removeComand(item);
+}
+
 void Canvas::removeItems(const QList<AbstractPhoto*> & items)
 {
-    if (items.count() > 1)
-        m_undo_stack->beginMacro("Remove items");
-    foreach (AbstractPhoto * item, items)
+    if (askAboutRemoving(items.count()))
     {
-        UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
-        m_undo_stack->push(undo);
+        if (items.count() > 1)
+            beginRowsRemoving();
+        foreach (AbstractPhoto * item, items)
+            this->removeComand(item);
+        if (items.count() > 1)
+            endRowsRemoving();
     }
-    if (items.count() > 1)
-        m_undo_stack->endMacro();
+}
+
+void Canvas::removeSelectedRows(const QModelIndexList & selectedIndexes)
+{
+    if (askAboutRemoving(selectedIndexes.count()))
+    {
+        qDebug() << "start removing" << selectedIndexes;
+        if (selectedIndexes.count() > 1)
+            beginRowsRemoving();
+        foreach (QModelIndex index, selectedIndexes)
+        {
+            if (index.column() != LayersModelItem::NameString)
+                continue;
+            AbstractPhoto * photo = static_cast<LayersModelItem*>(index.internalPointer())->photo();
+            removeComand(photo);
+        }
+        if (selectedIndexes.count() > 1)
+            endRowsRemoving();
+    }
+}
+
+bool Canvas::askAboutRemoving(int count)
+{
+    if (count)
+    {
+        int result = KMessageBox::questionYesNo(KApplication::activeWindow(),QString("Are you sure you want to delete ").append(count).append(" selected items?"),QString("Items deleting"));
+        if (result == KMessageBox::Yes)
+            return true;
+    }
+    return false;
 }
 
 void Canvas::selectionChanged()

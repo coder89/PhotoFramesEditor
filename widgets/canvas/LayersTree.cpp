@@ -114,25 +114,7 @@ void LayersTree::contextMenuEvent(QContextMenuEvent * event)
 
 void LayersTree::removeSelectedRows()
 {
-    QModelIndexList indexList = this->selectedIndexes();
-    QMap<QModelIndex,QList<int> > map;
-    foreach (QModelIndex index, indexList)
-    {
-        if (index.isValid() && index.column() == 0)
-        {
-            QList<int> list = map.value(index.parent());
-            list.append(index.row());
-            map.insert(index.parent(),list);
-        }
-    }
-    QList<QModelIndex> parents = map.keys();
-    foreach (QModelIndex parent, parents)
-    {
-        QList<int> list = map.value(parent);
-        qSort(list);
-        for (int i = list.size()-1; i >= 0; --i)
-            this->model()->removeRow(list[i], parent);
-    }
+    emit selectedRowsAboutToBeRemoved(this->selectedIndexes());
 }
 
 void LayersTree::moveSelectedRowsUp()

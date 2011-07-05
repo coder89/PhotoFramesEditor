@@ -32,6 +32,8 @@ namespace KIPIPhotoFramesEditor
 
         signals:
 
+            void selectedRowsAboutToBeRemoved(const QModelIndexList & selectedIndexes);
+
         protected:
 
             void contextMenuEvent(QContextMenuEvent * event);

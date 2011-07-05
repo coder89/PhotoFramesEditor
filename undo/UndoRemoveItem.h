@@ -3,6 +3,7 @@
 
 #include <QUndoCommand>
 #include <QModelIndex>
+#include <QGraphicsItem>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -14,7 +15,7 @@ namespace KIPIPhotoFramesEditor
     {
             AbstractPhoto * m_item;
             AbstractPhoto * m_parentItem;
-            Scene * m_scene;
+            QGraphicsScene * m_scene;
             LayersModel * m_model;
             QModelIndex m_parentIndex;
             QModelIndex m_itemIndex;
@@ -25,6 +26,11 @@ namespace KIPIPhotoFramesEditor
             UndoRemoveItem(AbstractPhoto * item, Scene * scene, LayersModel * model, QUndoCommand * parent = 0);
             virtual void redo();
             virtual void undo();
+
+        private:
+
+            void appendChild(AbstractPhoto * item, const QModelIndex & parent);
+            static bool compareGraphicsItems(QGraphicsItem * i1, QGraphicsItem * i2);
     };
 }
 

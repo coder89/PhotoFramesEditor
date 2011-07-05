@@ -174,6 +174,7 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
         disconnect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),this,0);
         disconnect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
         disconnect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
+        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved(QModelIndexList)),m_canvas,0);
         m_canvas->deleteLater();
     }
     m_canvas = new Canvas(dimension, this);
@@ -186,6 +187,7 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),d->undoAction,SLOT(setEnabled(bool)));
     connect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(undo()));
     connect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(redo()));
+    connect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved(QModelIndexList)),m_canvas,SLOT(removeSelectedRows(QModelIndexList)));
 }
 
 void PhotoFramesEditor::open()

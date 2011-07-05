@@ -69,14 +69,38 @@ namespace KIPIPhotoFramesEditor
             void addImage(const QImage & image);
             void addItemToModel(AbstractPhoto * item);
 
-            /// Remove items selected on scene (remove from scene & model + create undo command)
+            /// Create undo/redo command
+            void removeComand(AbstractPhoto * item);
+
+            /// Remove item selected on scene (remove from scene & model + create undo commands)
+            void removeItem(AbstractPhoto * item);
+
+            /// Remove items selected on scene (remove from scene & model + create undo commands)
             void removeItems(const QList<AbstractPhoto*> & items);
+
+            /// Remove items selected on model (remove from model & scene + create undo command)
+            void removeSelectedRows(const QModelIndexList & selectedIndexes);
+
+            /// Shows confirm dialog
+            bool askAboutRemoving(int count);
 
             /// Select items on model (synchronize model with scene)
             void selectionChanged();
 
             /// Select items on scene (synchronize scene with model)
             void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
+
+            /// Groups operations into one undo operation
+            void beginRowsRemoving()
+            {
+                m_undo_stack->beginMacro("Remove items");
+            }
+
+            /// Finish group of undo operations
+            void endRowsRemoving()
+            {
+                m_undo_stack->endMacro();
+            }
 
         private:
 

@@ -64,7 +64,6 @@ namespace KIPIPhotoFramesEditor
 Scene::Scene(const QRectF & dimension, QObject * parent) :
     QGraphicsScene(dimension, parent),
     d(new ScenePrivate(this)),
-    zIndex(0),
     shadow(0),
     x_grid(0),
     y_grid(0),
@@ -75,7 +74,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     if (1)                                            /// TODO : personalization of default canvas background
     {
         shadow = new QGraphicsRectItem(dimension, 0,this);
-        shadow->setZValue(zIndex++);
+        shadow->setZValue(-1.0/0.0);
         shadow->setBrush(Qt::white);
         shadow->setPen(QPen(Qt::white, 0));
     }
@@ -105,21 +104,14 @@ Scene::~Scene()
 
 void Scene::removeItem(AbstractPhoto * item)
 {
-    QGraphicsScene::removeItem(item);
+    emit itemAboutToBeRemoved(item);
 }
 
 //#####################################################################################################
 
-bool Scene::removeItems(const QList<AbstractPhoto *> & items)
+void Scene::removeItems(const QList<AbstractPhoto *> & items)
 {
-    if (items.count() == 0)
-        return false;
-    int result = KMessageBox::questionYesNo(KApplication::activeWindow(),"Are you sure you want to delete selected items?",QString("Items deleting"));
-    if (result == KMessageBox::Yes)
-    {
-        emit itemsAboutToBeRemoved(items);
-    }
-    return true;
+    emit itemsAboutToBeRemoved(items);
 }
 
 //#####################################################################################################
@@ -129,7 +121,7 @@ void Scene::enableItemsDrawing()
     this->editingMode = LineDrawing;
     temp_path = QPainterPath();
     this->temp_widget = new QGraphicsPathItem(temp_path);
-    temp_widget->setZValue(zIndex++);
+    //temp_widget->setZValue(zIndex++);
     QGraphicsScene::addItem(temp_widget);
 }
 
@@ -171,11 +163,12 @@ void Scene::keyPressEvent(QKeyEvent * event)
     switch(event->key())
     {
         case Qt::Key_Delete:
-            if (this->removeItems(selectedItems()))
-                event->accept();
+            this->removeItems(selectedItems());
+            event->accept();
             break;
         case Qt::Key_Escape:
             disableitemsDrawing();
+            break;
     }
     if (event->isAccepted())
         return;

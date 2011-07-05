@@ -34,7 +34,7 @@ LayersModelItem::LayersModelItem() :
 
 LayersModelItem::~LayersModelItem()
 {
-    qDebug() << "DELETE ITEM!";
+    //qDebug() << "DELETE ITEM!";
     foreach (LayersModelItem * child, childItems)
         delete child;
 }
@@ -43,14 +43,14 @@ void LayersModelItem::removeChild(LayersModelItem * child)
 {
     if (child && child->parent() == this)
     {
-        qDebug() << "removeChild" << "OK";
+        //qDebug() << "removeChild" << "OK";
         child->setParent(0);
     }
 }
 
 LayersModelItem * LayersModelItem::parent() const
 {
-    qDebug() << "parent" << parentItem;
+    //qDebug() << "parent" << parentItem;
     return parentItem;
 }
 
@@ -58,28 +58,28 @@ int LayersModelItem::row() const
 {
     if (parentItem)
     {
-        qDebug() << "row" << parentItem->childItems.indexOf(const_cast<LayersModelItem*>(this));
+        //qDebug() << "row" << parentItem->childItems.indexOf(const_cast<LayersModelItem*>(this));
         return parentItem->childItems.indexOf(const_cast<LayersModelItem*>(this));
     }
-    qDebug() << "row" << 0;
+    //qDebug() << "row" << 0;
     return 0;
 }
 
 int LayersModelItem::columnCount() const
 {
-    qDebug() << "columnCoount" << COLUMN_COUNT;
+    //qDebug() << "columnCoount" << COLUMN_COUNT;
     return COLUMN_COUNT;
 }
 
 int LayersModelItem::childCount() const
 {
-    qDebug() << "childCount" << childItems.count();
+    //qDebug() << "childCount" << childItems.count();
     return childItems.count();
 }
 
 LayersModelItem * LayersModelItem::child(int row) const
 {
-    qDebug() << "child" << childItems.value(row);
+    //qDebug() << "child" << childItems.value(row);
     return childItems.value(row);
 }
 
@@ -87,16 +87,16 @@ void LayersModelItem::setParent(LayersModelItem * parent)
 {
     if (parent == this->parentItem)
     {
-        qDebug() << "setParent" << "No parent";
+        //qDebug() << "setParent" << "No parent";
         return;
     }
     if (parentItem)
     {
-        qDebug() << "setParent" << "clear" << parentItem;
+        //qDebug() << "setParent" << "clear" << parentItem;
         parentItem->removeChild(this);
     }
     this->parentItem = parent;
-    qDebug() << "setParent" << parentItem;
+    //qDebug() << "setParent" << parentItem;
     if (parent && !parent->childItems.contains(this))
         parent->childItems.prepend(this);
     this->QObject::setParent(parent);
@@ -124,7 +124,7 @@ bool LayersModelItem::setData(const QVariant & data, int type)
 
 QVariant LayersModelItem::data(int column) const
 {
-    qDebug() << "data" << this << column;
+    //qDebug() << "data" << this << column;
     if (column == LayersModelItem::NameString)
         return itemPhoto ? itemPhoto->name() : "Name";
     else
@@ -133,7 +133,7 @@ QVariant LayersModelItem::data(int column) const
 
 QList<QVariant> LayersModelItem::data() const
 {
-    qDebug() << "data" << this << "all";
+    //qDebug() << "data" << this << "all";
     QList<QVariant> result;
     for(int i = 0; i < COLUMN_COUNT; ++i)
         result << data(i);
@@ -142,10 +142,10 @@ QList<QVariant> LayersModelItem::data() const
 
 bool LayersModelItem::insertChildren(int position, LayersModelItem * item)
 {
-    qDebug() << "insertChildern" << position << item;
+    //qDebug() << "insertChildern" << position << item;
     if (position < 0 || position > childItems.size())
         return false;
-    qDebug() << "dodajemy";
+    //qDebug() << "dodajemy";
     childItems.insert(position, item);
     if (item != 0)
         item->setParent(this);
@@ -154,11 +154,11 @@ bool LayersModelItem::insertChildren(int position, LayersModelItem * item)
 
 bool LayersModelItem::removeChildren(int position, int count)
 {
-    qDebug() << "removeChildren" << position << count;
+    //qDebug() << "removeChildren" << position << count;
     if (position < 0 || position + count > childItems.size())
         return false;
 
-    qDebug() << "usuwamy";
+    //qDebug() << "usuwamy";
     for (int row = 0; row < count; ++row)
         delete childItems.takeAt(position);
 

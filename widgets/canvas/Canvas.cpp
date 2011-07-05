@@ -22,7 +22,6 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
     //connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT());
-    this->addImage(QImage());
 }
 
 void Canvas::addImage(const QImage & image)
@@ -42,6 +41,7 @@ void Canvas::addImage(const QImage & image)
     asf.addRect(QRectF(r));
     PolygonWidget * it = new PolygonWidget(asf,0,m_scene);  /// TODO : Change to image item - NOT POLYGON!!!!
     it->setName(image.text("File"));
+    it->setZValue(m_model->rowCount());
     m_scene->addItem(it);
     m_model->prependItem(it);
 }
@@ -52,17 +52,15 @@ void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 
 void Canvas::removeItems(const QList<AbstractPhoto*> & items)
 {
-    qDebug() << "item remowe";
-    this->addImage(QImage());
-//    if (items.count() > 1)
-//        m_undo_stack->beginMacro("Remove items");
-//    foreach (AbstractPhoto * item, items)
-//    {
-//        UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
-//        m_undo_stack->push(undo);
-//    }
-//    if (items.count() > 1)
-//        m_undo_stack->endMacro();
+    if (items.count() > 1)
+        m_undo_stack->beginMacro("Remove items");
+    foreach (AbstractPhoto * item, items)
+    {
+        UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
+        m_undo_stack->push(undo);
+    }
+    if (items.count() > 1)
+        m_undo_stack->endMacro();
 }
 
 void Canvas::selectionChanged()

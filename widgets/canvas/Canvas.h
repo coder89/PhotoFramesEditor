@@ -68,9 +68,15 @@ namespace KIPIPhotoFramesEditor
 
             void addImage(const QImage & image);
             void addItemToModel(AbstractPhoto * item);
-            void selectionChanged();
-            void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
+
+            /// Remove items selected on scene (remove from scene & model + create undo command)
             void removeItems(const QList<AbstractPhoto*> & items);
+
+            /// Select items on model (synchronize model with scene)
+            void selectionChanged();
+
+            /// Select items on scene (synchronize scene with model)
+            void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
 
         private:
 

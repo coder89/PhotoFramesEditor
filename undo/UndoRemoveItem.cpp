@@ -17,27 +17,19 @@ UndoRemoveItem::UndoRemoveItem(AbstractPhoto * item, Scene * scene, LayersModel 
 
 void UndoRemoveItem::redo()
 {
-//    m_parentIndex = m_model->findIndex(m_parentItem);
-//    qDebug() << m_parentIndex.isValid();
-//    m_itemIndex = m_model->findIndex(m_item, m_parentIndex);
-//    qDebug() << m_itemIndex.isValid();
-//    m_row = m_itemIndex.row();
-//    if (m_itemIndex.isValid())
-//        m_model->removeRow(0,m_parentIndex);
-//    //m_scene->removeItem(m_item);
-//    qDebug() << "redo";
+    m_parentIndex = m_model->findIndex(m_parentItem);
+    m_itemIndex = m_model->findIndex(m_item, m_parentIndex);
+    m_row = m_itemIndex.row();
+    if (m_itemIndex.isValid())
+        m_model->removeRow(m_row,m_parentIndex);
+    m_scene->removeItem(m_item);
 }
 
 void UndoRemoveItem::undo()
 {
-//    qDebug() << "undo";
-//    //m_parentIndex = m_model->findIndex(m_parentItem);
-
-//   // qDebug() << m_parentIndex.isValid();
-//   // m_scene->addItem(m_item);
-//    //m_item->setParentItem(m_parentItem);
-//    m_model->prependItem(m_item);
-//    //if (m_model->insertRows(m_row,10,m_parentIndex))
-//    //    static_cast<LayersModelItem*>(m_model->index(m_row,0,m_parentIndex).internalPointer())->setPhoto(m_item);
-//    qDebug() << m_model->rowCount();
+    m_parentIndex = m_model->findIndex(m_parentItem);
+    m_scene->addItem(m_item);
+    m_item->setParentItem(m_parentItem);
+    if (m_model->insertRow(m_row,m_parentIndex))
+        static_cast<LayersModelItem*>(m_model->index(m_row,0,m_parentIndex).internalPointer())->setPhoto(m_item);
 }

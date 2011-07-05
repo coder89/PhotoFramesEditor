@@ -172,6 +172,7 @@ bool LayersModel::insertRows(int position, int count, const QModelIndex  & paren
     for (;count;--count)
         result &= parentItem->insertChildren(position, new LayersModelItem());
     endInsertRows();
+    emit layoutChanged();
     return result;
 }
 
@@ -244,5 +245,6 @@ bool LayersModel::removeRows(int row, int count, const QModelIndex & parent)
     beginRemoveRows(parent, row, row+count-1);
     bool result = parentItem->removeChildren(row, count);
     endRemoveRows();
+    emit layoutChanged();
     return result;
 }

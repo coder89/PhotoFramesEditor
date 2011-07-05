@@ -435,7 +435,6 @@ void Scene::addItem(AbstractPhoto * item)
     if (item->scene() != this)
         this->QGraphicsScene::addItem(item);
     this->children.append(item);
-    item->setZValue(zIndex++);
     emit newItemAdded(item);
 }
 

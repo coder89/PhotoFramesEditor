@@ -3,6 +3,7 @@
 #include <QtGui/QApplication>
 #include <QDesktopWidget>
 #include <QResource>
+#include <qmath.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -13,7 +14,8 @@ int main(int argc, char *argv[])
 
     PhotoFramesEditor * w = PhotoFramesEditor::instancePhotoFramesEditor(0);
     w->setAttribute(Qt::WA_DeleteOnClose, true);
-    w->resize(QApplication::desktop()->width()-500,QApplication::desktop()->height()-200);
+    int height = QApplication::desktop()->height()-500;
+    w->resize(round(height*16.0/9.0),height);
     QDesktopWidget * d = a.desktop();
     w->move(d->rect().center()-w->frameGeometry().center());
     w->show();

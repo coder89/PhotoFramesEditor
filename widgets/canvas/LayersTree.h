@@ -30,10 +30,6 @@ namespace KIPIPhotoFramesEditor
 
         public Q_SLOTS:
 
-            void hide(SwitchableIcon * icon);
-            void lock(SwitchableIcon * icon);
-            void headerSectionClicked(int section);
-
         signals:
 
         protected:
@@ -42,9 +38,6 @@ namespace KIPIPhotoFramesEditor
 
         protected Q_SLOTS:
 
-            void rowsInserted(const QModelIndex & parent, int start, int end);
-            void setRowWidgets(const QModelIndex & parent, int row);
-            void setupRowsWidgets(const QModelIndex & parent = QModelIndex());
             void removeSelectedRows();
             void moveSelectedRowsUp();
             void moveSelectedRowsDown();

@@ -185,6 +185,7 @@ void CanvasWidget::setCanvas(Canvas * canvas)
     connect(this, SIGNAL(toggleGrid(bool)), canvas->scene(), SLOT(setGridVisible(bool)));
 
     QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
+    img.setText("File","routing.jpg");
     m_canvas->addImage(img);                                /// TODO : Remove after finish
     m_canvas->addImage(img);                                /// TODO : Remove after finish
     m_canvas->addImage(img);                                /// TODO : Remove after finish

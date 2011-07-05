@@ -32,10 +32,12 @@ namespace KIPIPhotoFramesEditor
             bool appendItem(AbstractPhoto * item, const QModelIndex & parent = QModelIndex());
             bool prependItem(AbstractPhoto * item, const QModelIndex & parent = QModelIndex());
             bool appendItems(const QList<AbstractPhoto*> & items, const QModelIndex & parent);
+            bool prependItems(const QList<AbstractPhoto*> & items, const QModelIndex & parent);
             QModelIndexList itemsToIndexes(const QList<AbstractPhoto*> & items) const;
+            QModelIndex findIndex(AbstractPhoto * item, const QModelIndex & parent = QModelIndex()) const;
             QModelIndex findIndex(LayersModelItem * item, const QModelIndex & parent = QModelIndex()) const;
             bool insertRows(int row, int count, const QModelIndex  & parent);
-            bool insertRow(int row, LayersModelItem * item, const QModelIndex  & parent);
+           // bool insertRow(int row, LayersModelItem * item, const QModelIndex  & parent);
             LayersModelItem * getItem(const QModelIndex &index) const;
             bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 

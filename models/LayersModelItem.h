@@ -2,21 +2,27 @@
 #define MOTELITEM_H
 
 #include <QObject>
+#include <QDebug>
 
 namespace KIPIPhotoFramesEditor
 {
+    class AbstractPhoto;
+
     class LayersModelItem : public QObject
     {
             Q_OBJECT
 
+            static const int COLUMN_COUNT = 4;
+
         public:
 
-            enum DataType
+            enum
             {
-                PadLockIcon, EyeIcon, NameString = 3,
+                EyeIcon = 1, PadLockIcon, NameString = COLUMN_COUNT-1,
             };
 
-            LayersModelItem(const QList<QVariant> & data, LayersModelItem * parent = 0);
+            LayersModelItem(AbstractPhoto * item, LayersModelItem * parent = 0);
+            LayersModelItem();
             virtual ~LayersModelItem();
             void removeChild(LayersModelItem * child);
             LayersModelItem * parent() const;
@@ -29,7 +35,15 @@ namespace KIPIPhotoFramesEditor
             QList<QVariant> data() const;
             bool insertChildren(int position, LayersModelItem * item);
             bool removeChildren(int position, int count);
-            bool setData(const QVariant & data, DataType type);
+            bool setData(const QVariant & data, int type);
+            void setPhoto(AbstractPhoto * photo)
+            {
+                this->itemPhoto = photo;
+            }
+            AbstractPhoto * photo() const
+            {
+                return this->itemPhoto;
+            }
 
         public Q_SLOTS:
 
@@ -45,14 +59,13 @@ namespace KIPIPhotoFramesEditor
 
         protected:
 
-            LayersModelItem();
             void setData(const QList<QVariant> & data);
 
         private:
 
             LayersModelItem * parentItem;
             QList<LayersModelItem*> childItems;
-            QList<QVariant> itemData;
+            AbstractPhoto * itemPhoto;
     };
 }
 

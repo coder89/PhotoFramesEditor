@@ -1,6 +1,7 @@
 #include "Canvas.h"
 #include "Scene.h"
 #include "LayersModel.h"
+#include "LayersModelItem.h"
 #include "LayersSelectionModel.h"
 #include "UndoRemoveItem.h"
 
@@ -20,7 +21,8 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
-   // connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT())
+    //connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT());
+    this->addImage(QImage());
 }
 
 void Canvas::addImage(const QImage & image)
@@ -38,13 +40,29 @@ void Canvas::addImage(const QImage & image)
     painter.drawImage(r, image);
     QPainterPath asf;
     asf.addRect(QRectF(r));
-    PolygonWidget * it = new PolygonWidget(asf,0,m_scene);
+    PolygonWidget * it = new PolygonWidget(asf,0,m_scene);  /// TODO : Change to image item - NOT POLYGON!!!!
+    it->setName(image.text("File"));
     m_scene->addItem(it);
     m_model->prependItem(it);
 }
 
 void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 {
+}
+
+void Canvas::removeItems(const QList<AbstractPhoto*> & items)
+{
+    qDebug() << "item remowe";
+    this->addImage(QImage());
+//    if (items.count() > 1)
+//        m_undo_stack->beginMacro("Remove items");
+//    foreach (AbstractPhoto * item, items)
+//    {
+//        UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
+//        m_undo_stack->push(undo);
+//    }
+//    if (items.count() > 1)
+//        m_undo_stack->endMacro();
 }
 
 void Canvas::selectionChanged()
@@ -54,13 +72,13 @@ void Canvas::selectionChanged()
     QModelIndexList oldSelected = m_selmodel->selectedIndexes();
     foreach (QModelIndex index, oldSelected)
     {
-        if (!newSelected.contains(index) && index.column() == 0)
-            m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Deselect);
+        if (!newSelected.contains(index) && index.column() == LayersModelItem::NameString)
+            m_selmodel->select(index, QItemSelectionModel::Deselect);
     }
     foreach(QModelIndex index, newSelected)
     {
-        if (!m_selmodel->isSelected(index) && index.column() == 0)
-            m_selmodel->select(index,QItemSelectionModel::Rows | QItemSelectionModel::Select);
+        if (!m_selmodel->isSelected(index) && index.column() == LayersModelItem::NameString)
+            m_selmodel->select(index, QItemSelectionModel::Select);
     }
 }
 
@@ -72,28 +90,19 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
     QSet<QModelIndex> deselected = oldSel.toSet().subtract(newSel.toSet());
     foreach (QModelIndex index, deselected)
     {
-        if (index.column() != 0)
+        if (index.column() != LayersModelItem::NameString)
             continue;
         temp = static_cast<LayersModelItem*>(index.internalPointer());
-        if (static_cast<AbstractPhoto*>(temp)->isSelected())
-            static_cast<AbstractPhoto*>(temp)->setSelected(false);
+        if (temp->photo() && temp->photo()->isSelected())
+            temp->photo()->setSelected(false);
     }
     QSet<QModelIndex> selected = newSel.toSet().subtract(oldSel.toSet());
     foreach (QModelIndex index, selected)
     {
-        if (index.column() != 0)
+        if (index.column() != LayersModelItem::NameString)
             continue;
         temp = static_cast<LayersModelItem*>(index.internalPointer());
-        if (!static_cast<AbstractPhoto*>(temp)->isSelected())
-            static_cast<AbstractPhoto*>(temp)->setSelected(true);
-    }
-}
-
-void Canvas::removeItems(const QList<AbstractPhoto*> & items)
-{
-    foreach (AbstractPhoto * item, items)
-    {
-        UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
-        m_undo_stack->push(undo);
+        if (temp->photo() && !temp->photo()->isSelected())
+            temp->photo()->setSelected(true);
     }
 }

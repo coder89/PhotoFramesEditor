@@ -20,14 +20,8 @@ const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
 AbstractPhoto::AbstractPhoto(QGraphicsScene * parent) :
     QGraphicsPixmapItem(0,parent),
-    LayersModelItem(),
-    x_grid(1),
-    y_grid(1)
+    m_name("New layer")
 {
-    QList<QVariant> data;
-    data << "sfa" << QIcon(":eye.png") << QIcon(":padlock.png") << QString().append("Name=").append(QString::number(QTime::currentTime().msec()));
-    LayersModelItem::setData(data);
-
     //this->setAcceptDrops(true);
     this->setAcceptHoverEvents(true);
 }

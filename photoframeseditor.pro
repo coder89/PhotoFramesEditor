@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     widgets/canvas/QGraphicsSelectionItem.cpp \
     widgets/canvas/QGraphicsRotationItem.cpp \
     widgets/canvas/QGraphicsEditionWidget.cpp \
-    undo/UndoRemoveItem.cpp
+    undo/UndoRemoveItem.cpp \
+    widgets/canvas/LayersTreeDelegate.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -52,7 +53,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/canvas/QGraphicsSelectionItem.h \
     widgets/canvas/QGraphicsRotationItem.h \
     widgets/canvas/QGraphicsEditionWidget.h \
-    undo/UndoRemoveItem.h
+    undo/UndoRemoveItem.h \
+    widgets/canvas/LayersTreeDelegate.h
 
 LIBS += \
     -L/usr \

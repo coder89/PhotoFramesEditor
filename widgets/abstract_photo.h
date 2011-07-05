@@ -11,7 +11,6 @@
 
 // Local
 #include "canvasmouseevent.h"
-#include "LayersModelItem.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -19,8 +18,10 @@ namespace KIPIPhotoFramesEditor
     class WidgetsFactory;
     class LayersModelItem;
 
-    class AbstractPhoto : public QGraphicsPixmapItem, public LayersModelItem
+    class AbstractPhoto : public QGraphicsPixmapItem
     {
+            QString m_name;
+
         public:
 
             void setupWidget(const QPainterPath & path);
@@ -49,6 +50,19 @@ namespace KIPIPhotoFramesEditor
 
             void setGridLines(qreal /*x*/, qreal/* y*/)
             {}
+
+            /// Sets name of layer
+            void setName(const QString & name)
+            {
+                if (name.isEmpty())
+                    return;
+                m_name = name;
+            }
+            /// Gets name of layer
+            QString name() const
+            {
+                return m_name;
+            }
 
         protected:
 

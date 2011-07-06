@@ -189,6 +189,12 @@ void CanvasWidget::setCanvas(Canvas * canvas)
     m_canvas->addImage(img);                                /// TODO : Remove after finish
     m_canvas->addImage(img);                                /// TODO : Remove after finish
     m_canvas->addImage(img);                                /// TODO : Remove after finish
+    m_canvas->addImage(img);                                /// TODO : Remove after finish
+    m_canvas->addImage(img);                                /// TODO : Remove after finish
+    m_canvas->addImage(img);                                /// TODO : Remove after finish
+    m_canvas->addImage(img);                                /// TODO : Remove after finish
+    m_canvas->addImage(img);                                /// TODO : Remove after finish
+    m_canvas->addImage(img);                                /// TODO : Remove after finish
 }
 
 //#####################################################################################################

@@ -152,9 +152,9 @@ void PhotoFramesEditor::refreshActions()
 void PhotoFramesEditor::createWidgets()
 {
     QDockWidget * treeWidget = new QDockWidget("Layers", this);
-    treeWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    treeWidget->setFeatures(QDockWidget::DockWidgetMovable);
     treeWidget->setFloating(false);
-    treeWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    treeWidget->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
     d->tree = new LayersTree(this);
     d->tree->setAnimated(true);
     treeWidget->setWidget(d->tree);
@@ -174,9 +174,9 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
         disconnect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),this,0);
         disconnect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
         disconnect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
-        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved(QModelIndexList)),m_canvas,0);
-        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp(QModelIndexList)),m_canvas,0);
-        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown(QModelIndexList)),m_canvas,0);
+        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,0);
+        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,0);
+        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,0);
         m_canvas->deleteLater();
     }
     m_canvas = new Canvas(dimension, this);
@@ -189,9 +189,9 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),d->undoAction,SLOT(setEnabled(bool)));
     connect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(undo()));
     connect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(redo()));
-    connect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved(QModelIndexList)),m_canvas,SLOT(removeSelectedRows(QModelIndexList)));
-    connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp(QModelIndexList)),m_canvas,SLOT(moveSelectedRowsUp(QModelIndexList)));
-    connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown(QModelIndexList)),m_canvas,SLOT(moveSelectedRowsDown(QModelIndexList)));
+    connect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,SLOT(removeSelectedRows()));
+    connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,SLOT(moveSelectedRowsUp()));
+    connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,SLOT(moveSelectedRowsDown()));
 }
 
 void PhotoFramesEditor::open()

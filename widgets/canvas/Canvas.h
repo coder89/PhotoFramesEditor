@@ -9,6 +9,9 @@
 #include <QItemSelection>
 #include <QUndoStack>
 
+// KDE
+#include <klocalizedstring.h>
+
 namespace KIPIPhotoFramesEditor
 {
     class Scene;
@@ -69,29 +72,26 @@ namespace KIPIPhotoFramesEditor
             void addImage(const QImage & image);
             void addItemToModel(AbstractPhoto * item);
 
-            /// Create undo/redo command
-            void moveUpCommand();
-
-            /// Create undo/redo command
-            void moveDownCommand();
+            /// Creates move rows command and pushes it onto the stack
+            void moveRowsCommand(const QModelIndex & startIndex, int count, const QModelIndex & parentIndex, int move, const QModelIndex & destinationParent);
 
             /// Move selected items up on scene & model. (Called by layers tree)
-            void moveSelectedRowsUp(const QModelIndexList & selectedIndexes);
+            void moveSelectedRowsUp();
 
             /// Move selected items down on scene & model. (Called by layers tree)
-            void moveSelectedRowsDown(const QModelIndexList & selectedIndexes);
+            void moveSelectedRowsDown();
 
             /// Create undo/redo command
             void removeComand(AbstractPhoto * item);
 
-            /// Remove item selected on scene (remove from scene & model + create undo commands)
+            /// Remove item selected on scene (remove from scene & model => calls removeComand())
             void removeItem(AbstractPhoto * item);
 
-            /// Remove items selected on scene (remove from scene & model + create undo commands)
+            /// Remove items selected on scene (remove from scene & model => calls removeComand())
             void removeItems(const QList<AbstractPhoto*> & items);
 
-            /// Remove items selected on model (remove from model & scene + create undo command)
-            void removeSelectedRows(const QModelIndexList & selectedIndexes);
+            /// Remove items selected on model (remove from model & scene => calls removeComand())
+            void removeSelectedRows();
 
             /// Shows confirm dialog
             bool askAboutRemoving(int count);
@@ -105,7 +105,7 @@ namespace KIPIPhotoFramesEditor
             /// Groups operations into one undo operation
             void beginRowsRemoving()
             {
-                m_undo_stack->beginMacro("Remove items");
+                m_undo_stack->beginMacro(i18n("Remove items"));
             }
 
             /// Finish group of undo operations

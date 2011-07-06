@@ -32,9 +32,9 @@ namespace KIPIPhotoFramesEditor
 
         signals:
 
-            void selectedRowsAboutToBeRemoved(const QModelIndexList & selectedIndexes);
-            void selectedRowsAboutToBeMovedUp(const QModelIndexList & selectedIndexes);
-            void selectedRowsAboutToBeMovedDown(const QModelIndexList & selectedIndexes);
+            void selectedRowsAboutToBeRemoved();
+            void selectedRowsAboutToBeMovedUp();
+            void selectedRowsAboutToBeMovedDown();
 
         protected:
 

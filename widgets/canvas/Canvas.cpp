@@ -4,6 +4,7 @@
 #include "LayersModelItem.h"
 #include "LayersSelectionModel.h"
 #include "UndoRemoveItem.h"
+#include "UndoMoveRowsCommand.h"
 
 #include <kapplication.h>
 #include <kmessagebox.h>
@@ -50,7 +51,7 @@ void Canvas::addImage(const QImage & image)
     // Create & setup item
     PolygonWidget * it = new PolygonWidget(asf,0,m_scene);  /// TODO : Change to image item - NOT POLYGON!!!!
     it->setName(image.text("File").append(QString::number(m_model->rowCount())));
-    it->setZValue(m_model->rowCount());
+    it->setZValue(m_model->rowCount()+1);
 
     // Add item to scene & model
     m_scene->addItem(it);
@@ -65,28 +66,133 @@ void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 }
 
 /** ##########################################################################################################################
- * Creates item move up command and push it to the undo stack
- #############################################################################################################################*/
-void Canvas::moveUpCommand()
-{}
-
-/** ##########################################################################################################################
  * Creates item move down command and push it to the undo stack
  #############################################################################################################################*/
-void Canvas::moveDownCommand()
-{}
+void Canvas::moveRowsCommand(const QModelIndex & startIndex, int count, const QModelIndex & parentIndex, int move, const QModelIndex & destinationParent)
+{
+    int destination = startIndex.row();
+    if (move > 0)
+        destination += count + move;
+    else if (move < 0)
+        destination += move;
+    else
+        return;
+    UndoMoveRowsCommand * undo = new UndoMoveRowsCommand(startIndex.row(), count, parentIndex, destination, destinationParent, m_model);
+    m_undo_stack->push(undo);
+}
 
 /** ##########################################################################################################################
  * Move selected items up on scene & model. (Called by layers tree)
  #############################################################################################################################*/
-void Canvas::moveSelectedRowsUp(const QModelIndexList & selectedIndexes)
-{}
+void Canvas::moveSelectedRowsUp()
+{
+    QModelIndexList selectedRows = m_selmodel->selectedRows();
+    if (!selectedRows.count())
+    {
+#ifdef  QT_DEBUG
+        qDebug() << "No items selected to move!";
+#endif
+        return;
+    }
+    // Check continuity of selection
+    QModelIndexList::iterator it = selectedRows.begin();
+    QModelIndex startIndex = *it;
+    if (startIndex.isValid())
+    {
+        int minRow = startIndex.row();
+        int maxRow = startIndex.row();
+        int sumRows = startIndex.row();
+        for(++it; it != selectedRows.end(); ++it)
+        {
+            if (startIndex.parent() != it->parent())
+            {
+#ifdef  QT_DEBUG
+                qDebug() << "Different parents of items!\n" << selectedRows;
+#endif
+                return;
+            }
+            else if (!it->isValid())
+            {
+#ifdef  QT_DEBUG
+                qDebug() << "Invalid items!\n" << selectedRows;
+#endif
+                return;
+            }
+            if (it->row() < minRow)
+            {
+                startIndex = *it;
+                minRow = it->row();
+            }
+            if (it->row() > maxRow)
+                maxRow = it->row();
+            sumRows += it->row();
+        }
+        if ((((minRow+maxRow)*(maxRow-minRow+1))/2.0) != sumRows)
+        {
+#ifdef  QT_DEBUG
+        qDebug() << "Unordered items!\n" << selectedRows;
+#endif
+            return;
+        }
+        if (minRow) // It means "is there any space before starting index to move selection"
+            moveRowsCommand(startIndex, selectedRows.count(), startIndex.parent(), -1, startIndex.parent());
+    }
+    this->selectionChanged();
+}
 
 /** ##########################################################################################################################
  * Move selected items down on scene & model. (Called by layers tree)
  #############################################################################################################################*/
-void Canvas::moveSelectedRowsDown(const QModelIndexList & selectedIndexes)
-{}
+void Canvas::moveSelectedRowsDown()
+{
+    QModelIndexList selectedRows = m_selmodel->selectedRows();
+    if (!selectedRows.count())
+        return;
+    // Check continuity of selection
+    QModelIndexList::iterator it = selectedRows.begin();
+    QModelIndex startIndex = *it;
+    if (startIndex.isValid())
+    {
+        int minRow = startIndex.row();
+        int maxRow = startIndex.row();
+        int sumRows = startIndex.row();
+        for(++it; it != selectedRows.end(); ++it)
+        {
+            if (startIndex.parent() != it->parent())
+            {
+#ifdef  QT_DEBUG
+                qDebug() << "Different parents of items!\n" << selectedRows;
+#endif
+                return;
+            }
+            else if (!it->isValid())
+            {
+#ifdef  QT_DEBUG
+                qDebug() << "Invalid items!\n" << selectedRows;
+#endif
+                return;
+            }
+            if (it->row() < minRow)
+            {
+                startIndex = *it;
+                minRow = it->row();
+            }
+            if (it->row() > maxRow)
+                maxRow = it->row();
+            sumRows += it->row();
+        }
+        if ((((minRow+maxRow)*(maxRow-minRow+1))/2.0) != sumRows)
+        {
+#ifdef  QT_DEBUG
+        qDebug() << "Unordered items!\n" << selectedRows;
+#endif
+            return;
+        }
+        if (maxRow+1 < m_model->rowCount(startIndex.parent())) // It means "is there any space before starting index to move selection"
+            moveRowsCommand(startIndex, selectedRows.count(), startIndex.parent(), 1, startIndex.parent());
+    }
+    this->selectionChanged();
+}
 
 /** ##########################################################################################################################
  * Creates item remove command and push it to the undo stack
@@ -125,16 +231,15 @@ void Canvas::removeItems(const QList<AbstractPhoto*> & items)
 /** ##########################################################################################################################
  * Remove from scene items removed from layert tree.
  #############################################################################################################################*/
-void Canvas::removeSelectedRows(const QModelIndexList & selectedIndexes)
+void Canvas::removeSelectedRows()
 {
+    QModelIndexList selectedIndexes = m_selmodel->selectedRows();
     if (askAboutRemoving(selectedIndexes.count()))
     {
         if (selectedIndexes.count() > 1)
             beginRowsRemoving();
         foreach (QModelIndex index, selectedIndexes)
         {
-            if (index.column() != LayersModelItem::NameString)
-                continue;
             AbstractPhoto * photo = static_cast<LayersModelItem*>(index.internalPointer())->photo();
             removeComand(photo);
         }
@@ -168,12 +273,12 @@ void Canvas::selectionChanged()
     foreach (QModelIndex index, oldSelected)
     {
         if (!newSelected.contains(index) && index.column() == LayersModelItem::NameString)
-            m_selmodel->select(index, QItemSelectionModel::Deselect);
+            m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Deselect);
     }
     foreach(QModelIndex index, newSelected)
     {
         if (!m_selmodel->isSelected(index) && index.column() == LayersModelItem::NameString)
-            m_selmodel->select(index, QItemSelectionModel::Select);
+            m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Select);
     }
 }
 

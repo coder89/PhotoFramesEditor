@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     widgets/canvas/LayersTreeDelegate.cpp \
     widgets/menus/SceneMenu.cpp \
     widgets/menus/GraphicsEditingWidgetMenu.cpp \
-    widgets/menus/LayersTreeMenu.cpp
+    widgets/menus/LayersTreeMenu.cpp \
+    undo/UndoMoveRowsCommand.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -60,7 +61,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/canvas/LayersTreeDelegate.h \
     widgets/menus/SceneMenu.h \
     widgets/menus/GraphicsEditingWidgetMenu.h \
-    widgets/menus/LayersTreeMenu.h
+    widgets/menus/LayersTreeMenu.h \
+    undo/UndoMoveRowsCommand.h
 
 LIBS += \
     -L/usr \

@@ -190,12 +190,11 @@ bool LayersModelItem::moveChildren(int sourcePosition, int count, LayersModelIte
 {
     if (!count || (sourcePosition < destPosition && sourcePosition+count-1 >= destPosition) || !destParent)
         return false;
-
     QList<LayersModelItem*> movingItems;
-    for (;count;--count)
-        movingItems.push_back(this->childItems.takeAt(sourcePosition));
     if (this == destParent && destPosition > sourcePosition)
         destPosition -= count;
+    for (;count;--count)
+        movingItems.push_back(this->childItems.takeAt(sourcePosition));
     for ( ; movingItems.count() ; movingItems.pop_back())
         destParent->childItems.insert(destPosition, movingItems.last());
     this->refreshZValues();

@@ -29,6 +29,7 @@ LayersTree::LayersTree(QWidget * parent) :
     this->setDefaultDropAction(Qt::MoveAction);
     this->header()->setResizeMode(QHeaderView::ResizeToContents);
     this->setContextMenuPolicy(Qt::DefaultContextMenu);
+    this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setAnimated(true);
 }
 
@@ -56,39 +57,66 @@ void LayersTree::setModel(QAbstractItemModel * model)
 
 void LayersTree::contextMenuEvent(QContextMenuEvent * event)
 {
-    if (this->selectedIndexes().count())
+    QModelIndexList indexList = this->selectedIndexes();
+    if (indexList.count())
     {
-        QModelIndexList indexList = this->selectedIndexes();
         m_menu->setDeleteEnabled(true);
-        m_menu->setMoveDownEnabled(true);
-        m_menu->setMoveUpEnabled(true);
-        foreach (QModelIndex index, indexList)
+        m_menu->setMoveDownEnabled(false);
+        m_menu->setMoveUpEnabled(false);
+
+        // Disables unsupported move operations
+        QModelIndexList::iterator it = indexList.begin();
+        QModelIndex startIndex = *it;
+        unsigned int minRow;
+        unsigned int maxRow;
+        unsigned int sumRows;
+        if (!startIndex.isValid())
+            goto end_moving_menus;      // It's not so bad as many people think ;) Here 'goto' simplyfies code!
+        minRow = it->row();
+        maxRow = it->row();
+        sumRows = it->row();
+        for (++it; it != indexList.end(); ++it)
         {
-            if (index.isValid())
+            if (!it->isValid())
             {
-                if (index.row() == 0)
-                    m_menu->setMoveUpEnabled(false);
-                if (index.row()+1 >= this->model()->rowCount(index.parent()))
-                    m_menu->setMoveDownEnabled(false);
+                event->setAccepted(false);
+                return;
             }
-            else
-                m_menu->setDeleteEnabled(false);
+            else if (startIndex.parent() != it->parent())
+                goto end_moving_menus;  // It's not so bad as many people think ;) Here 'goto' simplyfies code!
+            if (it->row() < minRow)
+                minRow = it->row();
+            if (it->row() > maxRow)
+                maxRow = it->row();
+            sumRows += it->row();
         }
+
+        if ((((minRow+maxRow)*(maxRow-minRow+1))/2.0) == sumRows)
+        {
+            if (minRow > 0)
+                m_menu->setMoveUpEnabled(true);
+            if (maxRow+1 < this->model()->rowCount(indexList.first().parent()))
+                m_menu->setMoveDownEnabled(true);
+        }
+
+        end_moving_menus:
+
+        // Shows menu
         m_menu->exec(event->globalPos());
     }
 }
 
 void LayersTree::removeSelectedRows()
 {
-    emit selectedRowsAboutToBeRemoved(this->selectedIndexes());
+    emit selectedRowsAboutToBeRemoved();
 }
 
 void LayersTree::moveSelectedRowsUp()
 {
-    emit selectedRowsAboutToBeMovedUp(this->selectedIndexes());
+    emit selectedRowsAboutToBeMovedUp();
 }
 
 void LayersTree::moveSelectedRowsDown()
 {
-    emit selectedRowsAboutToBeMovedDown(this->selectedIndexes());
+    emit selectedRowsAboutToBeMovedDown();
 }

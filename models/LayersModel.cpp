@@ -105,7 +105,7 @@ Qt::ItemFlags LayersModel::flags(const QModelIndex &index) const
     if (index.isValid())
     {
         if (index.column() == LayersModelItem::NameString)
-            result |= Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable;
+            result |= Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable; // ONLY ONE COLUMN COULD HAVE ItemIsSelectable FLAG! (it simplifies model)
         else
             result &= !Qt::ItemIsEditable & !Qt::ItemIsSelectable;
         result |= Qt::ItemIsDragEnabled | Qt::ItemIsEnabled;

@@ -3,6 +3,7 @@
 
 #include <QGraphicsWidget>
 #include <QPainter>
+
 namespace KIPIPhotoFramesEditor
 {
     class ScenePrivate;
@@ -30,6 +31,9 @@ namespace KIPIPhotoFramesEditor
             virtual QPainterPath opaqueArea() const;
             virtual QPainterPath shape() const;
             void reset();
+            int maxSceneZValue() const;
+
+            /// TODO : Remove after finish
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
             {
                 painter->setPen(Qt::red);

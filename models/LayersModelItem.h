@@ -35,15 +35,10 @@ namespace KIPIPhotoFramesEditor
             QList<QVariant> data() const;
             bool insertChildren(int position, LayersModelItem * item);
             bool removeChildren(int position, int count);
+            bool moveChildren(int sourcePosition, int count, LayersModelItem * destParent, int destPosition);
             bool setData(const QVariant & data, int type);
-            void setPhoto(AbstractPhoto * photo)
-            {
-                this->itemPhoto = photo;
-            }
-            AbstractPhoto * photo() const
-            {
-                return this->itemPhoto;
-            }
+            void setPhoto(AbstractPhoto * photo);
+            AbstractPhoto * photo() const;
 
         public Q_SLOTS:
 
@@ -62,6 +57,8 @@ namespace KIPIPhotoFramesEditor
             void setData(const QList<QVariant> & data);
 
         private:
+
+            void refreshZValues();
 
             LayersModelItem * parentItem;
             QList<LayersModelItem*> childItems;

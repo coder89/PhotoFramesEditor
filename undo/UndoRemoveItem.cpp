@@ -4,10 +4,12 @@
 #include "LayersModel.h"
 #include "LayersModelItem.h"
 
+#include <klocalizedstring.h>
+
 using namespace KIPIPhotoFramesEditor;
 
 UndoRemoveItem::UndoRemoveItem(AbstractPhoto * item, Scene * scene, LayersModel * model, QUndoCommand * parent) :
-    QUndoCommand("Remove item", parent),
+    QUndoCommand(i18n("Remove item"), parent),
     m_item(item),
     m_parentItem(static_cast<AbstractPhoto*>(item->QGraphicsItem::parentItem())),
     m_scene(scene->toGraphicsScene()),

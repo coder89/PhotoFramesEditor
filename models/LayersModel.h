@@ -37,9 +37,12 @@ namespace KIPIPhotoFramesEditor
             QModelIndex findIndex(AbstractPhoto * item, const QModelIndex & parent = QModelIndex()) const;
             QModelIndex findIndex(LayersModelItem * item, const QModelIndex & parent = QModelIndex()) const;
             bool insertRows(int row, int count, const QModelIndex  & parent);
-           // bool insertRow(int row, LayersModelItem * item, const QModelIndex  & parent);
             LayersModelItem * getItem(const QModelIndex &index) const;
             bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
+            bool moveRows(int row1, const QModelIndex & parent1, int row2, const QModelIndex & parent2);
+            bool moveRows(const QModelIndex & row1, const QModelIndex & parent1, const QModelIndex & row2, const QModelIndex & parent2);
+            bool moveRows(int start1, int end1, const QModelIndex & parent1, int start2, const QModelIndex & parent2);
+            bool moveRows(const QModelIndex & start1, const QModelIndex & end1, const QModelIndex & parent1, const QModelIndex & start2, const QModelIndex & parent2);
 
             enum ModelRoles
             {

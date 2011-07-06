@@ -70,6 +70,18 @@ namespace KIPIPhotoFramesEditor
             void addItemToModel(AbstractPhoto * item);
 
             /// Create undo/redo command
+            void moveUpCommand();
+
+            /// Create undo/redo command
+            void moveDownCommand();
+
+            /// Move selected items up on scene & model. (Called by layers tree)
+            void moveSelectedRowsUp(const QModelIndexList & selectedIndexes);
+
+            /// Move selected items down on scene & model. (Called by layers tree)
+            void moveSelectedRowsDown(const QModelIndexList & selectedIndexes);
+
+            /// Create undo/redo command
             void removeComand(AbstractPhoto * item);
 
             /// Remove item selected on scene (remove from scene & model + create undo commands)

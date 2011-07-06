@@ -1,6 +1,7 @@
 #include "LayersTree.h"
 #include "abstract_photo.h"
 #include "LayersTreeDelegate.h"
+#include "LayersTreeMenu.h"
 
 // Qt
 #include <QStandardItemModel>
@@ -12,41 +13,6 @@
 #include <QContextMenuEvent>
 
 using namespace KIPIPhotoFramesEditor;
-
-class KIPIPhotoFramesEditor::LayersTreeMenu : public QMenu
-{
-    public:
-
-        LayersTreeMenu(LayersTree * parent) :
-            QMenu(parent)
-        {
-            moveUpItems = this->addAction("Move up");
-            connect(moveUpItems, SIGNAL(triggered()), parent, SLOT(moveSelectedRowsUp()));
-            moveDownItems = this->addAction("Move down");
-            connect(moveDownItems, SIGNAL(triggered()), parent, SLOT(moveSelectedRowsDown()));
-            this->addSeparator();
-            deleteItems = this->addAction("Delete selected");
-            connect(deleteItems, SIGNAL(triggered()), parent, SLOT(removeSelectedRows()));
-        }
-        void setMoveUpEnabled(bool enabled)
-        {
-            moveUpItems->setEnabled(enabled);
-        }
-        void setMoveDownEnabled(bool enabled)
-        {
-            moveDownItems->setEnabled(enabled);
-        }
-        void setDeleteEnabled(bool enabled)
-        {
-            deleteItems->setEnabled(enabled);
-        }
-
-    private:
-
-        QAction * moveUpItems;
-        QAction * moveDownItems;
-        QAction * deleteItems;
-};
 
 LayersTree::LayersTree(QWidget * parent) :
     QTreeView(parent),
@@ -119,10 +85,10 @@ void LayersTree::removeSelectedRows()
 
 void LayersTree::moveSelectedRowsUp()
 {
-    QModelIndexList indexList = this->selectedIndexes();
-    qDebug() << showDropIndicator();
+    emit selectedRowsAboutToBeMovedUp(this->selectedIndexes());
 }
 
 void LayersTree::moveSelectedRowsDown()
 {
+    emit selectedRowsAboutToBeMovedDown(this->selectedIndexes());
 }

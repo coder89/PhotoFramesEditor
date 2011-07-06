@@ -122,6 +122,25 @@ bool LayersModelItem::setData(const QVariant & data, int type)
     return false;
 }
 
+void LayersModelItem::setPhoto(AbstractPhoto * photo)
+{
+    this->itemPhoto = photo;
+    if (photo)
+    {
+        int newZValue = this->parent()->childCount()-this->parent()->childItems.indexOf(this);
+        #ifdef QT_DEBUG
+                if (photo->zValue() != newZValue)
+                    qDebug() << "ZValue changed!" << photo << "Current:" << photo->zValue() << "New:" << newZValue;
+        #endif
+        photo->setZValue(newZValue);
+    }
+}
+
+AbstractPhoto * LayersModelItem::photo() const
+{
+    return this->itemPhoto;
+}
+
 QVariant LayersModelItem::data(int column) const
 {
     //qDebug() << "data" << this << column;
@@ -149,6 +168,7 @@ bool LayersModelItem::insertChildren(int position, LayersModelItem * item)
     childItems.insert(position, item);
     if (item != 0)
         item->setParent(this);
+    this->refreshZValues();
     return true;
 }
 
@@ -162,5 +182,36 @@ bool LayersModelItem::removeChildren(int position, int count)
     for (int row = 0; row < count; ++row)
         delete childItems.takeAt(position);
 
+    this->refreshZValues();
     return true;
+}
+
+bool LayersModelItem::moveChildren(int sourcePosition, int count, LayersModelItem * destParent, int destPosition)
+{
+    if (!count || (sourcePosition < destPosition && sourcePosition+count-1 >= destPosition) || !destParent)
+        return false;
+
+    QList<LayersModelItem*> movingItems;
+    for (;count;--count)
+        movingItems.push_back(this->childItems.takeAt(sourcePosition));
+    if (this == destParent && destPosition > sourcePosition)
+        destPosition -= count;
+    for ( ; movingItems.count() ; movingItems.pop_back())
+        destParent->childItems.insert(destPosition, movingItems.last());
+    this->refreshZValues();
+    if (destParent != this)
+        destParent->refreshZValues();
+    return true;
+}
+
+void LayersModelItem::refreshZValues()
+{
+    int i = childItems.count();
+    foreach (LayersModelItem * item, childItems)
+    {
+        AbstractPhoto * photo = item->photo();
+        if (photo)
+            photo->setZValue(i);
+        --i;
+    }
 }

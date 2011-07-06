@@ -7,6 +7,7 @@
 
 #include <kapplication.h>
 #include <kmessagebox.h>
+#include <klocalizedstring.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -25,7 +26,6 @@ Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
     connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
-    //connect(m_model, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT());
 }
 
 void Canvas::addImage(const QImage & image)
@@ -49,7 +49,7 @@ void Canvas::addImage(const QImage & image)
 
     // Create & setup item
     PolygonWidget * it = new PolygonWidget(asf,0,m_scene);  /// TODO : Change to image item - NOT POLYGON!!!!
-    it->setName(image.text("File"));        
+    it->setName(image.text("File").append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount());
 
     // Add item to scene & model
@@ -64,18 +64,51 @@ void Canvas::addItemToModel(AbstractPhoto * /*item*/)
 {
 }
 
+/** ##########################################################################################################################
+ * Creates item move up command and push it to the undo stack
+ #############################################################################################################################*/
+void Canvas::moveUpCommand()
+{}
+
+/** ##########################################################################################################################
+ * Creates item move down command and push it to the undo stack
+ #############################################################################################################################*/
+void Canvas::moveDownCommand()
+{}
+
+/** ##########################################################################################################################
+ * Move selected items up on scene & model. (Called by layers tree)
+ #############################################################################################################################*/
+void Canvas::moveSelectedRowsUp(const QModelIndexList & selectedIndexes)
+{}
+
+/** ##########################################################################################################################
+ * Move selected items down on scene & model. (Called by layers tree)
+ #############################################################################################################################*/
+void Canvas::moveSelectedRowsDown(const QModelIndexList & selectedIndexes)
+{}
+
+/** ##########################################################################################################################
+ * Creates item remove command and push it to the undo stack
+ #############################################################################################################################*/
 void Canvas::removeComand(AbstractPhoto * item)
 {
     UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
     m_undo_stack->push(undo);
 }
 
+/** ##########################################################################################################################
+ * Remove from model ONE item removed from scene
+ #############################################################################################################################*/
 void Canvas::removeItem(AbstractPhoto * item)
 {
     if (item && askAboutRemoving(1))
         this->removeComand(item);
 }
 
+/** ##########################################################################################################################
+ * Remove from model items removed from scene
+ #############################################################################################################################*/
 void Canvas::removeItems(const QList<AbstractPhoto*> & items)
 {
     if (askAboutRemoving(items.count()))
@@ -89,11 +122,13 @@ void Canvas::removeItems(const QList<AbstractPhoto*> & items)
     }
 }
 
+/** ##########################################################################################################################
+ * Remove from scene items removed from layert tree.
+ #############################################################################################################################*/
 void Canvas::removeSelectedRows(const QModelIndexList & selectedIndexes)
 {
     if (askAboutRemoving(selectedIndexes.count()))
     {
-        qDebug() << "start removing" << selectedIndexes;
         if (selectedIndexes.count() > 1)
             beginRowsRemoving();
         foreach (QModelIndex index, selectedIndexes)
@@ -108,17 +143,23 @@ void Canvas::removeSelectedRows(const QModelIndexList & selectedIndexes)
     }
 }
 
+/** ##########################################################################################################################
+ * Ask about removing @arg count of items
+ #############################################################################################################################*/
 bool Canvas::askAboutRemoving(int count)
 {
     if (count)
     {
-        int result = KMessageBox::questionYesNo(KApplication::activeWindow(),QString("Are you sure you want to delete ").append(count).append(" selected items?"),QString("Items deleting"));
+        int result = KMessageBox::questionYesNo(KApplication::activeWindow(), i18n("Are you sure you want to delete ").append(count).append(i18n(" selected items?")), i18n("Items deleting"));
         if (result == KMessageBox::Yes)
             return true;
     }
     return false;
 }
 
+/** ###########################################################################################################################
+ * Synchronize scene's selection with model's selection
+ #############################################################################################################################*/
 void Canvas::selectionChanged()
 {
     QList<AbstractPhoto*> selectedItems = m_scene->selectedItems();
@@ -136,6 +177,9 @@ void Canvas::selectionChanged()
     }
 }
 
+/** ###########################################################################################################################
+ * Synchronize model's selection with scene's selection
+ #############################################################################################################################*/
 void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection)
 {
     LayersModelItem * temp;

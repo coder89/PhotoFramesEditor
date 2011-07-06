@@ -30,7 +30,10 @@ SOURCES += main.cpp\
     widgets/canvas/QGraphicsRotationItem.cpp \
     widgets/canvas/QGraphicsEditionWidget.cpp \
     undo/UndoRemoveItem.cpp \
-    widgets/canvas/LayersTreeDelegate.cpp
+    widgets/canvas/LayersTreeDelegate.cpp \
+    widgets/menus/SceneMenu.cpp \
+    widgets/menus/GraphicsEditingWidgetMenu.cpp \
+    widgets/menus/LayersTreeMenu.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -54,7 +57,10 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/canvas/QGraphicsRotationItem.h \
     widgets/canvas/QGraphicsEditionWidget.h \
     undo/UndoRemoveItem.h \
-    widgets/canvas/LayersTreeDelegate.h
+    widgets/canvas/LayersTreeDelegate.h \
+    widgets/menus/SceneMenu.h \
+    widgets/menus/GraphicsEditingWidgetMenu.h \
+    widgets/menus/LayersTreeMenu.h
 
 LIBS += \
     -L/usr \
@@ -65,6 +71,7 @@ INCLUDEPATH += \
     plugin \
     widgets \
     widgets/canvas \
+    widgets/menus \
     events \
     utils \
     models \

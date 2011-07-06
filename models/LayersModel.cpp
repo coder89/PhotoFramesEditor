@@ -248,3 +248,40 @@ bool LayersModel::removeRows(int row, int count, const QModelIndex & parent)
     emit layoutChanged();
     return result;
 }
+
+bool LayersModel::moveRows(int sourcePosition, const QModelIndex & sourceParent, int destPosition, const QModelIndex & destinationParent)
+{
+    return moveRows(sourcePosition, 1, sourceParent, destPosition, destinationParent);
+}
+
+bool LayersModel::moveRows(const QModelIndex & sourceIndex, const QModelIndex & sourdeParent, const QModelIndex & destinationIndex, const QModelIndex & destinationParent)
+{
+    return moveRows(sourceIndex.row(), 1, sourdeParent, destinationIndex.row()+1, destinationParent);
+}
+
+bool LayersModel::moveRows(int sourcePosition, int sourceCount, const QModelIndex & sourceParent, int destPosition, const QModelIndex & destinationParent)
+{
+    LayersModelItem * srcItem = getItem(sourceParent);
+    LayersModelItem * destItem = getItem(destinationParent);
+    if (    sourceCount                                          &&
+            sourcePosition < srcItem->childCount()               &&
+            sourcePosition+sourceCount <= srcItem->childCount()  &&
+            destPosition <= destItem->childCount()               &&
+            sourcePosition != destPosition                       &&
+            sourcePosition != destPosition-1                     &&
+            sourcePosition >= 0                                  &&
+            destPosition >= 0)
+    {
+        beginMoveRows(sourceParent, sourcePosition, sourcePosition+sourceCount-1, destinationParent, destPosition);
+        bool result = srcItem->moveChildren(sourcePosition, sourceCount, destItem, destPosition);
+        endMoveRows();
+        emit layoutChanged();
+        return result;
+    }
+    return false;
+}
+
+bool LayersModel::moveRows(const QModelIndex & start1, const QModelIndex & end1, const QModelIndex & parent1, const QModelIndex & start2, const QModelIndex & parent2)
+{
+    return moveRows(start1.row(), end1.row(), parent1, start2.row(), parent2);
+}

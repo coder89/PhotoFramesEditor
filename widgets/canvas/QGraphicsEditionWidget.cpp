@@ -1,8 +1,10 @@
 #include "QGraphicsEditionWidget.h"
 #include "QGraphicsRotationItem.h"
 #include "QGraphicsSelectionItem.h"
+#include "GraphicsEditingWidgetMenu.h"
 
-#include <QMenu>
+#include <kmenu.h>
+#include <klocalizedstring.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -27,9 +29,7 @@ QGraphicsEditionWidget::QGraphicsEditionWidget(QGraphicsItem * parent) :
 
 void QGraphicsEditionWidget::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    QMenu menu;
-    QAction * deleteItems = menu.addAction("Delete selected");
-    connect(deleteItems,SIGNAL(triggered()),this,SLOT(deleteSelected()));
+    GraphicsEditingWidgetMenu menu(this);
     menu.exec(event->screenPos());
 }
 
@@ -112,4 +112,13 @@ void QGraphicsEditionWidget::deleteSelected()
     {
         emit deleteSelectedItems();
     }
+}
+
+int QGraphicsEditionWidget::maxSceneZValue() const
+{
+    QList<QGraphicsItem*> items = this->scene()->items();
+    items.removeAll(const_cast<QGraphicsEditionWidget*>(this));
+    if (items.count())
+        items.at(0)->zValue();
+    return -1;
 }

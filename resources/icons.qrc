@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>eye.png</file>
         <file>padlock.png</file>
+        <file>arrow_down.png</file>
+        <file>arrow_top.png</file>
     </qresource>
 </RCC>

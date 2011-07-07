@@ -7,6 +7,7 @@
 
 // Qt
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QDebug>
 #include <QTreeView>
 #include <QStandardItemModel>
@@ -15,6 +16,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QApplication>
+#include <QPushButton>
 
 // KDE
 #include <kmenubar.h>
@@ -136,7 +138,11 @@ void PhotoFramesEditor::refreshActions()
 {
     bool isEnabledForCanvas = false;
     if (m_canvas)
+    {
         isEnabledForCanvas = true;
+        d->undoAction->setEnabled(m_canvas->undoStack()->canUndo());
+        d->redoAction->setEnabled(m_canvas->undoStack()->canRedo());
+    }
 
     d->saveAction->setEnabled(isEnabledForCanvas);
     d->saveAsAction->setEnabled(isEnabledForCanvas);
@@ -144,24 +150,26 @@ void PhotoFramesEditor::refreshActions()
     d->printPreviewAction->setEnabled(isEnabledForCanvas);
     d->printAction->setEnabled(isEnabledForCanvas);
     d->closeAction->setEnabled(isEnabledForCanvas);
-    d->undoAction->setEnabled(isEnabledForCanvas);
-    d->redoAction->setEnabled(isEnabledForCanvas);
     d->gridActionMenu->setEnabled(isEnabledForCanvas);
 }
-
+#include <kstandardguiitem.h>
 void PhotoFramesEditor::createWidgets()
 {
-    QDockWidget * treeWidget = new QDockWidget("Layers", this);
-    treeWidget->setFeatures(QDockWidget::DockWidgetMovable);
-    treeWidget->setFloating(false);
-    treeWidget->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
-    d->tree = new LayersTree(this);
+    // Layers dockwidget
+    d->treeWidget = new QDockWidget("Layers", this);
+    d->treeWidget->setFeatures(QDockWidget::DockWidgetMovable);
+    d->treeWidget->setFloating(false);
+    d->treeWidget->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
+    d->tree = new LayersTree(d->treeWidget);
     d->tree->setAnimated(true);
-    treeWidget->setWidget(d->tree);
-    d->tree->setIconSize(QSize(50,50));
+    d->treeWidget->setWidget(d->tree);
+    d->treeTitle = new LayersTreeTitleWidget(d->treeTitle);
+    d->treeWidget->setTitleBarWidget(d->treeTitle);
+    this->addDockWidget(Qt::RightDockWidgetArea, d->treeWidget);
+
+    // Canvas widget (main area)
     m_canvas_widget = new CanvasWidget(this);
     this->setCentralWidget(m_canvas_widget);
-    this->addDockWidget(Qt::RightDockWidgetArea, treeWidget);
 
     createCanvas(QSizeF(800,800));                               /// TODO : REMOVE WHEN FINISH
 }
@@ -177,6 +185,8 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
         disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,0);
         disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,0);
         disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,0);
+        disconnect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,0);
+        disconnect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,0);
         m_canvas->deleteLater();
     }
     m_canvas = new Canvas(dimension, this);
@@ -192,6 +202,8 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,SLOT(removeSelectedRows()));
     connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,SLOT(moveSelectedRowsUp()));
     connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,SLOT(moveSelectedRowsDown()));
+    connect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsUp()));
+    connect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsDown()));
 }
 
 void PhotoFramesEditor::open()
@@ -313,5 +325,4 @@ void PhotoFramesEditor::setGridVisible(bool isVisible)
 
 void PhotoFramesEditor::setupGrid()
 {
-
 }

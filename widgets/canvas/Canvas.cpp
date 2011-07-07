@@ -86,36 +86,38 @@ void Canvas::moveRowsCommand(const QModelIndex & startIndex, int count, const QM
  #############################################################################################################################*/
 void Canvas::moveSelectedRowsUp()
 {
-    QModelIndexList selectedRows = m_selmodel->selectedRows();
-    if (!selectedRows.count())
+    QModelIndexList selectedIndexes = m_selmodel->selectedIndexes();
+    if (!selectedIndexes.count())
     {
-#ifdef  QT_DEBUG
-        qDebug() << "No items selected to move!";
-#endif
+        #ifdef  QT_DEBUG
+        qDebug() << "No items selected to move!" << selectedIndexes;
+        #endif
         return;
     }
     // Check continuity of selection
-    QModelIndexList::iterator it = selectedRows.begin();
+    QModelIndexList::iterator it = selectedIndexes.begin();
     QModelIndex startIndex = *it;
     if (startIndex.isValid())
     {
         int minRow = startIndex.row();
         int maxRow = startIndex.row();
         int sumRows = startIndex.row();
-        for(++it; it != selectedRows.end(); ++it)
+        for(++it; it != selectedIndexes.end(); ++it)
         {
+            if (it->column() != LayersModelItem::NameString)
+                continue;
             if (startIndex.parent() != it->parent())
             {
-#ifdef  QT_DEBUG
-                qDebug() << "Different parents of items!\n" << selectedRows;
-#endif
+                #ifdef  QT_DEBUG
+                qDebug() << "Different parents of items!\n" << selectedIndexes;
+                #endif
                 return;
             }
             else if (!it->isValid())
             {
-#ifdef  QT_DEBUG
-                qDebug() << "Invalid items!\n" << selectedRows;
-#endif
+                #ifdef  QT_DEBUG
+                qDebug() << "Invalid items!\n" << selectedIndexes;
+                #endif
                 return;
             }
             if (it->row() < minRow)
@@ -129,13 +131,13 @@ void Canvas::moveSelectedRowsUp()
         }
         if ((((minRow+maxRow)*(maxRow-minRow+1))/2.0) != sumRows)
         {
-#ifdef  QT_DEBUG
-        qDebug() << "Unordered items!\n" << selectedRows;
-#endif
+            #ifdef  QT_DEBUG
+            qDebug() << "Unordered items!\n" << selectedIndexes;
+            #endif
             return;
         }
         if (minRow) // It means "is there any space before starting index to move selection"
-            moveRowsCommand(startIndex, selectedRows.count(), startIndex.parent(), -1, startIndex.parent());
+            moveRowsCommand(startIndex, selectedIndexes.count(), startIndex.parent(), -1, startIndex.parent());
     }
     this->selectionChanged();
 }
@@ -145,31 +147,38 @@ void Canvas::moveSelectedRowsUp()
  #############################################################################################################################*/
 void Canvas::moveSelectedRowsDown()
 {
-    QModelIndexList selectedRows = m_selmodel->selectedRows();
-    if (!selectedRows.count())
+    QModelIndexList selectedIndexes = m_selmodel->selectedIndexes();
+    if (!selectedIndexes.count())
+    {
+        #ifdef  QT_DEBUG
+        qDebug() << "No items selected to move!" << selectedIndexes;
+        #endif
         return;
+    }
     // Check continuity of selection
-    QModelIndexList::iterator it = selectedRows.begin();
+    QModelIndexList::iterator it = selectedIndexes.begin();
     QModelIndex startIndex = *it;
     if (startIndex.isValid())
     {
         int minRow = startIndex.row();
         int maxRow = startIndex.row();
         int sumRows = startIndex.row();
-        for(++it; it != selectedRows.end(); ++it)
+        for(++it; it != selectedIndexes.end(); ++it)
         {
+            if (it->column() != LayersModelItem::NameString)
+                continue;
             if (startIndex.parent() != it->parent())
             {
-#ifdef  QT_DEBUG
-                qDebug() << "Different parents of items!\n" << selectedRows;
-#endif
+                #ifdef  QT_DEBUG
+                qDebug() << "Different parents of items!\n" << selectedIndexes;
+                #endif
                 return;
             }
             else if (!it->isValid())
             {
-#ifdef  QT_DEBUG
-                qDebug() << "Invalid items!\n" << selectedRows;
-#endif
+                #ifdef  QT_DEBUG
+                qDebug() << "Invalid items!\n" << selectedIndexes;
+                #endif
                 return;
             }
             if (it->row() < minRow)
@@ -183,13 +192,13 @@ void Canvas::moveSelectedRowsDown()
         }
         if ((((minRow+maxRow)*(maxRow-minRow+1))/2.0) != sumRows)
         {
-#ifdef  QT_DEBUG
-        qDebug() << "Unordered items!\n" << selectedRows;
-#endif
+            #ifdef  QT_DEBUG
+            qDebug() << "Unordered items!\n" << selectedIndexes;
+            #endif
             return;
         }
         if (maxRow+1 < m_model->rowCount(startIndex.parent())) // It means "is there any space before starting index to move selection"
-            moveRowsCommand(startIndex, selectedRows.count(), startIndex.parent(), 1, startIndex.parent());
+            moveRowsCommand(startIndex, selectedIndexes.count(), startIndex.parent(), 1, startIndex.parent());
     }
     this->selectionChanged();
 }

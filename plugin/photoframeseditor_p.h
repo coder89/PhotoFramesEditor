@@ -11,9 +11,11 @@
 // Qt
 #include <QHBoxLayout>
 #include <QTreeView>
+#include <QDockWidget>
 
 // Local
 #include "LayersTree.h"
+#include "LayersTreeTitleWidget.h"
 
 #define Q_DELETE(ptr)   if (ptr) delete ptr;
 
@@ -39,7 +41,9 @@ namespace KIPIPhotoFramesEditor
                 showGridToggleAction(0),
                 gridConfigAction(0),
                 fileDialog(0),
-                tree(0)
+                tree(0),
+                treeWidget(0),
+                treeTitle(0)
             {}
 
             ~PhotoFramesEditorPriv()
@@ -68,6 +72,8 @@ namespace KIPIPhotoFramesEditor
                 // Other
                 Q_DELETE(fileDialog)
                 Q_DELETE(tree)
+                Q_DELETE(treeWidget)
+                //Q_DELETE(treeTitle)   // DELETED BY treeWidget
             }
 
             // File menu
@@ -96,6 +102,8 @@ namespace KIPIPhotoFramesEditor
 
             // Tree of layers
             LayersTree *  tree;
+            QDockWidget * treeWidget;
+            LayersTreeTitleWidget * treeTitle;
     };
 }
 

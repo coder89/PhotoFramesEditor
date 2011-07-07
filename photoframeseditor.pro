@@ -19,22 +19,22 @@ SOURCES += main.cpp\
     events/canvasmouseevent.cpp \
     widgets/CanvasWidget.cpp \
     widgets/canvas/SwitchableIcon.cpp \
-    widgets/canvas/LayersTree.cpp \
     widgets/CanvasCreationDialog.cpp \
     models/LayersModel.cpp \
     models/LayersModelItem.cpp \
+    models/LayersSelectionModel.cpp \
     widgets/canvas/Scene.cpp \
     widgets/canvas/Canvas.cpp \
-    models/LayersSelectionModel.cpp \
     widgets/canvas/QGraphicsSelectionItem.cpp \
     widgets/canvas/QGraphicsRotationItem.cpp \
     widgets/canvas/QGraphicsEditionWidget.cpp \
-    undo/UndoRemoveItem.cpp \
-    widgets/canvas/LayersTreeDelegate.cpp \
+    widgets/layers/LayersTree.cpp \
+    widgets/layers/LayersTreeDelegate.cpp \
     widgets/menus/SceneMenu.cpp \
     widgets/menus/GraphicsEditingWidgetMenu.cpp \
     widgets/menus/LayersTreeMenu.cpp \
-    undo/UndoMoveRowsCommand.cpp
+    undo/UndoMoveRowsCommand.cpp \
+    undo/UndoRemoveItem.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -46,23 +46,24 @@ HEADERS  += plugin/photoframeseditor.h \
     utils/global.h \
     widgets/CanvasWidget.h \
     widgets/canvas/SwitchableIcon.h \
-    widgets/canvas/LayersTree.h \
     widgets/dialogs/GridConfigDialog.h \
     widgets/CanvasCreationDialog.h \
     models/LayersModel.h \
     models/LayersModelItem.h \
+    models/LayersSelectionModel.h \
     widgets/canvas/Scene.h \
     widgets/canvas/Canvas.h \
-    models/LayersSelectionModel.h \
     widgets/canvas/QGraphicsSelectionItem.h \
     widgets/canvas/QGraphicsRotationItem.h \
     widgets/canvas/QGraphicsEditionWidget.h \
-    undo/UndoRemoveItem.h \
-    widgets/canvas/LayersTreeDelegate.h \
+    widgets/layers/LayersTree.h \
+    widgets/layers/LayersTreeDelegate.h \
     widgets/menus/SceneMenu.h \
     widgets/menus/GraphicsEditingWidgetMenu.h \
     widgets/menus/LayersTreeMenu.h \
-    undo/UndoMoveRowsCommand.h
+    undo/UndoMoveRowsCommand.h \
+    undo/UndoRemoveItem.h \
+    widgets/layers/LayersTreeTitleWidget.h
 
 LIBS += \
     -L/usr \
@@ -73,6 +74,7 @@ INCLUDEPATH += \
     plugin \
     widgets \
     widgets/canvas \
+    widgets/layers \
     widgets/menus \
     events \
     utils \

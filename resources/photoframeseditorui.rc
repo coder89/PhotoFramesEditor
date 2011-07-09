@@ -1,0 +1,39 @@
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<gui version="1" name="photoframeseditor" >
+
+    <MenuBar>
+
+        <Menu name="File" >
+         <text>&amp;File</text>
+           <Action name="open_new" />
+           <Action name="open" />
+           <Action name="open_recent" />
+         <Separator/>
+           <Action name="save" />
+           <Action name="save_as" />
+         <Separator/>
+           <Action name="export" />
+         <Separator/>
+           <Action name="print_preview" />
+           <Action name="print" />
+         <Separator/>
+           <Action name="close" />
+           <Action name="quit" />
+        </Menu>
+
+        <Menu name="Edit" >
+         <text>&amp;Edit</text>
+           <Action name="undo" />
+           <Action name="redo" />
+         <Separator/>
+        </Menu>
+
+        <Menu name="View" >
+         <text>&amp;View</text>
+           <Action name="grid_lines" />
+         <Separator/>
+        </Menu>
+
+    </MenuBar>
+
+</gui>

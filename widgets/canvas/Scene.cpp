@@ -83,7 +83,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     d->m_edit_widget->setZValue(1.0/0.0);
 
     // Mouse interaction mode
-    setMode(Rotating);
+    //setMode();
 
     // Create default grid
     setGrid(25,25);
@@ -118,7 +118,7 @@ void Scene::removeItems(const QList<AbstractPhoto *> & items)
 
 void Scene::enableItemsDrawing()
 {
-    this->editingMode = LineDrawing;
+    this->editingMode = Drawing;
     temp_path = QPainterPath();
     this->temp_widget = new QGraphicsPathItem(temp_path);
     //temp_widget->setZValue(zIndex++);
@@ -227,10 +227,10 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
     {
         switch(this->editingMode)
         {
-            case WidgetsMoving:
+            case Moving:
                 QGraphicsScene::mouseDoubleClickEvent(event);
                 break;
-            case LineDrawing:
+            case Drawing:
                 {
                     temp_path.closeSubpath();
                     PolygonWidget * tempItem = new PolygonWidget(temp_path, this);
@@ -260,7 +260,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     {
         switch(this->editingMode)
         {
-            case LineDrawing:
+            case Drawing:
                 {
                     if (temp_path.elementCount() == 0)
                         break;
@@ -407,7 +407,7 @@ void Scene::setMode(EditMode mode)
             editingMode = mode;
             d->setMode(ScenePrivate::Rotation);
             break;
-        case WidgetsMoving:
+        case Moving:
         default:
             editingMode = DEFAULT_EDITING_MODE;
     }

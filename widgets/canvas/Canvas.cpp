@@ -12,14 +12,17 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-Canvas::Canvas(const QSizeF & dimension, QObject *parent) :
-    QObject(parent),
+Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
+    QGraphicsView(parent),
     m_items_group(0),
     m_undo_stack(new QUndoStack(this))
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
     m_model = new LayersModel(this);
     m_selmodel = new LayersSelectionModel(m_model, this);
+
+    this->setupGUI();
+    this->setViewingMode();
 
     // Signals connection
     connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addItemToModel(AbstractPhoto*)));
@@ -318,3 +321,76 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
             temp->photo()->setSelected(true);
     }
 }
+
+/** ###########################################################################################################################
+ * Change selection mode
+ #############################################################################################################################*/
+void Canvas::setMode(SelectionMode mode)
+{
+    switch(mode)
+    {
+        case Viewing:
+            this->setInteractive(false);
+            this->setDragMode(QGraphicsView::ScrollHandDrag);
+            goto save;
+        case Selecting:
+            this->setInteractive(true);
+            this->setDragMode(QGraphicsView::RubberBandDrag);
+            goto save;
+    }
+    return;
+    save:
+        m_selection_mode = mode;
+}
+
+
+#define MAX_SCALE_LIMIT 4
+#define MIN_SCALE_LIMIT 0.5
+
+void Canvas::setupGUI()
+{
+    this->setAcceptDrops(true);
+    this->setAutoFillBackground(true);
+    this->viewport()->setAutoFillBackground(false);
+    this->setCacheMode(QGraphicsView::CacheBackground);
+    this->setBackgroundBrush(QPalette().brush(QPalette::Window));
+    /*this->setRenderHint(QPainter::Antialiasing);*/                                /// It causes worst quality!
+    /*this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);*/  /// It causes worst quality!
+
+    this->setScene(m_scene);
+
+    QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
+    img.setText("File","routing.jpg");
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+}
+
+void Canvas::wheelEvent(QWheelEvent * event)
+{
+    // Scaling limitation
+    static double factor = 1;
+    if ( !scene() || (factor > MAX_SCALE_LIMIT && event->delta() > 0) || (factor < MIN_SCALE_LIMIT && event->delta() < 0) )
+        return;
+
+    double scaleFactor;
+    if(event->delta() > 0)
+        scaleFactor = (factor + 0.1) / factor;
+    else
+        scaleFactor = (factor - 0.1) / factor;
+
+    scale(scaleFactor, scaleFactor);
+
+    centerOn( mapToScene(event->pos()) );
+
+    factor *= scaleFactor;
+}
+
+#undef MAX_SCALE_LIMIT
+#undef MIN_SCALE_LIMIT

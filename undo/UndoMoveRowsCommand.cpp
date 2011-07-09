@@ -10,6 +10,15 @@ UndoMoveRowsCommand::UndoMoveRowsCommand(int startingRow, int rowsCount, const Q
 {
     if (m_model)
     {
+        if (sourceParent == destinationParent)
+        {
+            if (startingRow > destinationRow)
+                this->setText("Move up");
+            else
+                this->setText("Move down");
+        }
+        else
+            this->setText("Change parent");
         m_src_parent_row = model->getItem(sourceParent);
         m_dest_parent_row = model->getItem(destinationParent);
         m_starting_row = startingRow;
@@ -57,7 +66,7 @@ void UndoMoveRowsCommand::undo()
         reverse();
     }
 #ifdef QT_DEBUG
-    //else
+    else
     {
         qDebug() << "Can't undo from UndoMoveRowsCommand:";
         qDebug() << "\tStarting Row =" << m_starting_row;

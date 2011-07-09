@@ -53,7 +53,9 @@ namespace KIPIPhotoFramesEditor
 
         protected Q_SLOTS:
 
+            virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
+            virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
 
             friend class ScenePrivate;
     };

@@ -59,15 +59,15 @@ namespace KIPIPhotoFramesEditor
         formLayout->addRow(new QLabel("Paper size:", d->sizeWidget), d->paperSize);
         //-----------------------------------------------------------------------------------
         d->xSize = new QSpinBox(d->sizeWidget);
-        d->xSize->setEnabled(false);
         d->xSize->setMinimum(1);
         d->xSize->setMaximum(999999);
+        d->xSize->setValue(800);
         formLayout->addRow(new QLabel("Width:", d->sizeWidget), d->xSize);
         //-----------------------------------------------------------------------------------
         d->ySize = new QSpinBox(d->sizeWidget);
-        d->ySize->setEnabled(false);
         d->ySize->setMinimum(1);
         d->ySize->setMaximum(999999);
+        d->ySize->setValue(800);
         formLayout->addRow(new QLabel("Height:", d->sizeWidget), d->ySize);
         //-----------------------------------------------------------------------------------
         d->sizeWidget->setLayout(formLayout);

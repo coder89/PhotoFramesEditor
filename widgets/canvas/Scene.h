@@ -28,10 +28,10 @@ namespace KIPIPhotoFramesEditor
 
             enum EditMode
             {
-                Disabled,
-                WidgetsMoving,
+                View,
+                Moving,
                 Rotating,
-                LineDrawing,
+                Drawing,
             };
 
         public:
@@ -94,7 +94,7 @@ namespace KIPIPhotoFramesEditor
             void setRotationWidgetVisible(bool visible);
 
             EditMode editingMode;
-            static const EditMode DEFAULT_EDITING_MODE = WidgetsMoving;
+            static const EditMode DEFAULT_EDITING_MODE = Moving;
 
             QGraphicsRectItem * shadow;
 

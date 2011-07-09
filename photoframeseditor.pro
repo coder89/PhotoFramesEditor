@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     widgets/menus/GraphicsEditingWidgetMenu.cpp \
     widgets/menus/LayersTreeMenu.cpp \
     undo/UndoMoveRowsCommand.cpp \
-    undo/UndoRemoveItem.cpp
+    undo/UndoRemoveItem.cpp \
+    widgets/tools/ToolsDockWidget.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -63,7 +64,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/menus/LayersTreeMenu.h \
     undo/UndoMoveRowsCommand.h \
     undo/UndoRemoveItem.h \
-    widgets/layers/LayersTreeTitleWidget.h
+    widgets/layers/LayersTreeTitleWidget.h \
+    widgets/tools/ToolsDockWidget.h
 
 LIBS += \
     -L/usr \
@@ -76,6 +78,7 @@ INCLUDEPATH += \
     widgets/canvas \
     widgets/layers \
     widgets/menus \
+    widgets/tools \
     events \
     utils \
     models \

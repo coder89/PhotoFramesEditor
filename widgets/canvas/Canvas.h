@@ -8,6 +8,8 @@
 #include <QGraphicsScene>
 #include <QItemSelection>
 #include <QUndoStack>
+#include <QGraphicsView>
+#include <QWheelEvent>
 
 // KDE
 #include <klocalizedstring.h>
@@ -19,13 +21,20 @@ namespace KIPIPhotoFramesEditor
     class LayersSelectionModel;
     class AbstractPhoto;
 
-    class Canvas : public QObject
+    class Canvas : public QGraphicsView
     {
             Q_OBJECT
 
         public:
 
-            explicit Canvas(const QSizeF & dimension, QObject * parent = 0);
+            enum SelectionMode
+            {
+                Selecting,
+                Viewing
+            };
+
+            explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
+            virtual void wheelEvent(QWheelEvent *event);
 
             Scene * scene() const
             {
@@ -102,6 +111,9 @@ namespace KIPIPhotoFramesEditor
             /// Select items on scene (synchronize scene with model)
             void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
 
+            /// Set selection mode
+            void setMode(SelectionMode mode);
+
             /// Groups operations into one undo operation
             void beginRowsRemoving()
             {
@@ -114,13 +126,29 @@ namespace KIPIPhotoFramesEditor
                 m_undo_stack->endMacro();
             }
 
+            /// Sets selecting mode
+            void setSelectionMode()
+            {
+                setMode(Selecting);
+            }
+
+            /// Sets viewing mode
+            void setViewingMode()
+            {
+                setMode(Viewing);
+            }
+
         private:
+
+            void setupGUI();
 
             Scene * m_scene;
             LayersModel * m_model;
             LayersSelectionModel * m_selmodel;
             QGraphicsItemGroup * m_items_group;
             QUndoStack * m_undo_stack;
+
+            SelectionMode m_selection_mode;
     };
 }
 

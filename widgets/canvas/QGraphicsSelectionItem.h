@@ -34,7 +34,7 @@ namespace KIPIPhotoFramesEditor
 
             virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
             {
-                painter->setPen(QPen(Qt::black, 1, Qt::DotLine));
+                painter->setPen(Qt::DashLine);
                 painter->drawRect(m_shape.boundingRect());
                 painter->drawPath(m_shape);
             }

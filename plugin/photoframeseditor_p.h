@@ -16,6 +16,7 @@
 // Local
 #include "LayersTree.h"
 #include "LayersTreeTitleWidget.h"
+#include "ToolsDockWidget.h"
 
 #define Q_DELETE(ptr)   if (ptr) delete ptr;
 
@@ -25,6 +26,7 @@ namespace KIPIPhotoFramesEditor
     {
         public:
             PhotoFramesEditorPriv() :
+                centralWidget(0),
                 openNewFileAction(0),
                 openFileAction(0),
                 openRecentFilesMenu(0),
@@ -43,11 +45,14 @@ namespace KIPIPhotoFramesEditor
                 fileDialog(0),
                 tree(0),
                 treeWidget(0),
-                treeTitle(0)
+                treeTitle(0),
+                toolsWidget(0)
             {}
 
             ~PhotoFramesEditorPriv()
             {
+                Q_DELETE(centralWidget)
+
                 // File menu
                 Q_DELETE(openNewFileAction)
                 Q_DELETE(openFileAction)
@@ -74,7 +79,11 @@ namespace KIPIPhotoFramesEditor
                 Q_DELETE(tree)
                 Q_DELETE(treeWidget)
                 //Q_DELETE(treeTitle)   // DELETED BY treeWidget
+
+                Q_DELETE(toolsWidget)
             }
+
+            QWidget *   centralWidget;
 
             // File menu
             KAction *   openNewFileAction;
@@ -104,6 +113,9 @@ namespace KIPIPhotoFramesEditor
             LayersTree *  tree;
             QDockWidget * treeWidget;
             LayersTreeTitleWidget * treeTitle;
+
+            // Tools
+            ToolsDockWidget * toolsWidget;
     };
 }
 

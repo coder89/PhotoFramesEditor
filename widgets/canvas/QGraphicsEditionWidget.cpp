@@ -89,11 +89,25 @@ QPainterPath QGraphicsEditionWidget::shape() const
     return result;
 }
 
+void QGraphicsEditionWidget::mousePressEvent(QGraphicsSceneMouseEvent * event)
+{
+    QGraphicsWidget::mousePressEvent(event);
+    if (event->isAccepted())
+    {}
+}
+
 void QGraphicsEditionWidget::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     QGraphicsWidget::mouseMoveEvent(event);
     if (event->buttons() & Qt::LeftButton)
         m_sel->mouseMoveEvent(event);
+}
+
+void QGraphicsEditionWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+{
+    QGraphicsWidget::mouseReleaseEvent(event);
+    if (event->isAccepted())
+    {}
 }
 
 void QGraphicsEditionWidget::setRotationAngle(qreal angle, bool round)

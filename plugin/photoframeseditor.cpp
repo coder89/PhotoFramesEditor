@@ -155,6 +155,11 @@ void PhotoFramesEditor::refreshActions()
 #include <kstandardguiitem.h>
 void PhotoFramesEditor::createWidgets()
 {
+    // Tools
+    d->toolsWidget = new ToolsDockWidget(this);
+    this->addDockWidget(Qt::RightDockWidgetArea, d->toolsWidget);
+    d->toolsWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
     // Layers dockwidget
     d->treeWidget = new QDockWidget("Layers", this);
     d->treeWidget->setFeatures(QDockWidget::DockWidgetMovable);
@@ -166,10 +171,14 @@ void PhotoFramesEditor::createWidgets()
     d->treeTitle = new LayersTreeTitleWidget(d->treeTitle);
     d->treeWidget->setTitleBarWidget(d->treeTitle);
     this->addDockWidget(Qt::RightDockWidgetArea, d->treeWidget);
+    d->treeWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-    // Canvas widget (main area)
-    m_canvas_widget = new CanvasWidget(this);
-    this->setCentralWidget(m_canvas_widget);
+    // Central widget (widget with canvas)
+    d->centralWidget = new QWidget(this);
+    d->centralWidget->setLayout(new QHBoxLayout(d->centralWidget));
+    d->centralWidget->layout()->setSpacing(0);
+    d->centralWidget->layout()->setMargin(0);
+    this->setCentralWidget(d->centralWidget);
 
     createCanvas(QSizeF(800,800));                               /// TODO : REMOVE WHEN FINISH
 }
@@ -178,19 +187,20 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
 {
     if (m_canvas)
     {
-        disconnect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),this,0);
-        disconnect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),this,0);
-        disconnect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
-        disconnect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
-        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,0);
-        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,0);
-        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,0);
-        disconnect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,0);
-        disconnect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,0);
+//        disconnect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),this,0);
+//        disconnect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),this,0);
+//        disconnect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
+//        disconnect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
+//        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,0);
+//        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,0);
+//        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,0);
+//        disconnect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,0);
+//        disconnect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,0);
+        d->centralWidget->layout()->removeWidget(m_canvas);
         m_canvas->deleteLater();
     }
-    m_canvas = new Canvas(dimension, this);
-    m_canvas_widget->setCanvas(m_canvas);
+    m_canvas = new Canvas(dimension, d->centralWidget);
+    d->centralWidget->layout()->addWidget(m_canvas);
     d->tree->setModel(m_canvas->model());
     d->tree->setSelectionModel(m_canvas->selectionModel());
     for (int i = d->tree->model()->columnCount()-1; i >= 0; --i)
@@ -204,6 +214,8 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,SLOT(moveSelectedRowsDown()));
     connect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsUp()));
     connect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsDown()));
+    connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(setSelectionMode()));
+    connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(setViewingMode()));
 }
 
 void PhotoFramesEditor::open()

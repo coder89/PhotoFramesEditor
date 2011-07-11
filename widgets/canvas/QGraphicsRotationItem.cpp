@@ -108,7 +108,7 @@ QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
     reset();
 }
 
-void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
 {
     painter->drawEllipse(0,0,20,20);
     painter->setBrush(Qt::black);
@@ -130,12 +130,12 @@ QRectF QGraphicsRotationItem::boundingRect() const
     return (m_path + m_handler->shape().translated(m_handler->pos())).boundingRect();
 }
 
-void QGraphicsRotationItem::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
+void QGraphicsRotationItem::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
     this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
-void QGraphicsRotationItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
+void QGraphicsRotationItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
     this->unsetCursor();
 }

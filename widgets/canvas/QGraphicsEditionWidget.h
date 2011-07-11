@@ -31,6 +31,7 @@ namespace KIPIPhotoFramesEditor
             virtual QPainterPath opaqueArea() const;
             virtual QPainterPath shape() const;
             void reset();
+            void refresh();
             int maxSceneZValue() const;
 
             /// TODO : Remove after finish

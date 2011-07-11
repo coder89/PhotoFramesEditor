@@ -196,6 +196,14 @@ QModelIndexList LayersModel::itemsToIndexes(const QList<AbstractPhoto*> & items)
     return indexes;
 }
 
+QList<AbstractPhoto*> LayersModel::indexesToItems(const QModelIndexList & indexes) const
+{
+    QList<AbstractPhoto*> items;
+    foreach(QModelIndex index, indexes)
+        items.append(getItem(index)->photo());
+    return items;
+}
+
 QModelIndex LayersModel::findIndex(AbstractPhoto * item, const QModelIndex & parent) const
 {
     if (item)

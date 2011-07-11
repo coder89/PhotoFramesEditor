@@ -44,8 +44,8 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
     m_instance = this;
 
     setupActions();
-    refreshActions();
     createWidgets();
+    refreshActions();
 
     this->setAcceptDrops(true);
 }
@@ -143,7 +143,6 @@ void PhotoFramesEditor::refreshActions()
         d->undoAction->setEnabled(m_canvas->undoStack()->canUndo());
         d->redoAction->setEnabled(m_canvas->undoStack()->canRedo());
     }
-
     d->saveAction->setEnabled(isEnabledForCanvas);
     d->saveAsAction->setEnabled(isEnabledForCanvas);
     d->exportFileAction->setEnabled(isEnabledForCanvas);
@@ -151,14 +150,22 @@ void PhotoFramesEditor::refreshActions()
     d->printAction->setEnabled(isEnabledForCanvas);
     d->closeAction->setEnabled(isEnabledForCanvas);
     d->gridActionMenu->setEnabled(isEnabledForCanvas);
+    d->treeWidget->setEnabled(isEnabledForCanvas);
+    d->toolsWidget->setDefaultTool();
+    d->toolsWidget->setEnabled(isEnabledForCanvas);
 }
-#include <kstandardguiitem.h>
+
 void PhotoFramesEditor::createWidgets()
 {
     // Tools
     d->toolsWidget = new ToolsDockWidget(this);
     this->addDockWidget(Qt::RightDockWidgetArea, d->toolsWidget);
-    d->toolsWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
+    // Borders tool
+    d->toolBorder = new BorderEditTool(this);
+    this->addDockWidget(Qt::RightDockWidgetArea, d->toolBorder);
+    d->toolBorder->setVisible(false);
+    connect(d->toolsWidget,SIGNAL(borderToolSelectionChanged(bool)),d->toolBorder,SLOT(setShown(bool)));
 
     // Layers dockwidget
     d->treeWidget = new QDockWidget("Layers", this);
@@ -172,6 +179,9 @@ void PhotoFramesEditor::createWidgets()
     d->treeWidget->setTitleBarWidget(d->treeTitle);
     this->addDockWidget(Qt::RightDockWidgetArea, d->treeWidget);
     d->treeWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    connect(d->toolsWidget,SIGNAL(pointerToolSelected()),d->tree,SLOT(setMultiSelection()));
+    connect(d->toolsWidget,SIGNAL(handToolSelected()),d->tree,SLOT(setMultiSelection()));
+    connect(d->toolsWidget,SIGNAL(borderToolSelected()),d->tree,SLOT(setSingleSelection()));
 
     // Central widget (widget with canvas)
     d->centralWidget = new QWidget(this);
@@ -205,6 +215,7 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     d->tree->setSelectionModel(m_canvas->selectionModel());
     for (int i = d->tree->model()->columnCount()-1; i >= 0; --i)
         d->tree->resizeColumnToContents(i);
+    // model/tree/canvas synchronization signals
     connect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),d->redoAction,SLOT(setEnabled(bool)));
     connect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),d->undoAction,SLOT(setEnabled(bool)));
     connect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(undo()));
@@ -214,8 +225,14 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,SLOT(moveSelectedRowsDown()));
     connect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsUp()));
     connect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsDown()));
-    connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(setSelectionMode()));
-    connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(setViewingMode()));
+    // interaction modes (tools)
+    connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(enableDefaultSelectionMode()));
+    connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
+    connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBorderEditingMode()));
+    // tools specific signals
+    connect(m_canvas,SIGNAL(setInitialValues(qreal,Qt::PenJoinStyle,QColor)),d->toolBorder,SLOT(setInitialValues(qreal,Qt::PenJoinStyle,QColor)));
+    connect(d->toolBorder,SIGNAL(borderStyleChanged(qreal,Qt::PenJoinStyle,QColor)),m_canvas,SLOT(borderChangeCommand(qreal,Qt::PenJoinStyle,QColor)));
+    connect(d->toolBorder,SIGNAL(visibilityChanged(bool)),m_canvas,SLOT(refreshWidgetConnections(bool)));
 }
 
 void PhotoFramesEditor::open()
@@ -312,6 +329,7 @@ bool PhotoFramesEditor::closeDocument()
             //    case KMessageBox::No:
             delete m_canvas;
             m_canvas = 0;
+            refreshActions();
             return true;
             //    default:
             return false;

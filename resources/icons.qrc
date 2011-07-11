@@ -4,7 +4,8 @@
         <file>padlock.png</file>
         <file>arrow_down.png</file>
         <file>arrow_top.png</file>
-        <file>tool_hand.gif</file>
         <file>tool_pointer.png</file>
+        <file>tool_hand.png</file>
+        <file>tool_border.png</file>
     </qresource>
 </RCC>

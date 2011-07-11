@@ -23,7 +23,7 @@ namespace KIPIPhotoFramesEditor
                 return m_parent;
             }
 
-            void setParent(AbstractPhoto * parent, Qt::WindowFlags f = Qt::Widget)
+            void setParent(AbstractPhoto * parent, Qt::WindowFlags /*f*/ = Qt::Widget)
             {
                 this->m_parent = parent;
             }

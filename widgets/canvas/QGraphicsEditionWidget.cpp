@@ -64,6 +64,11 @@ void QGraphicsEditionWidget::reset()
     setRotationVisible(m_rot_visibility);
 }
 
+void QGraphicsEditionWidget::refresh()
+{
+    setPos(m_sel->setSelection(m_sel->m_itemsList));
+}
+
 QRectF QGraphicsEditionWidget::boundingRect() const
 {
     return shape().boundingRect();

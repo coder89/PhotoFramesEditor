@@ -17,6 +17,7 @@
 #include "LayersTree.h"
 #include "LayersTreeTitleWidget.h"
 #include "ToolsDockWidget.h"
+#include "BorderEditTool.h"
 
 #define Q_DELETE(ptr)   if (ptr) delete ptr;
 
@@ -46,7 +47,8 @@ namespace KIPIPhotoFramesEditor
                 tree(0),
                 treeWidget(0),
                 treeTitle(0),
-                toolsWidget(0)
+                toolsWidget(0),
+                toolBorder(0)
             {}
 
             ~PhotoFramesEditorPriv()
@@ -81,6 +83,7 @@ namespace KIPIPhotoFramesEditor
                 //Q_DELETE(treeTitle)   // DELETED BY treeWidget
 
                 Q_DELETE(toolsWidget)
+                Q_DELETE(toolBorder)
             }
 
             QWidget *   centralWidget;
@@ -116,6 +119,7 @@ namespace KIPIPhotoFramesEditor
 
             // Tools
             ToolsDockWidget * toolsWidget;
+            BorderEditTool * toolBorder;
     };
 }
 

@@ -35,7 +35,9 @@ SOURCES += main.cpp\
     widgets/menus/LayersTreeMenu.cpp \
     undo/UndoMoveRowsCommand.cpp \
     undo/UndoRemoveItem.cpp \
-    widgets/tools/ToolsDockWidget.cpp
+    widgets/tools/ToolsDockWidget.cpp \
+    widgets/tools/BorderEditTool.cpp \
+    undo/UndoBorderChangeCommand.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo.h \
@@ -65,7 +67,9 @@ HEADERS  += plugin/photoframeseditor.h \
     undo/UndoMoveRowsCommand.h \
     undo/UndoRemoveItem.h \
     widgets/layers/LayersTreeTitleWidget.h \
-    widgets/tools/ToolsDockWidget.h
+    widgets/tools/ToolsDockWidget.h \
+    widgets/tools/BorderEditTool.h \
+    undo/UndoBorderChangeCommand.h
 
 LIBS += \
     -L/usr \

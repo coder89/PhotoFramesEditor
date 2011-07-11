@@ -1,4 +1,6 @@
 #include "abstract_photo.h"
+#include "Scene.h"
+#include "photo_context_menu.h"
 
 #include <QMenu>
 #include <QStyle>
@@ -9,11 +11,9 @@
 #include <QVariant>
 #include <qmath.h>
 
-// Local
-#include "photo_context_menu.h"
-
 #include <QDebug>
 #include <QTime>
+
 using namespace KIPIPhotoFramesEditor;
 
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
@@ -28,20 +28,25 @@ AbstractPhoto::AbstractPhoto(QGraphicsScene * parent) :
 
 void AbstractPhoto::setupWidget(const QPainterPath & path)
 {
-    this->m_path = path.translated(-path.boundingRect().topLeft());
-    this->m_path = m_path.simplified();
-    m_pixmap = QPixmap(m_path.boundingRect().size().toSize());
+    this->m_image_path = path.translated(-path.boundingRect().topLeft());
+    this->m_image_path = m_image_path.simplified();
+    m_pixmap = QPixmap(m_image_path.boundingRect().size().toSize());
     m_pixmap.fill(Qt::transparent);
 
     QPainter p(&m_pixmap);
     p.setRenderHint(QPainter::Antialiasing);
     p.setPen(QPen(QColor(122, 163, 39), 1, Qt::DotLine));
-    p.drawPath(m_path);
-    p.fillPath(m_path, QColor(200, 200, 255, 255));
+    p.drawPath(m_image_path);
+    p.fillPath(m_image_path, QColor(200, 200, 255, 255));
 
     QGraphicsPixmapItem::setPixmap(m_pixmap);
     this->setFlag(QGraphicsItem::ItemIsSelectable);
     this->updateIcon();
+
+    // Default border style
+    this->setBorderWidth(0);
+    this->setBorderColor(Qt::black);
+    this->setBorderCornersStyle(Qt::RoundJoin);
 }
 
 void AbstractPhoto::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -55,9 +60,11 @@ void AbstractPhoto::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     {
         QPainterPath exposedPath = QPainterPath();
         exposedPath.addRect(option->exposedRect);
-        painter->fillPath(m_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
+        painter->fillPath(m_complete_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
     }
 
+    if (this->borderWidth())
+        painter->fillPath(m_border_path, this->borderColor());
 }
 
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
@@ -149,4 +156,23 @@ void AbstractPhoto::showStateChanged(bool state)
 void AbstractPhoto::lockStateChanged(bool state)
 {
     this->setFlag(QGraphicsItem::ItemIsMovable, state);
+}
+
+void AbstractPhoto::recalcShape()
+{
+    QPainterPathStroker s;
+    s.setWidth(m_border_width);
+    s.setJoinStyle(m_border_corner_style);
+    m_border_path = s.createStroke(m_image_path);
+    m_complete_path = m_border_path.united(m_image_path);
+    prepareGeometryChange();
+
+    try // I'm not sure how to properly/safely cast from QGraphicsScene* -> Scene*
+    {
+        Scene * m_scene = (Scene*)this->scene();
+        if (m_scene)
+            m_scene->updateSelection();
+    }
+    catch(...)
+    {}
 }

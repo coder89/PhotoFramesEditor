@@ -29,12 +29,25 @@ namespace KIPIPhotoFramesEditor
 
             enum SelectionMode
             {
-                Selecting,
-                Viewing
+                Viewing = 1,
+                MultiSelecting = 2,
+                SingleSelcting = 4,
+            };
+
+            enum InteractionMode
+            {
+                NoInteraction = 0,
+                SingleElementEditingMode = 1,
+                BorderEditingMode = 3,
+                EffectsEditingMode = 5,
             };
 
             explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
             virtual void wheelEvent(QWheelEvent *event);
+
+            /// Set selection mode
+            void setSelectionMode(SelectionMode mode);
+            void setInteractionMode(InteractionMode mode);
 
             Scene * scene() const
             {
@@ -111,8 +124,8 @@ namespace KIPIPhotoFramesEditor
             /// Select items on scene (synchronize scene with model)
             void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
 
-            /// Set selection mode
-            void setMode(SelectionMode mode);
+            /// Sets border style for selected item
+            void borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color);
 
             /// Groups operations into one undo operation
             void beginRowsRemoving()
@@ -127,16 +140,38 @@ namespace KIPIPhotoFramesEditor
             }
 
             /// Sets selecting mode
-            void setSelectionMode()
+            void enableDefaultSelectionMode()
             {
-                setMode(Selecting);
+                setInteractionMode(NoInteraction);
+                setSelectionMode(MultiSelecting);
             }
 
             /// Sets viewing mode
-            void setViewingMode()
+            void enableViewingMode()
             {
-                setMode(Viewing);
+                setInteractionMode(NoInteraction);
+                setSelectionMode(Viewing);
             }
+
+            /// Sets border editing mode
+            void enableBorderEditingMode()
+            {
+                setInteractionMode(BorderEditingMode);
+            }
+
+            /// Sets effects editing mode
+            void enableEffectsEditingMode()
+            {
+                setInteractionMode(EffectsEditingMode);
+            }
+
+            /// Refresh widgets connections to canvas signals
+            void refreshWidgetConnections(bool isVisible);
+
+        signals:
+
+            void hasSelectionChanged(bool hasSelection);
+            void setInitialValues(qreal width, Qt::PenJoinStyle cornersStyle, const QColor & color);
 
         private:
 
@@ -149,6 +184,7 @@ namespace KIPIPhotoFramesEditor
             QUndoStack * m_undo_stack;
 
             SelectionMode m_selection_mode;
+            InteractionMode m_interaction_mode;
     };
 }
 

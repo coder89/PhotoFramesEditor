@@ -2,10 +2,12 @@
 #define LAYERSTREETITLEWIDGET_H
 
 #include <QWidget>
-#include <QIcon>
 #include <QLabel>
-#include <QPushButton>
 #include <QHBoxLayout>
+
+#include <kpushbutton.h>
+#include <kicon.h>
+#include <klocalizedstring.h>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -13,20 +15,18 @@ namespace KIPIPhotoFramesEditor
     {
             QHBoxLayout * m_layout;
             QLabel * m_label;
-            QPushButton * m_up_btn;
-            QPushButton * m_dwn_btn;
+            KPushButton * m_up_btn;
+            KPushButton * m_dwn_btn;
 
         public:
 
             LayersTreeTitleWidget (QWidget * parent = 0) :
                 QWidget(parent),
                 m_layout(new QHBoxLayout(this)),
-                m_label(new QLabel("Layers",this)),
-                m_up_btn(new QPushButton(QIcon(":arrow_top.png"), "", this)),
-                m_dwn_btn(new QPushButton(QIcon(":arrow_down.png"), "", this))
+                m_label(new QLabel(i18n("Layers"),this)),
+                m_up_btn(new KPushButton(KIcon(":arrow_top.png"), "", this)),
+                m_dwn_btn(new KPushButton(KIcon(":arrow_down.png"), "", this))
             {
-                m_up_btn->setGeometry(QRect(0,0,20,20));
-
                 m_layout->addWidget(m_label,1);
                 m_layout->addWidget(m_up_btn);
                 m_layout->addWidget(m_dwn_btn);
@@ -35,6 +35,9 @@ namespace KIPIPhotoFramesEditor
                 m_layout->setMargin(0);
                 m_layout->setSpacing(0);
                 m_layout->update();
+
+                m_up_btn->setFixedSize(24,24);
+                m_dwn_btn->setFixedSize(24,24);
             }
 
             QAbstractButton * moveUpButton() const

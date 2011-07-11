@@ -30,9 +30,9 @@ namespace KIPIPhotoFramesEditor
 
     void PolygonWidget::mouseDoubleClicked(const QPointF & point)
     {
-        m_path.lineTo(point);
-        m_path.closeSubpath();
-        this->setupWidget(m_path);
+        m_image_path.lineTo(point);
+        m_image_path.closeSubpath();
+        this->setupWidget(m_image_path);
     }
 
     void PolygonWidget::mouseMoved(const QPointF & point)
@@ -41,9 +41,9 @@ namespace KIPIPhotoFramesEditor
 
     void PolygonWidget::mousePressed(const QPointF & point)
     {
-        if (m_path.elementCount())
-            m_path.lineTo(point);
+        if (m_image_path.elementCount())
+            m_image_path.lineTo(point);
         else
-            m_path.moveTo(point);
+            m_image_path.moveTo(point);
     }
 }

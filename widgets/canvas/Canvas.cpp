@@ -5,6 +5,7 @@
 #include "LayersSelectionModel.h"
 #include "UndoRemoveItem.h"
 #include "UndoMoveRowsCommand.h"
+#include "UndoBorderChangeCommand.h"
 
 #include <kapplication.h>
 #include <kmessagebox.h>
@@ -22,7 +23,7 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
     m_selmodel = new LayersSelectionModel(m_model, this);
 
     this->setupGUI();
-    this->setViewingMode();
+    this->enableViewingMode();
 
     // Signals connection
     connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addItemToModel(AbstractPhoto*)));
@@ -30,6 +31,54 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
     connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+}
+
+/** ###########################################################################################################################
+ * Change selection mode
+ #############################################################################################################################*/
+void Canvas::setSelectionMode(SelectionMode mode)
+{
+    if (mode & Viewing)
+    {
+        this->setInteractive(false);
+        this->setDragMode(QGraphicsView::ScrollHandDrag);
+        m_scene->setSelectionMode(Scene::NoSelection);
+        goto save;
+    }
+    else if (mode & MultiSelecting)
+    {
+        this->setInteractive(true);
+        this->setDragMode(QGraphicsView::RubberBandDrag);
+        m_scene->setSelectionMode(Scene::MultiSelection);
+        goto save;
+    }
+    else if (mode & SingleSelcting)
+    {
+        this->setInteractive(true);
+        this->setDragMode(QGraphicsView::RubberBandDrag);
+        m_scene->setSelectionMode(Scene::SingleSelection);
+        goto save;
+    }
+    return;
+    save:
+        m_selection_mode = mode;
+}
+
+/** ###########################################################################################################################
+ * Change interaction mode
+ #############################################################################################################################*/
+void Canvas::setInteractionMode(InteractionMode mode)
+{
+    if (!mode)
+        m_interaction_mode = mode;
+    else if (mode & BorderEditingMode)
+        m_interaction_mode = mode;
+    else if (mode & EffectsEditingMode)
+        m_interaction_mode = mode;
+    else
+        return;
+    if (mode & SingleElementEditingMode)
+        setSelectionMode(SingleSelcting);
 }
 
 void Canvas::addImage(const QImage & image)
@@ -280,8 +329,8 @@ bool Canvas::askAboutRemoving(int count)
 void Canvas::selectionChanged()
 {
     QList<AbstractPhoto*> selectedItems = m_scene->selectedItems();
-    QModelIndexList newSelected = m_model->itemsToIndexes(selectedItems);
     QModelIndexList oldSelected = m_selmodel->selectedIndexes();
+    QModelIndexList newSelected = m_model->itemsToIndexes(selectedItems);
     foreach (QModelIndex index, oldSelected)
     {
         if (!newSelected.contains(index) && index.column() == LayersModelItem::NameString)
@@ -291,6 +340,21 @@ void Canvas::selectionChanged()
     {
         if (!m_selmodel->isSelected(index) && index.column() == LayersModelItem::NameString)
             m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Select);
+    }
+
+    selectedItems = m_scene->selectedItems();
+    if (m_selection_mode & SingleSelcting)
+    {
+        if (selectedItems.count() == 1)
+        {
+            emit hasSelectionChanged(true);
+            AbstractPhoto * item = selectedItems.at(0);
+            // Specific signals emitting
+            if (m_interaction_mode & BorderEditingMode)
+                emit setInitialValues(item->borderWidth(), item->borderCornersStyle(), item->borderColor());
+        }
+        else
+            emit hasSelectionChanged(false);
     }
 }
 
@@ -323,26 +387,32 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
 }
 
 /** ###########################################################################################################################
- * Change selection mode
+ * Border change command
  #############################################################################################################################*/
-void Canvas::setMode(SelectionMode mode)
+void Canvas::borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color)
 {
-    switch(mode)
+    QList<AbstractPhoto*> selectedItem = m_scene->selectedItems();
+    if (m_selection_mode & SingleSelcting && m_interaction_mode & BorderEditingMode && selectedItem.count() == 1)
     {
-        case Viewing:
-            this->setInteractive(false);
-            this->setDragMode(QGraphicsView::ScrollHandDrag);
-            goto save;
-        case Selecting:
-            this->setInteractive(true);
-            this->setDragMode(QGraphicsView::RubberBandDrag);
-            goto save;
+        AbstractPhoto * item = selectedItem.at(0);
+        UndoBorderChangeCommand * undo = new UndoBorderChangeCommand(item, width, cornerStyle, color);
+        m_undo_stack->push(undo);
     }
-    return;
-    save:
-        m_selection_mode = mode;
 }
 
+/** ###########################################################################################################################
+ * Connect widgets to canvas signals
+ #############################################################################################################################*/
+void Canvas::refreshWidgetConnections(bool isVisible)
+{
+    if (isVisible)
+    {
+        connect(this,SIGNAL(hasSelectionChanged(bool)),sender(),SLOT(setEnabled(bool)));
+        emit hasSelectionChanged(m_scene->selectedItems().count());
+    }
+    else
+        disconnect(this,SIGNAL(hasSelectionChanged(bool)),sender(),0);
+}
 
 #define MAX_SCALE_LIMIT 4
 #define MIN_SCALE_LIMIT 0.5

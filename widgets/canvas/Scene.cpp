@@ -83,7 +83,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     d->m_edit_widget->setZValue(1.0/0.0);
 
     // Mouse interaction mode
-    //setMode();
+    //setMode(DEFAULT_EDITING_MODE);
 
     // Create default grid
     setGrid(25,25);
@@ -193,6 +193,8 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
     if (event->button() == Qt::LeftButton)
     {
         qDebug() << "isContains:" << event->scenePos() << d->m_edit_widget->contains(event->scenePos()-d->m_edit_widget->pos()) << d->m_edit_widget->shape();
+        if (selectionMode & SingleSelection)
+            event->setModifiers(event->modifiers() & !Qt::ControlModifier);
         if (d->m_edit_widget->contains(event->scenePos()-d->m_edit_widget->pos()) && (!(event->modifiers() & Qt::ControlModifier)))
             goto press_others;
         d->m_edit_widget->setVisible(false);
@@ -405,11 +407,38 @@ void Scene::setMode(EditMode mode)
     {
         case Rotating:
             editingMode = mode;
+            setSelectionMode(SingleSelection);
             d->setMode(ScenePrivate::Rotation);
+            break;
+        case BorderEdit:
+            editingMode = mode;
+            setSelectionMode(SingleSelection);
             break;
         case Moving:
         default:
+            setSelectionMode(MultiSelection);
             editingMode = DEFAULT_EDITING_MODE;
+    }
+}
+
+//#####################################################################################################
+
+void Scene::setSelectionMode(SelectionMode selectionMode)
+{
+    switch(selectionMode)
+    {
+        case NoSelection:
+            this->setSelectionArea(QPainterPath());
+            this->selectionMode = selectionMode;
+            break;
+        case MultiSelection:
+            this->selectionMode = selectionMode;
+            break;
+        case SingleSelection:
+            if (this->selectedItems().count() > 1)
+                this->setSelectionArea(QPainterPath());
+            this->selectionMode = selectionMode;
+            break;
     }
 }
 
@@ -419,6 +448,13 @@ void Scene::updateChildernsGrid(qreal x, qreal y)
 {
     foreach(AbstractPhoto * p ,this->children)
         p->setGridLines(x,y);
+}
+
+//#####################################################################################################
+
+void Scene::updateSelection()
+{
+    d->m_edit_widget->refresh();
 }
 
 //#####################################################################################################

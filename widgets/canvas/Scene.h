@@ -15,8 +15,8 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class CanvasWidget;
     class Canvas;
+    class CanvasWidget;
     class ScenePrivate;
 
     class Scene : protected QGraphicsScene
@@ -28,10 +28,18 @@ namespace KIPIPhotoFramesEditor
 
             enum EditMode
             {
-                View,
-                Moving,
-                Rotating,
-                Drawing,
+                View = 1,
+                Moving = 2,
+                Rotating = 4,
+                Drawing = 8,
+                BorderEdit = 16,
+            };
+
+            enum SelectionMode
+            {
+                NoSelection = 0,
+                SingleSelection = 1,
+                MultiSelection = 2,
             };
 
         public:
@@ -44,6 +52,7 @@ namespace KIPIPhotoFramesEditor
             void addItem(AbstractPhoto * item);
             QList<AbstractPhoto*> selectedItems() const;
             void setMode(EditMode mode);
+            void setSelectionMode(SelectionMode selectionMode);
             const QGraphicsScene * toGraphicsScene() const
             {
                 return this;
@@ -69,6 +78,7 @@ namespace KIPIPhotoFramesEditor
             void removeSelectedItems();
             void setGrid(qreal x, qreal y);
             void setGridVisible(bool visible);
+            void updateSelection();
 
         protected:
 
@@ -96,6 +106,9 @@ namespace KIPIPhotoFramesEditor
             EditMode editingMode;
             static const EditMode DEFAULT_EDITING_MODE = Moving;
 
+            SelectionMode selectionMode;
+            static const SelectionMode DEFAULT_SELECTING_MODE = MultiSelection;
+
             QGraphicsRectItem * shadow;
 
             QGraphicsPathItem * temp_widget;
@@ -110,9 +123,10 @@ namespace KIPIPhotoFramesEditor
             QGraphicsItemGroup * grid_item;
             bool grid_changed;
 
-            friend class CanvasWidget;
             friend class Canvas;
+            friend class CanvasWidget;
             friend class ScenePrivate;
+            friend class AbstractPhoto;
     };
 
 }

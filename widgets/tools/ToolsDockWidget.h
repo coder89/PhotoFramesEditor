@@ -2,7 +2,8 @@
 #define TOOLSDOCKWIDGET_H
 
 #include <QDockWidget>
-#include <QPushButton>
+
+#include <kpushbutton.h>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -10,17 +11,21 @@ namespace KIPIPhotoFramesEditor
     {
             Q_OBJECT
 
-            QPushButton * m_tool_pointer;
-            QPushButton * m_tool_hand;
+            KPushButton * m_tool_pointer;
+            KPushButton * m_tool_hand;
+            KPushButton * m_tool_border;
 
         public:
 
             explicit ToolsDockWidget(QWidget * parent = 0);
+            void setDefaultTool();
 
         signals:
 
             void pointerToolSelected();
             void handToolSelected();
+            void borderToolSelectionChanged(bool);
+            void borderToolSelected();
 
         protected slots:
 
@@ -36,6 +41,12 @@ namespace KIPIPhotoFramesEditor
                     emit handToolSelected();
             }
 
+            void emitBorderToolSelected(bool isSelected)
+            {
+                emit borderToolSelectionChanged(isSelected);
+                if (isSelected)
+                    emit borderToolSelected();
+            }
     };
 }
 

@@ -12,7 +12,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         plugin/photoframeseditor.cpp \
-    widgets/abstract_photo.cpp \
     widgets/abstract_photo_resizer.cpp \
     widgets/photo_context_menu.cpp \
     widgets/polygon_widget.cpp \
@@ -37,10 +36,16 @@ SOURCES += main.cpp\
     undo/UndoRemoveItem.cpp \
     widgets/tools/ToolsDockWidget.cpp \
     widgets/tools/BorderEditTool.cpp \
-    undo/UndoBorderChangeCommand.cpp
+    undo/UndoBorderChangeCommand.cpp \
+    widgets/tools/ColorizeTool.cpp \
+    widgets/AbstractPhoto.cpp \
+    widgets/items/PhotoItem.cpp \
+    widgets/items/AbstractPhotoEffectsGroup.cpp \
+    widgets/items/AbstractPhotoEffect.cpp \
+    widgets/items/PixelizePhotoEffect.cpp \
+    widgets/items/BlurPhotoEffect.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
-    widgets/abstract_photo.h \
     widgets/abstract_photo_resizer.h \
     widgets/photo_context_menu.h \
     widgets/polygon_widget.h \
@@ -69,7 +74,14 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/layers/LayersTreeTitleWidget.h \
     widgets/tools/ToolsDockWidget.h \
     widgets/tools/BorderEditTool.h \
-    undo/UndoBorderChangeCommand.h
+    undo/UndoBorderChangeCommand.h \
+    widgets/tools/ColorizeTool.h \
+    widgets/AbstractPhoto.h \
+    widgets/items/PhotoItem.h \
+    widgets/items/AbstractPhotoEffectsGroup.h \
+    widgets/items/AbstractPhotoEffect.h \
+    widgets/items/PixelizePhotoEffect.h \
+    widgets/items/BlurPhotoEffect.h
 
 LIBS += \
     -L/usr \
@@ -80,6 +92,7 @@ INCLUDEPATH += \
     plugin \
     widgets \
     widgets/canvas \
+    widgets/items \
     widgets/layers \
     widgets/menus \
     widgets/tools \

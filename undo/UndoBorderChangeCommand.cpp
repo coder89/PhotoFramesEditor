@@ -1,5 +1,5 @@
 #include "UndoBorderChangeCommand.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 
 #include <QDebug>
 

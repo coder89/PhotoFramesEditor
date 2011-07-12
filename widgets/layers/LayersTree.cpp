@@ -1,5 +1,5 @@
 #include "LayersTree.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 #include "LayersTreeDelegate.h"
 #include "LayersTreeMenu.h"
 
@@ -31,6 +31,7 @@ LayersTree::LayersTree(QWidget * parent) :
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setAnimated(true);
     this->setMultiSelection();
+    this->setIconSize(QSize(50,50));
 }
 
 void LayersTree::setModel(QAbstractItemModel * model)

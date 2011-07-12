@@ -66,6 +66,8 @@ void QGraphicsEditionWidget::reset()
 
 void QGraphicsEditionWidget::refresh()
 {
+    qDebug() << m_sel->setSelection(m_sel->m_itemsList);
+    qDebug() << m_sel->shape();
     setPos(m_sel->setSelection(m_sel->m_itemsList));
 }
 

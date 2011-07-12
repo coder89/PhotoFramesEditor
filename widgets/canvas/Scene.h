@@ -9,7 +9,7 @@
 #include <QGraphicsItem>
 
 // Local
-#include "abstract_photo.h"
+#include "PhotoItem.h"
 #include "polygon_widget.h"
 #include "canvasmouseevent.h"
 

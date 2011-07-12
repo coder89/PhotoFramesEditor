@@ -1,6 +1,6 @@
 #include "LayersTreeDelegate.h"
 #include "LayersModelItem.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 
 #include <QPainter>
 

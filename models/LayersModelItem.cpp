@@ -1,5 +1,5 @@
 #include "LayersModelItem.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 
 // Qt
 #include <QVariant>
@@ -146,6 +146,8 @@ QVariant LayersModelItem::data(int column) const
     //qDebug() << "data" << this << column;
     if (column == LayersModelItem::NameString)
         return itemPhoto ? itemPhoto->name() : "Name";
+    else if (column == LayersModelItem::Thumbnail)
+        return itemPhoto ? itemPhoto->icon() : QIcon();
     else
         return QVariant();
 }

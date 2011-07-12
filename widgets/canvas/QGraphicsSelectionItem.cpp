@@ -1,5 +1,5 @@
 #include "QGraphicsSelectionItem.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 
 #include <QGraphicsWidget>
 #include <QGraphicsScene>

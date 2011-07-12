@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneDragDropEvent>
+#include <QIcon>
 
 // Local
 #include "canvasmouseevent.h"
@@ -18,6 +19,7 @@ namespace KIPIPhotoFramesEditor
     class Scene;
     class WidgetsFactory;
     class LayersModelItem;
+    class AbstractPhotoEffectsGroup;
 
     class AbstractPhoto : public QGraphicsPixmapItem
     {
@@ -26,6 +28,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             void setupWidget(const QPainterPath & path);
+            void setupWidget(const QPixmap & photo);
 
             virtual bool contains(const QPointF & point) const
             {
@@ -103,9 +106,25 @@ namespace KIPIPhotoFramesEditor
                 return m_border_corner_style;
             }
 
+          /**
+            * Icon getters
+            */
+            QIcon & icon()
+            {
+                return m_icon;
+            }
+            const QIcon & icon() const
+            {
+                return m_icon;
+            }
+
+        public Q_SLOTS:
+
+             void refreshPixmap();
+
         protected:
 
-            explicit AbstractPhoto(QGraphicsScene * parent = 0);
+            explicit AbstractPhoto(QGraphicsScene * scene = 0);
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }
@@ -124,13 +143,11 @@ namespace KIPIPhotoFramesEditor
             virtual void hoverEnterEvent(QGraphicsSceneHoverEvent * event);
             virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent * event);
 
-            // Updating items thumbnail
-            void updateIcon();
-
             // Paining method
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
             // Pixmap data
+            QPixmap m_pixmap_original;
             QPixmap m_pixmap;
             QPixmap & pixmap()
             {
@@ -140,11 +157,14 @@ namespace KIPIPhotoFramesEditor
             {
                 return m_pixmap;
             }
-            void setPixmap(const QPixmap &pixmap)
+            void setPixmap(const QPixmap & pixmap)
             {
-                this->m_pixmap = pixmap;
-                QGraphicsPixmapItem::setPixmap(this->m_pixmap);
+                this->setupWidget(pixmap);
             }
+
+            // Icon
+            QIcon m_icon;
+            void updateIcon();
 
             // Widget path
             QPainterPath m_image_path;
@@ -166,6 +186,8 @@ namespace KIPIPhotoFramesEditor
             virtual void lockStateChanged(bool state);
 
         private:
+
+            AbstractPhotoEffectsGroup * m_effects_group;
 
             qreal m_border_width;
             Qt::PenJoinStyle m_border_corner_style;

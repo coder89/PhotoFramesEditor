@@ -38,8 +38,8 @@ namespace KIPIPhotoFramesEditor
             {
                 NoInteraction = 0,
                 SingleElementEditingMode = 1,
-                BorderEditingMode = 3,
-                EffectsEditingMode = 5,
+                BorderToolMode = 3,
+                ColorizeToolMode = 5,
             };
 
             explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
@@ -154,19 +154,22 @@ namespace KIPIPhotoFramesEditor
             }
 
             /// Sets border editing mode
-            void enableBorderEditingMode()
+            void enableBordersToolMode()
             {
-                setInteractionMode(BorderEditingMode);
+                setInteractionMode(BorderToolMode);
             }
 
-            /// Sets effects editing mode
-            void enableEffectsEditingMode()
+            /// Sets border editing mode
+            void enableColorizeToolMode()
             {
-                setInteractionMode(EffectsEditingMode);
+                setInteractionMode(ColorizeToolMode);
             }
 
             /// Refresh widgets connections to canvas signals
             void refreshWidgetConnections(bool isVisible);
+
+            /// Appends new undo command
+            void newUndoCommand(QUndoCommand * command);
 
         signals:
 

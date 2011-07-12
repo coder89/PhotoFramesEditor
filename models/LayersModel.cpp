@@ -12,7 +12,7 @@
 
 // Local
 #include "LayersModelItem.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -79,6 +79,10 @@ QVariant LayersModel::data(const QModelIndex & index, int role) const
     LayersModelItem * item = static_cast<LayersModelItem*>(index.internalPointer());
     switch(role)
     {
+        case Qt::DecorationRole:
+            if (index.column() == LayersModelItem::NameString)
+                return item->data(LayersModelItem::Thumbnail);
+            break;
         case Qt::DisplayRole:
             if (index.column() == LayersModelItem::NameString)
                 return item->data(index.column());

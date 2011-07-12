@@ -1,6 +1,6 @@
 #include "UndoRemoveItem.h"
 #include "Scene.h"
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 #include "LayersModel.h"
 #include "LayersModelItem.h"
 

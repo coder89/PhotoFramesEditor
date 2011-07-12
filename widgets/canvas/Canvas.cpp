@@ -11,6 +11,9 @@
 #include <kmessagebox.h>
 #include <klocalizedstring.h>
 
+#define MAX_SCALE_LIMIT 4
+#define MIN_SCALE_LIMIT 0.5
+
 using namespace KIPIPhotoFramesEditor;
 
 Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
@@ -55,7 +58,7 @@ void Canvas::setSelectionMode(SelectionMode mode)
     else if (mode & SingleSelcting)
     {
         this->setInteractive(true);
-        this->setDragMode(QGraphicsView::RubberBandDrag);
+        this->setDragMode(QGraphicsView::ScrollHandDrag);
         m_scene->setSelectionMode(Scene::SingleSelection);
         goto save;
     }
@@ -71,9 +74,9 @@ void Canvas::setInteractionMode(InteractionMode mode)
 {
     if (!mode)
         m_interaction_mode = mode;
-    else if (mode & BorderEditingMode)
+    else if (mode & BorderToolMode)
         m_interaction_mode = mode;
-    else if (mode & EffectsEditingMode)
+    else if (mode & ColorizeToolMode)
         m_interaction_mode = mode;
     else
         return;
@@ -83,25 +86,8 @@ void Canvas::setInteractionMode(InteractionMode mode)
 
 void Canvas::addImage(const QImage & image)
 {
-    // Read image and create pixmap
-    QSize s = image.size();
-    QRect r = image.rect();
-    QSize sceneSize = m_scene->sceneRect().size().toSize();
-    if (sceneSize.width()<s.width() || sceneSize.height()<s.height())
-    {
-        s.scale(m_scene->sceneRect().size().toSize()*0.8, Qt::KeepAspectRatio);
-        r.setSize(s);
-    }
-    QPixmap pixmap(s);
-    QPainter painter(&pixmap);
-    painter.drawImage(r, image);
-
-    /// TODO: REMOVE AFTER TESTS!
-    QPainterPath asf;
-    asf.addRect(QRectF(r));
-
     // Create & setup item
-    PolygonWidget * it = new PolygonWidget(asf,0,m_scene);  /// TODO : Change to image item - NOT POLYGON!!!!
+    PhotoItem * it = new PhotoItem(image,m_scene);
     it->setName(image.text("File").append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount()+1);
 
@@ -342,6 +328,7 @@ void Canvas::selectionChanged()
             m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Select);
     }
 
+    // Selection change signals
     selectedItems = m_scene->selectedItems();
     if (m_selection_mode & SingleSelcting)
     {
@@ -350,12 +337,14 @@ void Canvas::selectionChanged()
             emit hasSelectionChanged(true);
             AbstractPhoto * item = selectedItems.at(0);
             // Specific signals emitting
-            if (m_interaction_mode & BorderEditingMode)
+            if (m_interaction_mode & BorderToolMode)
                 emit setInitialValues(item->borderWidth(), item->borderCornersStyle(), item->borderColor());
         }
         else
             emit hasSelectionChanged(false);
     }
+    else if (m_selection_mode & MultiSelecting)
+        emit hasSelectionChanged(selectedItems.count());
 }
 
 /** ###########################################################################################################################
@@ -392,7 +381,7 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
 void Canvas::borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color)
 {
     QList<AbstractPhoto*> selectedItem = m_scene->selectedItems();
-    if (m_selection_mode & SingleSelcting && m_interaction_mode & BorderEditingMode && selectedItem.count() == 1)
+    if (m_selection_mode & SingleSelcting && m_interaction_mode & BorderToolMode && selectedItem.count() == 1)
     {
         AbstractPhoto * item = selectedItem.at(0);
         UndoBorderChangeCommand * undo = new UndoBorderChangeCommand(item, width, cornerStyle, color);
@@ -414,8 +403,29 @@ void Canvas::refreshWidgetConnections(bool isVisible)
         disconnect(this,SIGNAL(hasSelectionChanged(bool)),sender(),0);
 }
 
-#define MAX_SCALE_LIMIT 4
-#define MIN_SCALE_LIMIT 0.5
+/** ###########################################################################################################################
+ * Appends new undo command
+ #############################################################################################################################*/
+void Canvas::newUndoCommand(QUndoCommand * command)
+{
+    m_undo_stack->push(command);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void Canvas::setupGUI()
 {

@@ -2,7 +2,7 @@
 #include "CanvasWidget.h"
 #include "polygon_widget.h"
 #include "canvasmouseevent.h"
-#include <abstract_photo.h>
+#include "AbstractPhoto.h"
 
 // Qt
 #include <QDebug>

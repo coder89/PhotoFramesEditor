@@ -4,11 +4,9 @@
 #include <QMenu>
 #include <QAction>
 
-// Local
-#include "abstract_photo.h"
-
 namespace KIPIPhotoFramesEditor
 {
+    class AbstractPhoto;
 
     class QContextMenu : public QMenu
     {

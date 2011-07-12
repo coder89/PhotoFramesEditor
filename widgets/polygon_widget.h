@@ -11,7 +11,7 @@
 #include <QGraphicsSceneMouseEvent>
 
 // Local
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 
 namespace KIPIPhotoFramesEditor
 {

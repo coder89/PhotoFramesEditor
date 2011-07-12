@@ -162,10 +162,16 @@ void PhotoFramesEditor::createWidgets()
     this->addDockWidget(Qt::RightDockWidgetArea, d->toolsWidget);
 
     // Borders tool
-    d->toolBorder = new BorderEditTool(this);
-    this->addDockWidget(Qt::RightDockWidgetArea, d->toolBorder);
-    d->toolBorder->setVisible(false);
-    connect(d->toolsWidget,SIGNAL(borderToolSelectionChanged(bool)),d->toolBorder,SLOT(setShown(bool)));
+    d->toolBorders = new BorderEditTool(this);
+    this->addDockWidget(Qt::RightDockWidgetArea, d->toolBorders);
+    d->toolBorders->setVisible(false);
+    connect(d->toolsWidget,SIGNAL(borderToolSelectionChanged(bool)),d->toolBorders,SLOT(setShown(bool)));
+
+    // Colorize tool
+    d->toolColorize = new ColorizeTool(this);
+    this->addDockWidget(Qt::RightDockWidgetArea, d->toolColorize);
+    d->toolColorize->setVisible(false);
+    connect(d->toolsWidget,SIGNAL(colorizeToolSelectionChanged(bool)),d->toolColorize,SLOT(setShown(bool)));
 
     // Layers dockwidget
     d->treeWidget = new QDockWidget("Layers", this);
@@ -179,9 +185,8 @@ void PhotoFramesEditor::createWidgets()
     d->treeWidget->setTitleBarWidget(d->treeTitle);
     this->addDockWidget(Qt::RightDockWidgetArea, d->treeWidget);
     d->treeWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    connect(d->toolsWidget,SIGNAL(pointerToolSelected()),d->tree,SLOT(setMultiSelection()));
-    connect(d->toolsWidget,SIGNAL(handToolSelected()),d->tree,SLOT(setMultiSelection()));
-    connect(d->toolsWidget,SIGNAL(borderToolSelected()),d->tree,SLOT(setSingleSelection()));
+    connect(d->toolsWidget,SIGNAL(requireMultiSelection()),d->tree,SLOT(setMultiSelection()));
+    connect(d->toolsWidget,SIGNAL(requireSingleSelection()),d->tree,SLOT(setSingleSelection()));
 
     // Central widget (widget with canvas)
     d->centralWidget = new QWidget(this);
@@ -197,15 +202,6 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
 {
     if (m_canvas)
     {
-//        disconnect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),this,0);
-//        disconnect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),this,0);
-//        disconnect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
-//        disconnect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),0);
-//        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,0);
-//        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,0);
-//        disconnect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,0);
-//        disconnect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,0);
-//        disconnect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,0);
         d->centralWidget->layout()->removeWidget(m_canvas);
         m_canvas->deleteLater();
     }
@@ -228,11 +224,13 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     // interaction modes (tools)
     connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(enableDefaultSelectionMode()));
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
-    connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBorderEditingMode()));
+    connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBordersToolMode()));
+    connect(d->toolsWidget,SIGNAL(colorizeToolSelected()),m_canvas,SLOT(enableColorizeToolMode()));
     // tools specific signals
-    connect(m_canvas,SIGNAL(setInitialValues(qreal,Qt::PenJoinStyle,QColor)),d->toolBorder,SLOT(setInitialValues(qreal,Qt::PenJoinStyle,QColor)));
-    connect(d->toolBorder,SIGNAL(borderStyleChanged(qreal,Qt::PenJoinStyle,QColor)),m_canvas,SLOT(borderChangeCommand(qreal,Qt::PenJoinStyle,QColor)));
-    connect(d->toolBorder,SIGNAL(visibilityChanged(bool)),m_canvas,SLOT(refreshWidgetConnections(bool)));
+    connect(m_canvas,SIGNAL(setInitialValues(qreal,Qt::PenJoinStyle,QColor)),d->toolBorders,SLOT(setInitialValues(qreal,Qt::PenJoinStyle,QColor)));
+    connect(d->toolBorders,SIGNAL(borderStyleChanged(qreal,Qt::PenJoinStyle,QColor)),m_canvas,SLOT(borderChangeCommand(qreal,Qt::PenJoinStyle,QColor)));
+    connect(d->toolBorders,SIGNAL(visibilityChanged(bool)),m_canvas,SLOT(refreshWidgetConnections(bool)));
+    connect(d->toolColorize,SIGNAL(visibilityChanged(bool)),m_canvas,SLOT(refreshWidgetConnections(bool)));
 }
 
 void PhotoFramesEditor::open()

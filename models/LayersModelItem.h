@@ -18,7 +18,7 @@ namespace KIPIPhotoFramesEditor
 
             enum
             {
-                EyeIcon = 1, PadLockIcon, NameString = COLUMN_COUNT-1,
+                EyeIcon = 1, PadLockIcon, NameString = COLUMN_COUNT-1, Thumbnail
             };
 
             LayersModelItem(AbstractPhoto * item, LayersModelItem * parent = 0);

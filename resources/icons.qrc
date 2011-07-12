@@ -7,5 +7,7 @@
         <file>tool_pointer.png</file>
         <file>tool_hand.png</file>
         <file>tool_border.png</file>
+        <file>tool_colorize.png</file>
+        <file>tool_effects.png</file>
     </qresource>
 </RCC>

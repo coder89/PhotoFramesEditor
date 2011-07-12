@@ -1,6 +1,7 @@
-#include "abstract_photo.h"
+#include "AbstractPhoto.h"
 #include "Scene.h"
 #include "photo_context_menu.h"
+#include "AbstractPhotoEffectsGroup.h"
 
 #include <QMenu>
 #include <QStyle>
@@ -18,30 +19,60 @@ using namespace KIPIPhotoFramesEditor;
 
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
-AbstractPhoto::AbstractPhoto(QGraphicsScene * parent) :
-    QGraphicsPixmapItem(0,parent),
+AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
+    QGraphicsPixmapItem(0,scene),
     m_name("New layer")
 {
     //this->setAcceptDrops(true);
     this->setAcceptHoverEvents(true);
+
+    // Effects group
+    m_effects_group = new AbstractPhotoEffectsGroup();
 }
 
 void AbstractPhoto::setupWidget(const QPainterPath & path)
 {
     this->m_image_path = path.translated(-path.boundingRect().topLeft());
     this->m_image_path = m_image_path.simplified();
-    m_pixmap = QPixmap(m_image_path.boundingRect().size().toSize());
-    m_pixmap.fill(Qt::transparent);
+    m_pixmap_original = QPixmap(m_image_path.boundingRect().size().toSize());
+    m_pixmap_original.fill(Qt::transparent);
+    this->recalcShape();
 
-    QPainter p(&m_pixmap);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setPen(QPen(QColor(122, 163, 39), 1, Qt::DotLine));
-    p.drawPath(m_image_path);
-    p.fillPath(m_image_path, QColor(200, 200, 255, 255));
+    // Create effective pixmap
+    this->refreshPixmap();
 
-    QGraphicsPixmapItem::setPixmap(m_pixmap);
     this->setFlag(QGraphicsItem::ItemIsSelectable);
-    this->updateIcon();
+
+    // Default border style
+    this->setBorderWidth(0);
+    this->setBorderColor(Qt::black);
+    this->setBorderCornersStyle(Qt::RoundJoin);
+}
+
+void AbstractPhoto::setupWidget(const QPixmap & photo)
+{
+    m_pixmap_original = photo;
+
+    // Scaling if to big
+    QSize s = photo.size();
+    QRect r = photo.rect();
+    QSize sceneSize = scene()->sceneRect().size().toSize();
+    if (sceneSize.width()<s.width() || sceneSize.height()<s.height())
+    {
+        s.scale(sceneSize*0.8, Qt::KeepAspectRatio);
+        r.setSize(s);
+    }
+
+    QPainterPath p;
+    p.addRect(r);
+    m_image_path = p;
+    this->m_image_path = m_image_path.simplified();
+    this->recalcShape();
+
+    // Create effective pixmap
+    this->refreshPixmap();
+
+    this->setFlag(QGraphicsItem::ItemIsSelectable);
 
     // Default border style
     this->setBorderWidth(0);
@@ -140,7 +171,7 @@ void AbstractPhoto::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
 
 void AbstractPhoto::updateIcon()
 {
-    //this->setIcon(QIcon(m_pixmap.scaled(100,100,Qt::KeepAspectRatioByExpanding)));
+    m_icon = QIcon(m_pixmap.scaled(100,100,Qt::KeepAspectRatioByExpanding));
 }
 
 void AbstractPhoto::selectStateChanged(bool state)
@@ -160,10 +191,15 @@ void AbstractPhoto::lockStateChanged(bool state)
 
 void AbstractPhoto::recalcShape()
 {
-    QPainterPathStroker s;
-    s.setWidth(m_border_width);
-    s.setJoinStyle(m_border_corner_style);
-    m_border_path = s.createStroke(m_image_path);
+    if (m_border_width)
+    {
+        QPainterPathStroker s;
+        s.setWidth(m_border_width);
+        s.setJoinStyle(m_border_corner_style);
+        m_border_path = s.createStroke(m_image_path);
+    }
+    else
+        m_border_path = QPainterPath();
     m_complete_path = m_border_path.united(m_image_path);
     prepareGeometryChange();
 
@@ -175,4 +211,11 @@ void AbstractPhoto::recalcShape()
     }
     catch(...)
     {}
+}
+
+void AbstractPhoto::refreshPixmap()
+{
+    this->m_pixmap = m_effects_group->apply(m_pixmap_original.scaled(this->boundingRect().size().toSize(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+    this->updateIcon();
+    QGraphicsPixmapItem::setPixmap(m_pixmap);
 }

@@ -9,28 +9,6 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class QGraphicsGradientEffect : public QGraphicsEffect
-{
-    protected:
-
-        virtual void draw(QPainter *painter)
-        {
-            QPoint offset;
-            if (sourceIsPixmap()) {
-                // No point in drawing in device coordinates (pixmap will be scaled anyways).
-                const QPixmap pixmap = sourcePixmap(Qt::LogicalCoordinates, &offset);
-                painter->setCompositionMode(QPainter::CompositionMode_Difference);
-                painter->drawPixmap(offset, pixmap);
-            } else {
-                // Draw pixmap in device coordinates to avoid pixmap scaling;
-                const QPixmap pixmap = sourcePixmap(Qt::DeviceCoordinates, &offset);
-                painter->setWorldTransform(QTransform());
-                /// TODO
-                painter->drawPixmap(offset, pixmap);
-            }
-        }
-};
-
 ColorizeTool::ColorizeTool(QWidget * parent) :
     QDockWidget(parent)
 {

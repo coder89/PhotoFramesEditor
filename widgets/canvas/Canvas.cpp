@@ -29,11 +29,38 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
     this->enableViewingMode();
 
     // Signals connection
-    connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addItemToModel(AbstractPhoto*)));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
     connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
     connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+}
+
+/** ###########################################################################################################################
+* Setup GUI of canvas widget
+#############################################################################################################################*/
+void Canvas::setupGUI()
+{
+    this->setAcceptDrops(true);
+    this->setAutoFillBackground(true);
+    this->viewport()->setAutoFillBackground(false);
+    this->setCacheMode(QGraphicsView::CacheBackground);
+    this->setBackgroundBrush(QPalette().brush(QPalette::Window));
+    /*this->setRenderHint(QPainter::Antialiasing);*/                                /// It causes worst quality!
+    /*this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);*/  /// It causes worst quality!
+
+    this->setScene(m_scene);
+
+    QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
+    img.setText("File","routing.jpg");
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
+    this->addImage(img);                                /// TODO : Remove after finish
 }
 
 /** ###########################################################################################################################
@@ -84,6 +111,9 @@ void Canvas::setInteractionMode(InteractionMode mode)
         setSelectionMode(SingleSelcting);
 }
 
+/** ###########################################################################################################################
+ * Add new image from QImage object
+ #############################################################################################################################*/
 void Canvas::addImage(const QImage & image)
 {
     // Create & setup item
@@ -97,10 +127,6 @@ void Canvas::addImage(const QImage & image)
 
     if (m_selmodel->hasSelection())
     {} /// TODO: add above selected
-}
-
-void Canvas::addItemToModel(AbstractPhoto * /*item*/)
-{
 }
 
 /** ##########################################################################################################################
@@ -411,47 +437,9 @@ void Canvas::newUndoCommand(QUndoCommand * command)
     m_undo_stack->push(command);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void Canvas::setupGUI()
-{
-    this->setAcceptDrops(true);
-    this->setAutoFillBackground(true);
-    this->viewport()->setAutoFillBackground(false);
-    this->setCacheMode(QGraphicsView::CacheBackground);
-    this->setBackgroundBrush(QPalette().brush(QPalette::Window));
-    /*this->setRenderHint(QPainter::Antialiasing);*/                                /// It causes worst quality!
-    /*this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);*/  /// It causes worst quality!
-
-    this->setScene(m_scene);
-
-    QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
-    img.setText("File","routing.jpg");
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-}
-
+/** ###########################################################################################################################
+ * Wheel event - scales the canvas
+ #############################################################################################################################*/
 void Canvas::wheelEvent(QWheelEvent * event)
 {
     // Scaling limitation

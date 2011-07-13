@@ -36,6 +36,9 @@ namespace KIPIPhotoFramesEditor
             void requireMultiSelection();
             void pointerToolSelected();
             void handToolSelected();
+            // Effects tool selection signals
+            void effectsToolSelectionChanged(bool);
+            void effectsToolSelected();
             // Border tool selection signals
             void borderToolSelectionChanged(bool);
             void borderToolSelected();
@@ -68,6 +71,16 @@ namespace KIPIPhotoFramesEditor
                 {
                     emit requireMultiSelection();
                     emit handToolSelected();
+                }
+            }
+
+            void emitEffectsToolSelected(bool isSelected)
+            {
+                emit effectsToolSelectionChanged(isSelected);
+                if (isSelected)
+                {
+                    emit requireSingleSelection();
+                    emit effectsToolSelected();
                 }
             }
 

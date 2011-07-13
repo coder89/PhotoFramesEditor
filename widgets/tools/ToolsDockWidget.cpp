@@ -52,19 +52,23 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     connect(m_tool_hand,SIGNAL(toggled(bool)),this,SLOT(emitHandToolSelected(bool)));
 
     // Colorize tool
-    m_tool_effects = new KPushButton(KIcon(":tool_effects.png"), "", widget);
+    m_tool_effects = new KPushButton(KGuiItem("", ":tool_effects.png",
+                                              i18n("Effects editor"),
+                                              i18n("This tool allows you to edit existing effects of your layers and add some new one.")), widget);
     m_tool_effects->setIconSize(QSize(24,24));
     m_tool_effects->setFixedSize(32,32);
     m_tool_effects->setCheckable(true);
     group->addButton(m_tool_effects);
-    formLayout->addWidget(m_tool_effects, 1,1, Qt::AlignCenter);
+    formLayout->addWidget(m_tool_effects, 0,3, Qt::AlignCenter);
+    connect(m_tool_effects,SIGNAL(toggled(bool)),this,SLOT(emitEffectsToolSelected(bool)));
 
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
+    m_tool_border->setIconSize(QSize(24,24));
     m_tool_border->setFixedSize(32,32);
     m_tool_border->setCheckable(true);
     group->addButton(m_tool_border);
-    formLayout->addWidget(m_tool_border, 1,2, Qt::AlignCenter);
+    formLayout->addWidget(m_tool_border, 1,1, Qt::AlignCenter);
     connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(emitBorderToolSelected(bool)));
 
     // Colorize tool
@@ -72,7 +76,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_colorize_button->setFixedSize(32,32);
     m_tool_colorize_button->setCheckable(true);
     group->addButton(m_tool_colorize_button);
-    formLayout->addWidget(m_tool_colorize_button, 1,3, Qt::AlignCenter);
+    formLayout->addWidget(m_tool_colorize_button, 1,2, Qt::AlignCenter);
     connect(m_tool_colorize_button,SIGNAL(toggled(bool)),this,SLOT(emitColorizeToolSelected(bool)));
 
     // Spacer

@@ -17,6 +17,7 @@
 #include "LayersTree.h"
 #include "LayersTreeTitleWidget.h"
 #include "ToolsDockWidget.h"
+#include "EffectsEditorTool.h"
 #include "BorderEditTool.h"
 #include "ColorizeTool.h"
 
@@ -49,6 +50,7 @@ namespace KIPIPhotoFramesEditor
                 treeWidget(0),
                 treeTitle(0),
                 toolsWidget(0),
+                toolEffects(0),
                 toolBorders(0),
                 toolColorize(0)
             {}
@@ -85,6 +87,7 @@ namespace KIPIPhotoFramesEditor
                 //Q_DELETE(treeTitle)   // DELETED BY treeWidget
 
                 //Q_DELETE(toolsWidget)     // DELETED BY main window
+                //Q_DELETE(toolEffects)     // DELETED BY main window
                 //Q_DELETE(toolBorders)     // DELETED BY main window
                 //Q_DELETE(toolColorize)    // DELETED BY main window
             }
@@ -122,6 +125,7 @@ namespace KIPIPhotoFramesEditor
 
             // Tools
             ToolsDockWidget * toolsWidget;
+            EffectsEditorTool * toolEffects;
             BorderEditTool * toolBorders;
             ColorizeTool * toolColorize;
     };

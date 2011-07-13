@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     widgets/items/AbstractPhotoEffectsGroup.cpp \
     widgets/items/AbstractPhotoEffect.cpp \
     widgets/items/PixelizePhotoEffect.cpp \
-    widgets/items/BlurPhotoEffect.cpp
+    widgets/items/BlurPhotoEffect.cpp \
+    widgets/tools/EffectsEditorTool.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -81,7 +82,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/items/AbstractPhotoEffectsGroup.h \
     widgets/items/AbstractPhotoEffect.h \
     widgets/items/PixelizePhotoEffect.h \
-    widgets/items/BlurPhotoEffect.h
+    widgets/items/BlurPhotoEffect.h \
+    widgets/tools/EffectsEditorTool.h
 
 LIBS += \
     -L/usr \

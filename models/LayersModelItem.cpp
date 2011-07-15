@@ -118,7 +118,6 @@ bool LayersModelItem::setData(const QVariant & data, int type)
         return false;
     if (type == NameString)
         this->itemPhoto->setName(data.toString());
-    /// HERE ADD SOME OTHER DATA TYPES!!!
     return false;
 }
 
@@ -143,7 +142,6 @@ AbstractPhoto * LayersModelItem::photo() const
 
 QVariant LayersModelItem::data(int column) const
 {
-    //qDebug() << "data" << this << column;
     if (column == LayersModelItem::NameString)
         return itemPhoto ? itemPhoto->name() : "Name";
     else if (column == LayersModelItem::Thumbnail)

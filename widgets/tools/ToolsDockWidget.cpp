@@ -51,7 +51,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     formLayout->addWidget(m_tool_hand, 0,2, Qt::AlignCenter);
     connect(m_tool_hand,SIGNAL(toggled(bool)),this,SLOT(emitHandToolSelected(bool)));
 
-    // Colorize tool
+    // Effects tool
     m_tool_effects = new KPushButton(KGuiItem("", ":tool_effects.png",
                                               i18n("Effects editor"),
                                               i18n("This tool allows you to edit existing effects of your layers and add some new one.")), widget);
@@ -60,7 +60,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_effects->setCheckable(true);
     group->addButton(m_tool_effects);
     formLayout->addWidget(m_tool_effects, 0,3, Qt::AlignCenter);
-    connect(m_tool_effects,SIGNAL(toggled(bool)),this,SLOT(emitEffectsToolSelected(bool)));
+    connect(m_tool_effects,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
 
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
@@ -102,4 +102,20 @@ void ToolsDockWidget::setDefaultTool()
 {
     m_tool_hand->setChecked(true);
     this->emitHandToolSelected(true);
+}
+
+void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
+{
+//    // Effects editor tool
+//    d->toolEffects = new EffectsEditorTool(this);
+//    this->addDockWidget(Qt::RightDockWidgetArea, d->toolEffects);
+//    d->toolEffects->setVisible(false);
+//    connect(d->toolsWidget,SIGNAL(effectsToolSelectionChanged(bool)),d->toolEffects,SLOT(setShown(bool)));
+
+    emit effectsToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        emit requireSingleSelection();
+        emit effectsToolSelected();
+    }
 }

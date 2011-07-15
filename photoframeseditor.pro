@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+include(utils/qtpropertybrowser/src/qtpropertybrowser.pri)
+
 QT       += core gui console
 
 TARGET = photoframeseditor
@@ -40,11 +42,12 @@ SOURCES += main.cpp\
     widgets/tools/ColorizeTool.cpp \
     widgets/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
-    widgets/items/AbstractPhotoEffectsGroup.cpp \
-    widgets/items/AbstractPhotoEffect.cpp \
-    widgets/items/PixelizePhotoEffect.cpp \
-    widgets/items/BlurPhotoEffect.cpp \
-    widgets/tools/EffectsEditorTool.cpp
+    widgets/effects/AbstractPhotoEffectsGroup.cpp \
+    widgets/effects/AbstractPhotoEffect.cpp \
+    widgets/effects/PixelizePhotoEffect.cpp \
+    widgets/effects/BlurPhotoEffect.cpp \
+    widgets/tools/EffectsEditorTool.cpp \
+    widgets/tools/AbstractPropertiesModel.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -79,11 +82,12 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/ColorizeTool.h \
     widgets/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
-    widgets/items/AbstractPhotoEffectsGroup.h \
-    widgets/items/AbstractPhotoEffect.h \
-    widgets/items/PixelizePhotoEffect.h \
-    widgets/items/BlurPhotoEffect.h \
-    widgets/tools/EffectsEditorTool.h
+    widgets/effects/AbstractPhotoEffectsGroup.h \
+    widgets/effects/AbstractPhotoEffect.h \
+    widgets/effects/PixelizePhotoEffect.h \
+    widgets/effects/BlurPhotoEffect.h \
+    widgets/tools/EffectsEditorTool.h \
+    widgets/tools/AbstractPropertiesModel.h
 
 LIBS += \
     -L/usr \
@@ -94,6 +98,7 @@ INCLUDEPATH += \
     plugin \
     widgets \
     widgets/canvas \
+    widgets/effects \
     widgets/items \
     widgets/layers \
     widgets/menus \

@@ -161,12 +161,6 @@ void PhotoFramesEditor::createWidgets()
     d->toolsWidget = new ToolsDockWidget(this);
     this->addDockWidget(Qt::RightDockWidgetArea, d->toolsWidget);
 
-    // Effects editor tool
-    d->toolEffects = new EffectsEditorTool(this);
-    this->addDockWidget(Qt::RightDockWidgetArea, d->toolEffects);
-    d->toolEffects->setVisible(false);
-    connect(d->toolsWidget,SIGNAL(effectsToolSelectionChanged(bool)),d->toolEffects,SLOT(setShown(bool)));
-
     // Borders tool
     d->toolBorders = new BorderEditTool(this);
     this->addDockWidget(Qt::RightDockWidgetArea, d->toolBorders);
@@ -228,6 +222,7 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsUp()));
     connect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsDown()));
     // interaction modes (tools)
+    connect(d->toolsWidget,SIGNAL(undoCommandCreated(QUndoCommand*)),m_canvas,SLOT(newUndoCommand(QUndoCommand*)));
     connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(enableDefaultSelectionMode()));
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
     connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableBordersToolMode()));

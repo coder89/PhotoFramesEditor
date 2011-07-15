@@ -17,7 +17,6 @@
 namespace KIPIPhotoFramesEditor
 {
     class Scene;
-    class WidgetsFactory;
     class LayersModelItem;
     class AbstractPhotoEffectsGroup;
 
@@ -174,9 +173,6 @@ namespace KIPIPhotoFramesEditor
             // Photo resizer class
             class AbstractPhotoResizer;
             friend class AbstractPhotoResizer;
-
-            // Allows factory to use widgets protected drawing methods
-            friend class WidgetsFactory;
 
         protected Q_SLOTS:
 

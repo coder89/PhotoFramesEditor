@@ -3,6 +3,7 @@
 
 #include <QDockWidget>
 #include <QLayout>
+#include <QUndoCommand>
 
 #include <kpushbutton.h>
 
@@ -32,6 +33,7 @@ namespace KIPIPhotoFramesEditor
 
         signals:
 
+            void undoCommandCreated(QUndoCommand * command);
             void requireSingleSelection();
             void requireMultiSelection();
             void pointerToolSelected();
@@ -56,6 +58,8 @@ namespace KIPIPhotoFramesEditor
                 m_has_selection = hasSelection;
             }
 
+            void setEffectsWidgetVisible(bool isVisible);
+
             void emitPointerToolSelected(bool isSelected)
             {
                 if (isSelected)
@@ -71,16 +75,6 @@ namespace KIPIPhotoFramesEditor
                 {
                     emit requireMultiSelection();
                     emit handToolSelected();
-                }
-            }
-
-            void emitEffectsToolSelected(bool isSelected)
-            {
-                emit effectsToolSelectionChanged(isSelected);
-                if (isSelected)
-                {
-                    emit requireSingleSelection();
-                    emit effectsToolSelected();
                 }
             }
 

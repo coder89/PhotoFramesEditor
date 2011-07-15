@@ -1,5 +1,6 @@
 #include "ToolsDockWidget.h"
 #include "ColorizeTool.h"
+#include "EffectsEditorTool.h"
 
 #include <QDebug>
 #include <QButtonGroup>
@@ -11,19 +12,48 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+class MyStackedLayout : public QStackedLayout
+{
+    public:
+
+        MyStackedLayout(QWidget * parent = 0) : QStackedLayout(parent) {}
+
+        virtual QSize sizeHint() const
+        {
+            QSize s = QStackedLayout::sizeHint();
+            s.setHeight(this->currentWidget()->sizeHint().height());
+            return s;
+        }
+
+        virtual QSize minimumSize() const
+        {
+            return sizeHint();
+        }
+};
+
 ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     QDockWidget("Tools",parent),
-    m_has_selection(false)
+    m_has_selection(false),
+    m_currentPhoto(0)
 {
     this->setFeatures(QDockWidget::DockWidgetMovable);
+    this->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
     QWidget * widget = new QWidget(this);
     QVBoxLayout * layout = new QVBoxLayout(widget);
     layout->setSizeConstraint(QLayout::SetMinimumSize);
+
+    // tools buttons layout
     QGridLayout * formLayout = new QGridLayout();
     formLayout->setSizeConstraint(QLayout::SetMinimumSize);
     layout->addLayout(formLayout);
+
+    // stacked widget (with tools widgets)
+    m_tool_widget_layout = new MyStackedLayout();
+    m_tool_widget_layout->addWidget(new QWidget(widget));
+    layout->addLayout(m_tool_widget_layout,1);
+
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,0);
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,0);
     QButtonGroup * group = new QButtonGroup(widget);
@@ -52,15 +82,17 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     connect(m_tool_hand,SIGNAL(toggled(bool)),this,SLOT(emitHandToolSelected(bool)));
 
     // Effects tool
-    m_tool_effects = new KPushButton(KGuiItem("", ":tool_effects.png",
+    m_effects_button = new KPushButton(KGuiItem("", ":tool_effects.png",
                                               i18n("Effects editor"),
                                               i18n("This tool allows you to edit existing effects of your layers and add some new one.")), widget);
-    m_tool_effects->setIconSize(QSize(24,24));
-    m_tool_effects->setFixedSize(32,32);
-    m_tool_effects->setCheckable(true);
-    group->addButton(m_tool_effects);
-    formLayout->addWidget(m_tool_effects, 0,3, Qt::AlignCenter);
-    connect(m_tool_effects,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
+    m_effects_button->setIconSize(QSize(24,24));
+    m_effects_button->setFixedSize(32,32);
+    m_effects_button->setCheckable(true);
+    group->addButton(m_effects_button);
+    formLayout->addWidget(m_effects_button, 0,3, Qt::AlignCenter);
+    m_effects_widget = new EffectsEditorTool(this);
+    m_tool_widget_layout->addWidget(m_effects_widget);
+    connect(m_effects_button,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
 
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
@@ -77,7 +109,9 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_colorize_button->setCheckable(true);
     group->addButton(m_tool_colorize_button);
     formLayout->addWidget(m_tool_colorize_button, 1,2, Qt::AlignCenter);
-    connect(m_tool_colorize_button,SIGNAL(toggled(bool)),this,SLOT(emitColorizeToolSelected(bool)));
+    m_colorize_widget = new ColorizeTool(this);
+    m_tool_widget_layout->addWidget(m_colorize_widget);
+    connect(m_tool_colorize_button,SIGNAL(toggled(bool)),this,SLOT(setColorizeWidgetVisible(bool)));
 
     // Spacer
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,5);
@@ -90,9 +124,9 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     layout->setSpacing(0);
     layout->setMargin(0);
     widget->setLayout(layout);
-    widget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+    widget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     this->setWidget(widget);
-    this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Ignored);
+    this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
     setDefaultTool();
 }
@@ -104,18 +138,36 @@ void ToolsDockWidget::setDefaultTool()
     this->emitHandToolSelected(true);
 }
 
+void ToolsDockWidget::itemSelected(AbstractPhoto * photo)
+{
+    m_currentPhoto = photo;
+    AbstractTool * tool =qobject_cast<AbstractTool*>(m_tool_widget_layout->currentWidget());
+    if (tool)
+        tool->setCurrentItem(photo);
+}
+
 void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
 {
-//    // Effects editor tool
-//    d->toolEffects = new EffectsEditorTool(this);
-//    this->addDockWidget(Qt::RightDockWidgetArea, d->toolEffects);
-//    d->toolEffects->setVisible(false);
-//    connect(d->toolsWidget,SIGNAL(effectsToolSelectionChanged(bool)),d->toolEffects,SLOT(setShown(bool)));
-
     emit effectsToolSelectionChanged(isVisible);
     if (isVisible)
     {
+        m_tool_widget_layout->setCurrentWidget(m_effects_widget);
+        m_effects_widget->setCurrentItem(m_currentPhoto);
         emit requireSingleSelection();
         emit effectsToolSelected();
+        this->adjustSize();
+    }
+}
+
+void ToolsDockWidget::setColorizeWidgetVisible(bool isSelected)
+{
+    emit colorizeToolSelectionChanged(isSelected);
+    if (isSelected)
+    {
+        m_tool_widget_layout->setCurrentWidget(m_colorize_widget);
+        m_colorize_widget->setCurrentItem(m_currentPhoto);
+        emit requireSingleSelection();
+        emit colorizeToolSelected();
+        this->adjustSize();
     }
 }

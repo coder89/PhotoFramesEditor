@@ -1,7 +1,7 @@
 #ifndef ABSTRACTPHOTOEFFECTSGROUP_H
 #define ABSTRACTPHOTOEFFECTSGROUP_H
 
-#include <QObject>
+#include <QAbstractItemModel>
 #include <QPixmap>
 
 namespace KIPIPhotoFramesEditor
@@ -9,15 +9,25 @@ namespace KIPIPhotoFramesEditor
     class AbstractPhoto;
     class AbstractPhotoEffect;
 
-    class AbstractPhotoEffectsGroup : public QObject
+    class AbstractPhotoEffectsGroup : public QAbstractItemModel
     {
             Q_OBJECT
 
+            AbstractPhoto * m_photo;
             QList<AbstractPhotoEffect*> m_effects_list;
 
         public:
 
-            explicit AbstractPhotoEffectsGroup(QObject * parent = 0);
+            explicit AbstractPhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
+            AbstractPhoto * photo() const;
+            AbstractPhotoEffect * getItem(const QModelIndex & index = QModelIndex()) const;
+
+            // Reimplemented QAbstractItemModel methods
+            virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
+            virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+            virtual QModelIndex index( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
+            virtual QModelIndex parent( const QModelIndex & index ) const;
+            virtual int rowCount( const QModelIndex & parent = QModelIndex() ) const;
 
         signals:
 

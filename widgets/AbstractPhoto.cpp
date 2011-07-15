@@ -27,7 +27,7 @@ AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
     this->setAcceptHoverEvents(true);
 
     // Effects group
-    m_effects_group = new AbstractPhotoEffectsGroup();
+    m_effects_group = new AbstractPhotoEffectsGroup(this);
 }
 
 void AbstractPhoto::setupWidget(const QPainterPath & path)

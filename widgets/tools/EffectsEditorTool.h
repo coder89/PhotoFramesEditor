@@ -1,22 +1,30 @@
 #ifndef EFFECTSEDITORTOOL_H
 #define EFFECTSEDITORTOOL_H
 
-#include <QDockWidget>
+#include "AbstractTool.h"
+
+#include <QModelIndex>
 
 namespace KIPIPhotoFramesEditor
 {
-    class EffectsEditorTool : public QDockWidget
+    class EffectsEditorToolPrivate;
+
+    class EffectsEditorTool : public AbstractTool
     {
             Q_OBJECT
+
+            EffectsEditorToolPrivate * d;
 
         public:
 
             explicit EffectsEditorTool(QWidget * parent = 0);
+            virtual void currentItemChanged();
 
         signals:
 
-        public slots:
+        protected slots:
 
+            void viewCurrentEffectEditor(const QModelIndex & index);
     };
 }
 

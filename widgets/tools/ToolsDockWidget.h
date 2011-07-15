@@ -4,12 +4,14 @@
 #include <QDockWidget>
 #include <QLayout>
 #include <QUndoCommand>
+#include <QStackedLayout>
 
 #include <kpushbutton.h>
 
 namespace KIPIPhotoFramesEditor
 {
-    class ColorizeTool;
+    class AbstractPhoto;
+    class AbstractTool;
 
     class ToolsDockWidget : public QDockWidget
     {
@@ -17,14 +19,17 @@ namespace KIPIPhotoFramesEditor
 
             KPushButton * m_tool_pointer;
             KPushButton * m_tool_hand;
-            KPushButton * m_tool_effects;
+            KPushButton * m_effects_button;
             KPushButton * m_tool_border;
             KPushButton * m_tool_colorize_button;
 
-            QWidget * m_current_widget;
-            ColorizeTool * m_tool_colorize;
-
             bool m_has_selection;
+
+            QStackedLayout * m_tool_widget_layout;
+            AbstractTool * m_effects_widget;
+            AbstractTool * m_colorize_widget;
+
+            AbstractPhoto * m_currentPhoto;
 
         public:
 
@@ -48,13 +53,15 @@ namespace KIPIPhotoFramesEditor
             void colorizeToolSelectionChanged(bool);
             void colorizeToolSelected();
 
+        public slots:
+
+            void itemSelected(AbstractPhoto * photo);
+
         protected slots:
 
             void selectionChanged(bool hasSelection)
             {
-                if (!m_current_widget)
-                    return;
-                m_current_widget->setEnabled(hasSelection);
+                m_tool_widget_layout->setEnabled(hasSelection);
                 m_has_selection = hasSelection;
             }
 
@@ -64,6 +71,7 @@ namespace KIPIPhotoFramesEditor
             {
                 if (isSelected)
                 {
+                    m_tool_widget_layout->setCurrentIndex(0);
                     emit requireMultiSelection();
                     emit pointerToolSelected();
                 }
@@ -73,6 +81,7 @@ namespace KIPIPhotoFramesEditor
             {
                 if (isSelected)
                 {
+                    m_tool_widget_layout->setCurrentIndex(0);
                     emit requireMultiSelection();
                     emit handToolSelected();
                 }
@@ -87,15 +96,8 @@ namespace KIPIPhotoFramesEditor
                     emit borderToolSelected();
                 }
             }
-            void emitColorizeToolSelected(bool isSelected)
-            {
-                emit colorizeToolSelectionChanged(isSelected);
-                if (isSelected)
-                {
-                    emit requireSingleSelection();
-                    emit colorizeToolSelected();
-                }
-            }
+
+            void setColorizeWidgetVisible(bool isSelected);
     };
 }
 

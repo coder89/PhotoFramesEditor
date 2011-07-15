@@ -10,33 +10,30 @@
 using namespace KIPIPhotoFramesEditor;
 
 ColorizeTool::ColorizeTool(QWidget * parent) :
-    QDockWidget(parent)
+    AbstractTool(parent)
 {
-    this->setFeatures(QDockWidget::NoDockWidgetFeatures);
-
-    QWidget * widget = new QWidget(this);
-    QGridLayout * layout = new QGridLayout(widget);
+    QGridLayout * layout = new QGridLayout(this);
 
     // Title
-    QLabel * title = new QLabel(i18n("Colorize"), widget);
+    QLabel * title = new QLabel(i18n("Colorize"), this);
     QFont titleFont = title->font();
     titleFont.setBold(true);
     title->setFont(titleFont);
-    this->setTitleBarWidget(title);
+    layout->addWidget(title,0,0,1,2);
 
     m_form_layout = new QFormLayout();
 
-    m_colorize_type_widget = new KComboBox(widget);
+    m_colorize_type_widget = new KComboBox(this);
     m_colorize_type_widget->addItem("Solid",Solid);
     m_colorize_type_widget->addItem("Linear gradient",LinearGradient);
     m_colorize_type_widget->addItem("Radial gradient",RadialGradient);
     m_form_layout->addRow(i18n("Mode"),m_colorize_type_widget);
     connect(m_colorize_type_widget,SIGNAL(currentIndexChanged(int)),this,SLOT(modeChanged(int)));
 
-    m_strength_slider = new QSlider(Qt::Horizontal, widget);
+    m_strength_slider = new QSlider(Qt::Horizontal, this);
     m_strength_slider->setMinimum(0);
     m_strength_slider->setMaximum(255);
-    m_strength_spinbox = new QSpinBox(widget);
+    m_strength_spinbox = new QSpinBox(this);
     m_strength_spinbox->setMinimum(0);
     m_strength_spinbox->setMaximum(255);
     connect(m_strength_spinbox,SIGNAL(valueChanged(int)),m_strength_slider,SLOT(setValue(int)));
@@ -47,21 +44,20 @@ ColorizeTool::ColorizeTool(QWidget * parent) :
     strengthLayout->addWidget(m_strength_spinbox);
     m_form_layout->addRow(i18n("Strength"),strengthLayout);
 
-    m_color_button = new KColorButton(widget);
+    m_color_button = new KColorButton(this);
     m_form_layout->addRow(i18n("Color"),m_color_button);
 
-    m_color_button1 = new KColorButton(widget);
+    m_color_button1 = new KColorButton(this);
     m_form_layout->addRow(i18n("Color1"),m_color_button1);
 
-    m_color_button2 = new KColorButton(widget);
+    m_color_button2 = new KColorButton(this);
     m_form_layout->addRow(i18n("Color2"),m_color_button2);
 
-    layout->addLayout(m_form_layout,0,0,1,2);
-    layout->setRowStretch(1,1);
-    widget->setLayout(layout);
-    this->setWidget(widget);
+    layout->addLayout(m_form_layout,1,0,1,2);
+    layout->setRowStretch(2,1);
+    this->setLayout(layout);
 
-    widget->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Maximum);
+    this->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Maximum);
     m_colorize_type_widget->setCurrentIndex(0);
     this->modeChanged(0);
 }

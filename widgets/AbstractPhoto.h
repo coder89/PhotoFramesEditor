@@ -117,6 +117,12 @@ namespace KIPIPhotoFramesEditor
                 return m_icon;
             }
 
+            /// Effects group object
+            AbstractPhotoEffectsGroup * effectsGroup() const
+            {
+                return m_effects_group;
+            }
+
         public Q_SLOTS:
 
              void refreshPixmap();

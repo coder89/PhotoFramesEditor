@@ -9,6 +9,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class AbstractPhoto;
     class AbstractPhotoEffectsGroup;
 
     class AbstractPhotoEffect : public QObject
@@ -19,7 +20,9 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit AbstractPhotoEffect(const QString & name, QObject *parent = 0);
+            explicit AbstractPhotoEffect(const QString & name, QObject * parent = 0);
+            AbstractPhotoEffectsGroup * group() const;
+            AbstractPhoto * photo() const;
 
           /**
             * Name propetry
@@ -35,7 +38,8 @@ namespace KIPIPhotoFramesEditor
             }
 
             virtual QImage apply(const QImage & image) = 0;
-            virtual QSharedPointer<QtAbstractPropertyBrowser> propertyBrowser() const = 0;
+            virtual QtAbstractPropertyBrowser * propertyBrowser() const = 0;
+            virtual QString toString() const = 0;
 
         signals:
 

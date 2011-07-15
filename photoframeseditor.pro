@@ -47,7 +47,7 @@ SOURCES += main.cpp\
     widgets/effects/PixelizePhotoEffect.cpp \
     widgets/effects/BlurPhotoEffect.cpp \
     widgets/tools/EffectsEditorTool.cpp \
-    widgets/tools/AbstractPropertiesModel.cpp
+    widgets/tools/AbstractTool.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -87,7 +87,7 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/effects/PixelizePhotoEffect.h \
     widgets/effects/BlurPhotoEffect.h \
     widgets/tools/EffectsEditorTool.h \
-    widgets/tools/AbstractPropertiesModel.h
+    widgets/tools/AbstractTool.h
 
 LIBS += \
     -L/usr \

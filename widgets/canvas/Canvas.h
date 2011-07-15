@@ -173,6 +173,7 @@ namespace KIPIPhotoFramesEditor
         signals:
 
             void hasSelectionChanged(bool hasSelection);
+            void selectedItem(AbstractPhoto * photo);
             void setInitialValues(qreal width, Qt::PenJoinStyle cornersStyle, const QColor & color);
 
         private:

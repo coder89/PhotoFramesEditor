@@ -18,7 +18,8 @@ namespace KIPIPhotoFramesEditor
 
             explicit BlurPhotoEffect(int radius, QObject * parent = 0);
             virtual QImage apply(const QImage & image);
-            virtual QSharedPointer<QtAbstractPropertyBrowser> propertyBrowser() const;
+            virtual QtAbstractPropertyBrowser * propertyBrowser() const;
+            virtual QString toString() const;
 
         private:
 

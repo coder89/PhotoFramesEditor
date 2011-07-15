@@ -360,14 +360,18 @@ void Canvas::selectionChanged()
     {
         if (selectedItems.count() == 1)
         {
-            emit hasSelectionChanged(true);
             AbstractPhoto * item = selectedItems.at(0);
+            emit hasSelectionChanged(true);
+            emit selectedItem(item);
             // Specific signals emitting
             if (m_interaction_mode & BorderToolMode)
                 emit setInitialValues(item->borderWidth(), item->borderCornersStyle(), item->borderColor());
         }
         else
+        {
             emit hasSelectionChanged(false);
+            emit selectedItem(NULL);
+        }
     }
     else if (m_selection_mode & MultiSelecting)
         emit hasSelectionChanged(selectedItems.count());

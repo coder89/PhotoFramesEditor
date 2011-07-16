@@ -18,6 +18,9 @@ namespace KIPIPhotoFramesEditor
             Q_OBJECT
 
             QString m_name;
+            QSemaphore sem;
+
+            class OpacityUndoCommand;
 
         public:
 
@@ -39,7 +42,7 @@ namespace KIPIPhotoFramesEditor
             }
 
             virtual QImage apply(const QImage & image);
-            virtual QtAbstractPropertyBrowser * propertyBrowser() const = 0;
+            virtual QtAbstractPropertyBrowser * propertyBrowser() const;
             virtual QString toString() const = 0;
 
           /**
@@ -49,7 +52,7 @@ namespace KIPIPhotoFramesEditor
             void setOpacity(int opacity)
             {
                 m_opacity = opacity;
-                emit effectChanged();
+                emit effectChanged(this);
             }
             int opacity() const
             {
@@ -58,17 +61,28 @@ namespace KIPIPhotoFramesEditor
 
         protected:
 
-            QSemaphore sem;
             int m_opacity;
             QUndoCommand * m_undo_command;
+            static const QString OPACITY_STRING;
+
+            void beginUndoCommandChange()
+            {
+                sem.acquire();
+            }
+
+            void endUndoCommandChange()
+            {
+                sem.release();
+            }
 
         protected slots:
 
             void emitEffectChange();
+            virtual void propertyChanged(QtProperty * property);
 
         signals:
 
-            void effectChanged();
+            void effectChanged(AbstractPhotoEffect * effect);
     };
 }
 

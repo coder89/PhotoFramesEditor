@@ -37,7 +37,7 @@ namespace KIPIPhotoFramesEditor
 
             void push_back(AbstractPhotoEffect * effect);
             void push_front(AbstractPhotoEffect * effect);
-            void emitEffectsChanged();
+            void emitEffectsChanged(AbstractPhotoEffect * effect);
             QPixmap apply(const QPixmap & pixmap);
 
     };

@@ -8,6 +8,7 @@ namespace KIPIPhotoFramesEditor
     class PixelizePhotoEffect : public AbstractPhotoEffect
     {
             int m_pixelSize;
+            class PixelizeUndoCommand;
 
         public:
 
@@ -15,9 +16,28 @@ namespace KIPIPhotoFramesEditor
             virtual QtAbstractPropertyBrowser * propertyBrowser() const;
             virtual QString toString() const;
 
+          /**
+            * Pixel size property
+            */
+            Q_PROPERTY(int m_pixelSize READ pixelSize WRITE setPixelSize)
+            void setPixelSize(int pixelSize)
+            {
+                m_pixelSize = pixelSize;
+                emit effectChanged(this);
+            }
+            int pixelSize() const
+            {
+                return m_pixelSize;
+            }
+
         protected:
 
+            static const QString PIXEL_SIZE_STRING;
             virtual QImage apply(const QImage &image);
+
+        protected slots:
+
+            virtual void propertyChanged(QtProperty * property);
 
         private:
 

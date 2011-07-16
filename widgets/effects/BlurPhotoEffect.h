@@ -15,9 +15,6 @@ namespace KIPIPhotoFramesEditor
 
             int m_radius;
 
-            static const QString RADIUS_STRING;
-            static const QString OPACITY_STRING;
-
             class BlurUndoCommand;
 
         public:
@@ -34,16 +31,20 @@ namespace KIPIPhotoFramesEditor
             void setRadius(int radius)
             {
                 m_radius = radius;
-                emit effectChanged();
+                emit effectChanged(this);
             }
             int radius() const
             {
                 return m_radius;
             }
 
+        protected:
+
+            static const QString RADIUS_STRING;
+
         protected slots:
 
-            void propertyChanged(QtProperty * property);
+            virtual void propertyChanged(QtProperty * property);
 
         private:
 

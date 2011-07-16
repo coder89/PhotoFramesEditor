@@ -95,6 +95,7 @@ KSliderEditFactory::KSliderEditFactory(QObject *parent) :
 
 void KSliderEditFactory::connectPropertyManager(QtIntPropertyManager * manager)
 {
+    this->addPropertyManager(manager);
     originalFactory->addPropertyManager(manager);
 }
 
@@ -120,12 +121,12 @@ QWidget * KSliderEditFactory::createEditor(QtIntPropertyManager * manager, QtPro
     layout->addWidget(slider,1);
     layout->addWidget(spinbox,0);
     w->setLayout(layout);
-    connect(slider,SIGNAL(valueChanged(int)),spinbox,SLOT(setValue(int)));
-    connect(spinbox,SIGNAL(valueChanged(int)),slider,SLOT(setValue(int)));
 
     createdEditors[property].append(w);
     editorToProperty[w] = property;
 
+    connect(slider,SIGNAL(valueChanged(int)),spinbox,SLOT(setValue(int)));
+    connect(spinbox,SIGNAL(valueChanged(int)),slider,SLOT(setValue(int)));
     connect(w,SIGNAL(destroyed(QObject*)),this,SLOT(slotEditorDestroyed(QObject*)));
 
     return w;
@@ -133,6 +134,7 @@ QWidget * KSliderEditFactory::createEditor(QtIntPropertyManager * manager, QtPro
 
 void KSliderEditFactory::disconnectPropertyManager(QtIntPropertyManager * manager)
 {
+    this->removePropertyManager(manager);
     originalFactory->removePropertyManager(manager);
 }
 

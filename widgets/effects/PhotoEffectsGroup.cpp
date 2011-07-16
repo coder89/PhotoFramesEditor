@@ -25,8 +25,8 @@ void PhotoEffectsGroup::push_back(AbstractPhotoEffect * effect)
 {
     m_effects_list.push_back(effect);
     effect->setParent(this);
-    connect(effect,SIGNAL(effectChanged()),this,SLOT(emitEffectsChanged()));
-    emitEffectsChanged();
+    connect(effect,SIGNAL(effectChanged(AbstractPhotoEffect*)),this,SLOT(emitEffectsChanged(AbstractPhotoEffect*)));
+    emitEffectsChanged(effect);
     emit layoutChanged();
 }
 
@@ -34,8 +34,8 @@ void PhotoEffectsGroup::push_front(AbstractPhotoEffect * effect)
 {
     m_effects_list.push_front(effect);
     effect->setParent(this);
-    connect(effect,SIGNAL(effectChanged()),this,SLOT(emitEffectsChanged()));
-    emitEffectsChanged();
+    connect(effect,SIGNAL(effectChanged(AbstractPhotoEffect*)),this,SLOT(emitEffectsChanged(AbstractPhotoEffect*)));
+    emitEffectsChanged(effect);
     emit layoutChanged();
 }
 
@@ -95,8 +95,11 @@ int PhotoEffectsGroup::rowCount(const QModelIndex & parent) const
     return this->m_effects_list.count();
 }
 
-void PhotoEffectsGroup::emitEffectsChanged()
+void PhotoEffectsGroup::emitEffectsChanged(AbstractPhotoEffect * effect)
 {
     m_photo->refreshPixmap();
+    int row = m_effects_list.count()-m_effects_list.indexOf(effect)-1;
+    QModelIndex indexChanged = index(row,0);
+    emit dataChanged(indexChanged,indexChanged);
     emit effectsChanged();
 }

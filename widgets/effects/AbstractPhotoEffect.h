@@ -6,11 +6,12 @@
 #include <QSharedPointer>
 #include <QUndoCommand>
 #include <QtAbstractPropertyBrowser>
+#include <QSemaphore>
 
 namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
-    class AbstractPhotoEffectsGroup;
+    class PhotoEffectsGroup;
 
     class AbstractPhotoEffect : public QObject
     {
@@ -21,7 +22,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit AbstractPhotoEffect(const QString & name, QObject * parent = 0);
-            AbstractPhotoEffectsGroup * group() const;
+            PhotoEffectsGroup * group() const;
             AbstractPhoto * photo() const;
 
           /**
@@ -37,13 +38,37 @@ namespace KIPIPhotoFramesEditor
                 m_name = name;
             }
 
-            virtual QImage apply(const QImage & image) = 0;
+            virtual QImage apply(const QImage & image);
             virtual QtAbstractPropertyBrowser * propertyBrowser() const = 0;
             virtual QString toString() const = 0;
 
+          /**
+            * Opacity property
+            */
+            Q_PROPERTY(int m_opacity READ opacity WRITE setOpacity)
+            void setOpacity(int opacity)
+            {
+                m_opacity = opacity;
+                emit effectChanged();
+            }
+            int opacity() const
+            {
+                return m_opacity;
+            }
+
+        protected:
+
+            QSemaphore sem;
+            int m_opacity;
+            QUndoCommand * m_undo_command;
+
+        protected slots:
+
+            void emitEffectChange();
+
         signals:
 
-            void effectChangeCommand(QUndoCommand * command);
+            void effectChanged();
     };
 }
 

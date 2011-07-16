@@ -1,7 +1,7 @@
 #include "EffectsEditorTool.h"
 #include "AbstractPhoto.h"
 #include "AbstractPhotoEffect.h"
-#include "AbstractPhotoEffectsGroup.h"
+#include "PhotoEffectsGroup.h"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -13,7 +13,7 @@ using namespace KIPIPhotoFramesEditor;
 
 class KIPIPhotoFramesEditor::EffectsEditorToolPrivate
 {
-    QListView * m_list_widget;
+    EffectsListView * m_list_widget;
 
     friend class EffectsEditorTool;
 };
@@ -29,12 +29,12 @@ EffectsEditorTool::EffectsEditorTool(QWidget * parent) :
     QFont titleFont = title->font();
     titleFont.setBold(true);
     title->setFont(titleFont);
-    layout->addWidget(title,0,0);
+    layout->addWidget(title,0,0,1,-1);
 
     // Effects list
-    d->m_list_widget = new QListView(this);
-    layout->addWidget(d->m_list_widget,1,0);
-    connect(d->m_list_widget,SIGNAL(clicked(QModelIndex)),this,SLOT(viewCurrentEffectEditor(QModelIndex)));
+    d->m_list_widget = new EffectsListView(this);
+    layout->addWidget(d->m_list_widget,1,0,1,-1);
+    connect(d->m_list_widget,SIGNAL(selectionChanged(AbstractPhotoEffect*)),this,SLOT(viewCurrentEffectEditor(AbstractPhotoEffect*)));
 
     this->setLayout(layout);
     this->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Maximum);
@@ -47,16 +47,28 @@ void EffectsEditorTool::currentItemChanged()
         d->m_list_widget->setModel(photo->effectsGroup());
     else
         d->m_list_widget->setModel(0);
+    removeCurrentPropertyBrowser();
 }
 
-void EffectsEditorTool::viewCurrentEffectEditor(const QModelIndex & index)
+void EffectsEditorTool::viewCurrentEffectEditor(AbstractPhotoEffect * effect)
 {
-    AbstractPhoto * photo = this->currentItem();
-    qDebug() << "viewCurrentEffectEditor!";
-    if (photo)
+    removeCurrentPropertyBrowser();
+    if (effect)
     {
-        QtAbstractPropertyBrowser * browser = photo->effectsGroup()->getItem(index)->propertyBrowser();
-        static_cast<QGridLayout*>(layout())->addWidget(browser,2,0);
-        qDebug() << "added!";
+        QtAbstractPropertyBrowser * browser = effect->propertyBrowser();
+        static_cast<QGridLayout*>(layout())->addWidget(browser,2,0,1,-1);
+        browser->show();
     }
+}
+
+void EffectsEditorTool::removeCurrentPropertyBrowser()
+{
+    QLayoutItem * itemBrowser = static_cast<QGridLayout*>(layout())->itemAtPosition(2,0);
+    if (!itemBrowser)
+        return;
+    QWidget * browser = itemBrowser->widget();
+    if (!browser)
+        return;
+    static_cast<QGridLayout*>(layout())->removeWidget(browser);
+    browser->hide();
 }

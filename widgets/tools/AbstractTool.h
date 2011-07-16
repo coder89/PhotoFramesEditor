@@ -6,6 +6,7 @@
 namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
+    class EffectsListView;
 
     class AbstractTool : public QWidget
     {

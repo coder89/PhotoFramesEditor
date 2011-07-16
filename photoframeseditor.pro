@@ -42,12 +42,15 @@ SOURCES += main.cpp\
     widgets/tools/ColorizeTool.cpp \
     widgets/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
-    widgets/effects/AbstractPhotoEffectsGroup.cpp \
     widgets/effects/AbstractPhotoEffect.cpp \
     widgets/effects/PixelizePhotoEffect.cpp \
     widgets/effects/BlurPhotoEffect.cpp \
     widgets/tools/EffectsEditorTool.cpp \
-    widgets/tools/AbstractTool.cpp
+    widgets/tools/AbstractTool.cpp \
+    widgets/effects/PhotoEffectsGroup.cpp \
+    utils/KEditFactory.cpp \
+    events/UndoCommandEvent.cpp \
+    events/UndoCommandEventFilter.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -82,12 +85,15 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/ColorizeTool.h \
     widgets/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
-    widgets/effects/AbstractPhotoEffectsGroup.h \
     widgets/effects/AbstractPhotoEffect.h \
     widgets/effects/PixelizePhotoEffect.h \
     widgets/effects/BlurPhotoEffect.h \
     widgets/tools/EffectsEditorTool.h \
-    widgets/tools/AbstractTool.h
+    widgets/tools/AbstractTool.h \
+    widgets/effects/PhotoEffectsGroup.h \
+    utils/KEditFactory.h \
+    events/UndoCommandEvent.h \
+    events/UndoCommandEventFilter.h
 
 LIBS += \
     -L/usr \

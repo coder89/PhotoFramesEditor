@@ -1,15 +1,32 @@
 #include "photoframeseditor.h"
 
-#include <QtGui/QApplication>
 #include <QDesktopWidget>
 #include <QResource>
 #include <qmath.h>
+
+#include <kapplication.h>
+#include <kcmdlineargs.h>
+#include <kaboutdata.h>
 
 using namespace KIPIPhotoFramesEditor;
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+
+    KAboutData aboutData("photoframeseditor",
+                         0,
+                         ki18n("Photo Framed Editor"),
+                         QString("").toUtf8(),
+                         ki18n(""),
+                         KAboutData::License_GPL,
+                         ki18n(""),
+                         ki18n(""),
+                         QString("").toUtf8());
+
+    KCmdLineArgs::init(argc,argv,&aboutData);
+
+    KApplication a;
+
     QResource::registerResource("resources/icons.qcc");
 
     PhotoFramesEditor * w = PhotoFramesEditor::instancePhotoFramesEditor(0);

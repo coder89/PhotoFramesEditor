@@ -151,6 +151,8 @@ class QT_QTPROPERTYBROWSER_EXPORT QtAbstractEditorFactoryBase : public QObject
     Q_OBJECT
 public:
     virtual QWidget *createEditor(QtProperty *property, QWidget *parent) = 0;
+signals:
+    void editingFinished();
 protected:
     explicit QtAbstractEditorFactoryBase(QObject *parent = 0)
         : QObject(parent) {}
@@ -158,6 +160,10 @@ protected:
     virtual void breakConnection(QtAbstractPropertyManager *manager) = 0;
 protected Q_SLOTS:
     virtual void managerDestroyed(QObject *manager) = 0;
+    void emitEditingFinished()
+    {
+        emit editingFinished();
+    }
 
     friend class QtAbstractPropertyBrowser;
 };

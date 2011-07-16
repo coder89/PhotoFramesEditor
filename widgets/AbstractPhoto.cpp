@@ -1,7 +1,7 @@
 #include "AbstractPhoto.h"
 #include "Scene.h"
 #include "photo_context_menu.h"
-#include "AbstractPhotoEffectsGroup.h"
+#include "PhotoEffectsGroup.h"
 
 #include <QMenu>
 #include <QStyle>
@@ -27,7 +27,7 @@ AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
     this->setAcceptHoverEvents(true);
 
     // Effects group
-    m_effects_group = new AbstractPhotoEffectsGroup(this);
+    m_effects_group = new PhotoEffectsGroup(this);
 }
 
 void AbstractPhoto::setupWidget(const QPainterPath & path)
@@ -215,6 +215,8 @@ void AbstractPhoto::recalcShape()
 
 void AbstractPhoto::refreshPixmap()
 {
+    if (m_pixmap_original.isNull())
+        return;
     this->m_pixmap = m_effects_group->apply(m_pixmap_original.scaled(this->boundingRect().size().toSize(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
     this->updateIcon();
     QGraphicsPixmapItem::setPixmap(m_pixmap);

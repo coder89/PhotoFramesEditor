@@ -4,6 +4,7 @@
 #include "CanvasCreationDialog.h"
 #include "Canvas.h"
 #include "LayersSelectionModel.h"
+#include "UndoCommandEventFilter.h"
 
 // Qt
 #include <QVBoxLayout>
@@ -26,6 +27,7 @@
 #include <ktip.h>
 #include <kaboutdata.h>
 #include <kmessagebox.h>
+#include <kapplication.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -33,7 +35,6 @@ PhotoFramesEditor * PhotoFramesEditor::m_instance = 0;
 
 PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
     KXmlGuiWindow(parent),
-    m_canvas_widget(0),
     m_canvas(0),
     d(new PhotoFramesEditorPriv)
 {
@@ -63,7 +64,18 @@ PhotoFramesEditor * PhotoFramesEditor::instancePhotoFramesEditor(QWidget * paren
     if (m_instance)
         return m_instance;
     else
+    {
+        KApplication * app = KApplication::kApplication();
+        app->installEventFilter(new UndoCommandEventFilter(app));
         return (m_instance = new PhotoFramesEditor(parent));
+    }
+}
+
+void PhotoFramesEditor::undoCommandEvent(UndoCommandEvent * event)
+{
+    QUndoCommand * command = event->undoCommand();
+    if (command && m_canvas)
+        m_canvas->undoStack()->push(command);
 }
 
 void PhotoFramesEditor::setupActions()
@@ -348,10 +360,8 @@ bool PhotoFramesEditor::queryClose()
         return false;
 }
 
-void PhotoFramesEditor::setGridVisible(bool isVisible)
+void PhotoFramesEditor::setGridVisible(bool /*isVisible*/)
 {
-    if (m_canvas_widget)
-        m_canvas_widget->setGridVisible(isVisible);
 }
 
 void PhotoFramesEditor::setupGrid()

@@ -5,6 +5,7 @@
 
 #include <QImage>
 #include <QPainter>
+#include <QtIntPropertyManager>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -14,12 +15,35 @@ namespace KIPIPhotoFramesEditor
 
             int m_radius;
 
+            static const QString RADIUS_STRING;
+            static const QString OPACITY_STRING;
+
+            class BlurUndoCommand;
+
         public:
 
             explicit BlurPhotoEffect(int radius, QObject * parent = 0);
             virtual QImage apply(const QImage & image);
             virtual QtAbstractPropertyBrowser * propertyBrowser() const;
             virtual QString toString() const;
+
+          /**
+            * Radius property
+            */
+            Q_PROPERTY(int m_radius READ radius WRITE setRadius)
+            void setRadius(int radius)
+            {
+                m_radius = radius;
+                emit effectChanged();
+            }
+            int radius() const
+            {
+                return m_radius;
+            }
+
+        protected slots:
+
+            void propertyChanged(QtProperty * property);
 
         private:
 

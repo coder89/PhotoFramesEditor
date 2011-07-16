@@ -1,12 +1,16 @@
 #ifndef PHOTOFRAMESEDITOR_H
 #define PHOTOFRAMESEDITOR_H
 
+// Qt
+#include <QUndoStack>
+
 // KDE
 #include <kxmlguiwindow.h>
 #include <kurl.h>
 
 // Local
 #include "CanvasWidget.h"
+#include "UndoCommandEvent.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -20,6 +24,7 @@ namespace KIPIPhotoFramesEditor
 
             ~PhotoFramesEditor();
             static PhotoFramesEditor * instancePhotoFramesEditor(QWidget * parent = 0);
+            virtual void undoCommandEvent(UndoCommandEvent * event);
 
         public Q_SLOTS:
 
@@ -50,7 +55,6 @@ namespace KIPIPhotoFramesEditor
             void refreshActions();
             void createWidgets();
 
-            CanvasWidget * m_canvas_widget;
             Canvas * m_canvas;
 
             class PhotoFramesEditorPriv;

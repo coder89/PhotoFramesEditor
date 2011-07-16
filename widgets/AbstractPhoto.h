@@ -18,7 +18,7 @@ namespace KIPIPhotoFramesEditor
 {
     class Scene;
     class LayersModelItem;
-    class AbstractPhotoEffectsGroup;
+    class PhotoEffectsGroup;
 
     class AbstractPhoto : public QGraphicsPixmapItem
     {
@@ -118,14 +118,12 @@ namespace KIPIPhotoFramesEditor
             }
 
             /// Effects group object
-            AbstractPhotoEffectsGroup * effectsGroup() const
+            PhotoEffectsGroup * effectsGroup() const
             {
                 return m_effects_group;
             }
 
-        public Q_SLOTS:
-
-             void refreshPixmap();
+            void refreshPixmap();
 
         protected:
 
@@ -189,7 +187,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            AbstractPhotoEffectsGroup * m_effects_group;
+            PhotoEffectsGroup * m_effects_group;
 
             qreal m_border_width;
             Qt::PenJoinStyle m_border_corner_style;

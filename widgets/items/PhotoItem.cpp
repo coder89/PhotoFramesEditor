@@ -1,5 +1,5 @@
 #include "PhotoItem.h"
-#include "AbstractPhotoEffectsGroup.h"
+#include "PhotoEffectsGroup.h"
 #include "AbstractPhotoEffect.h"
 
 using namespace KIPIPhotoFramesEditor;

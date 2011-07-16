@@ -12,6 +12,8 @@ namespace KIPIPhotoFramesEditor
         public:
 
             PixelizePhotoEffect(int pixelSize, QObject * parent = 0);
+            virtual QtAbstractPropertyBrowser * propertyBrowser() const;
+            virtual QString toString() const;
 
         protected:
 

@@ -9,7 +9,7 @@ namespace KIPIPhotoFramesEditor
     class AbstractPhoto;
     class AbstractPhotoEffect;
 
-    class AbstractPhotoEffectsGroup : public QAbstractItemModel
+    class PhotoEffectsGroup : public QAbstractItemModel
     {
             Q_OBJECT
 
@@ -18,7 +18,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit AbstractPhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
+            explicit PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
             AbstractPhoto * photo() const;
             AbstractPhotoEffect * getItem(const QModelIndex & index = QModelIndex()) const;
 
@@ -37,6 +37,7 @@ namespace KIPIPhotoFramesEditor
 
             void push_back(AbstractPhotoEffect * effect);
             void push_front(AbstractPhotoEffect * effect);
+            void emitEffectsChanged();
             QPixmap apply(const QPixmap & pixmap);
 
     };

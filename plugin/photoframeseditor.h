@@ -54,6 +54,7 @@ namespace KIPIPhotoFramesEditor
             void setupActions();
             void refreshActions();
             void createWidgets();
+            void loadEffects();
 
             Canvas * m_canvas;
 

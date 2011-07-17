@@ -1,11 +1,12 @@
 #include "EffectsEditorTool.h"
 #include "AbstractPhoto.h"
-#include "AbstractPhotoEffect.h"
+#include "PhotoEffectsLoader.h"
 #include "PhotoEffectsGroup.h"
 
 #include <QGridLayout>
 #include <QLabel>
 #include <QListView>
+#include <QtAbstractPropertyBrowser>
 
 #include <klocalizedstring.h>
 
@@ -34,7 +35,7 @@ EffectsEditorTool::EffectsEditorTool(QWidget * parent) :
     // Effects list
     d->m_list_widget = new EffectsListView(this);
     layout->addWidget(d->m_list_widget,1,0,1,-1);
-    connect(d->m_list_widget,SIGNAL(selectionChanged(AbstractPhotoEffect*)),this,SLOT(viewCurrentEffectEditor(AbstractPhotoEffect*)));
+    connect(d->m_list_widget,SIGNAL(selectionChanged(PhotoEffectsLoader*)),this,SLOT(viewCurrentEffectEditor(PhotoEffectsLoader*)));
 
     this->setLayout(layout);
     this->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Maximum);
@@ -50,7 +51,7 @@ void EffectsEditorTool::currentItemChanged()
     removeCurrentPropertyBrowser();
 }
 
-void EffectsEditorTool::viewCurrentEffectEditor(AbstractPhotoEffect * effect)
+void EffectsEditorTool::viewCurrentEffectEditor(PhotoEffectsLoader * effect)
 {
     removeCurrentPropertyBrowser();
     if (effect)

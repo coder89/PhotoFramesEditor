@@ -8,7 +8,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class AbstractPhotoEffect;
+    class PhotoEffectsLoader;
     class EffectsEditorToolPrivate;
 
     class EffectsEditorTool : public AbstractTool
@@ -19,7 +19,7 @@ namespace KIPIPhotoFramesEditor
             explicit EffectsEditorTool(QWidget * parent = 0);
             virtual void currentItemChanged();
         protected slots:
-            void viewCurrentEffectEditor(AbstractPhotoEffect * effect);
+            void viewCurrentEffectEditor(PhotoEffectsLoader * effect);
         private:
             void removeCurrentPropertyBrowser();
             EffectsEditorToolPrivate * d;
@@ -31,7 +31,7 @@ namespace KIPIPhotoFramesEditor
         public:
             EffectsListView(QWidget * parent = 0) : QListView(parent) {}
         signals:
-            void selectionChanged(AbstractPhotoEffect * effect);
+            void selectionChanged(PhotoEffectsLoader * effect);
         protected:
             virtual void selectionChanged (const QItemSelection & selected, const QItemSelection & /*deselected*/)
             {
@@ -41,7 +41,7 @@ namespace KIPIPhotoFramesEditor
                     QModelIndex index = indexes.at(0);
                     if (index.isValid())
                     {
-                        emit selectionChanged(static_cast<AbstractPhotoEffect*>(index.internalPointer()));
+                        emit selectionChanged(static_cast<PhotoEffectsLoader*>(index.internalPointer()));
                         return;
                     }
                 }

@@ -1,11 +1,11 @@
 #ifndef PIXELIZEPHOTOEFFECT_H
 #define PIXELIZEPHOTOEFFECT_H
 
-#include "AbstractPhotoEffect.h"
+#include "PhotoEffectsLoader.h"
 
 namespace KIPIPhotoFramesEditor
 {
-    class PixelizePhotoEffect : public AbstractPhotoEffect
+    class PixelizePhotoEffect : public PhotoEffectsLoader
     {
             int m_pixelSize;
             class PixelizeUndoCommand;
@@ -29,6 +29,11 @@ namespace KIPIPhotoFramesEditor
             {
                 return m_pixelSize;
             }
+
+          /**
+            * Pixelize effect identifier (name).
+            */
+            virtual QString effectName() const;
 
         protected:
 

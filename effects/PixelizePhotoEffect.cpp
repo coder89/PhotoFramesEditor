@@ -54,9 +54,14 @@ void PixelizePhotoEffect::PixelizeUndoCommand::setPixelSize(int pixelSize)
 const QString PixelizePhotoEffect::PIXEL_SIZE_STRING = i18n("Pixel size");
 
 PixelizePhotoEffect::PixelizePhotoEffect(int pixelSize, QObject * parent) :
-    AbstractPhotoEffect(i18n("Pixelize"), parent),
+    PhotoEffectsLoader(parent),
     m_pixelSize(pixelSize)
 {
+}
+
+QString PixelizePhotoEffect::effectName() const
+{
+    return i18n("Pixelize effect");
 }
 
 QImage PixelizePhotoEffect::apply(const QImage & image)
@@ -64,13 +69,13 @@ QImage PixelizePhotoEffect::apply(const QImage & image)
     QImage result = image;
     QPainter p(&result);
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.drawImage(0, 0, AbstractPhotoEffect::apply(pixelize(image, m_pixelSize)));
+    p.drawImage(0, 0, PhotoEffectsLoader::apply(pixelize(image, m_pixelSize)));
     return result;
 }
 
 QtAbstractPropertyBrowser * PixelizePhotoEffect::propertyBrowser() const
 {
-    QtAbstractPropertyBrowser * browser = AbstractPhotoEffect::propertyBrowser();
+    QtAbstractPropertyBrowser * browser = PhotoEffectsLoader::propertyBrowser();
     QtIntPropertyManager * intManager = new QtIntPropertyManager(browser);
     KSliderEditFactory * sliderFactory = new KSliderEditFactory(browser);
     browser->setFactoryForManager(intManager, sliderFactory);
@@ -83,7 +88,7 @@ QtAbstractPropertyBrowser * PixelizePhotoEffect::propertyBrowser() const
 
     intManager->setValue(pixelSize,m_pixelSize);
     connect(intManager,SIGNAL(propertyChanged(QtProperty*)),this,SLOT(propertyChanged(QtProperty*)));
-    connect(sliderFactory,SIGNAL(editingFinished()),this,SLOT(emitEffectChange()));
+    connect(sliderFactory,SIGNAL(editingFinished()),this,SLOT(postEffectChangedEvent()));
 
     return browser;
 }
@@ -102,7 +107,7 @@ void PixelizePhotoEffect::propertyChanged(QtProperty * property)
         pixelSize = manager->value(property);
     else
     {
-        AbstractPhotoEffect::propertyChanged(property);
+        PhotoEffectsLoader::propertyChanged(property);
         return;
     }
 

@@ -42,15 +42,14 @@ SOURCES += main.cpp\
     widgets/tools/ColorizeTool.cpp \
     widgets/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
-    widgets/effects/AbstractPhotoEffect.cpp \
-    widgets/effects/PixelizePhotoEffect.cpp \
-    widgets/effects/BlurPhotoEffect.cpp \
+    effects/PixelizePhotoEffect.cpp \
     widgets/tools/EffectsEditorTool.cpp \
     widgets/tools/AbstractTool.cpp \
-    widgets/effects/PhotoEffectsGroup.cpp \
+    effects/PhotoEffectsGroup.cpp \
     utils/KEditFactory.cpp \
     events/UndoCommandEvent.cpp \
-    events/UndoCommandEventFilter.cpp
+    events/UndoCommandEventFilter.cpp \
+    effects/PhotoEffectsLoader.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -85,15 +84,16 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/ColorizeTool.h \
     widgets/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
-    widgets/effects/AbstractPhotoEffect.h \
-    widgets/effects/PixelizePhotoEffect.h \
-    widgets/effects/BlurPhotoEffect.h \
+    effects/PixelizePhotoEffect.h \
     widgets/tools/EffectsEditorTool.h \
     widgets/tools/AbstractTool.h \
-    widgets/effects/PhotoEffectsGroup.h \
+    effects/PhotoEffectsGroup.h \
     utils/KEditFactory.h \
     events/UndoCommandEvent.h \
-    events/UndoCommandEventFilter.h
+    events/UndoCommandEventFilter.h \
+    effects/AbstractPhotoEffectFactory.h \
+    effects/AbstractPhotoEffectInterface.h \
+    effects/PhotoEffectsLoader.h
 
 LIBS += \
     -L/usr \
@@ -104,11 +104,11 @@ INCLUDEPATH += \
     plugin \
     widgets \
     widgets/canvas \
-    widgets/effects \
     widgets/items \
     widgets/layers \
     widgets/menus \
     widgets/tools \
+    effects \
     events \
     utils \
     models \

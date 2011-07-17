@@ -1,10 +1,12 @@
-#include "AbstractPhotoEffect.h"
+#include "PhotoEffectsLoader.h"
 #include "PhotoEffectsGroup.h"
 #include "AbstractPhoto.h"
 #include "UndoCommandEvent.h"
 #include "KEditFactory.h"
 #include "global.h"
+#include "AbstractPhotoEffectFactory.h"
 
+#include <QtAbstractPropertyBrowser>
 #include <QtTreePropertyBrowser>
 #include <QtIntPropertyManager>
 
@@ -13,12 +15,15 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class AbstractPhotoEffect::OpacityUndoCommand : public QUndoCommand
+QMap<QString, AbstractPhotoEffectFactory*> PhotoEffectsLoader::registeredEffects;
+const QString PhotoEffectsLoader::OPACITY_STRING = i18n("Opacity");
+
+class PhotoEffectsLoader::OpacityUndoCommand : public QUndoCommand
 {
-        AbstractPhotoEffect * m_effect;
+        PhotoEffectsLoader * m_effect;
         int m_opacity;
     public:
-        OpacityUndoCommand(AbstractPhotoEffect * effect, int opacity);
+        OpacityUndoCommand(PhotoEffectsLoader * effect, int opacity);
         virtual void redo();
         virtual void undo();
         void setOpacity(int opacity);
@@ -34,43 +39,40 @@ class AbstractPhotoEffect::OpacityUndoCommand : public QUndoCommand
         }
 };
 
-AbstractPhotoEffect::OpacityUndoCommand::OpacityUndoCommand(AbstractPhotoEffect * effect, int opacity) :
+PhotoEffectsLoader::OpacityUndoCommand::OpacityUndoCommand(PhotoEffectsLoader * effect, int opacity) :
     m_effect(effect),
     m_opacity(opacity)
 {}
 
-void AbstractPhotoEffect::OpacityUndoCommand::redo()
+void PhotoEffectsLoader::OpacityUndoCommand::redo()
 {
     runCommand();
 }
 
-void AbstractPhotoEffect::OpacityUndoCommand::undo()
+void PhotoEffectsLoader::OpacityUndoCommand::undo()
 {
     runCommand();
 }
 
-void AbstractPhotoEffect::OpacityUndoCommand::setOpacity(int opacity)
+void PhotoEffectsLoader::OpacityUndoCommand::setOpacity(int opacity)
 {
     m_opacity = opacity;
 }
 
-const QString AbstractPhotoEffect::OPACITY_STRING = i18n("Opacity");
-
-AbstractPhotoEffect::AbstractPhotoEffect(const QString & name, QObject * parent) :
+PhotoEffectsLoader::PhotoEffectsLoader(QObject * parent) :
     QObject(parent),
-    m_name(name),
     sem(1),
     m_opacity(100),
     m_undo_command(0)
 {
 }
 
-PhotoEffectsGroup * AbstractPhotoEffect::group() const
+PhotoEffectsGroup * PhotoEffectsLoader::group() const
 {
     return qobject_cast<PhotoEffectsGroup*>(this->parent());
 }
 
-AbstractPhoto * AbstractPhotoEffect::photo() const
+AbstractPhoto * PhotoEffectsLoader::photo() const
 {
     PhotoEffectsGroup * tempGroup = this->group();
     if (tempGroup)
@@ -79,7 +81,7 @@ AbstractPhoto * AbstractPhotoEffect::photo() const
         return 0;
 }
 
-QImage AbstractPhotoEffect::apply(const QImage & image)
+QImage PhotoEffectsLoader::apply(const QImage & image)
 {
     if (opacity() != 100)
     {
@@ -93,7 +95,7 @@ QImage AbstractPhotoEffect::apply(const QImage & image)
     return image;
 }
 
-QtAbstractPropertyBrowser * AbstractPhotoEffect::propertyBrowser() const
+QtAbstractPropertyBrowser * PhotoEffectsLoader::propertyBrowser() const
 {
     QtTreePropertyBrowser * browser = new QtTreePropertyBrowser();
     QtIntPropertyManager * intManager = new QtIntPropertyManager(browser);
@@ -108,13 +110,32 @@ QtAbstractPropertyBrowser * AbstractPhotoEffect::propertyBrowser() const
 
     intManager->setValue(opacity,m_opacity);
 
-    connect(sliderFactory,SIGNAL(editingFinished()),this,SLOT(emitEffectChange()));
+    connect(sliderFactory,SIGNAL(editingFinished()),this,SLOT(postEffectChangedEvent()));
     connect(intManager,SIGNAL(propertyChanged(QtProperty*)),this,SLOT(propertyChanged(QtProperty*)));
 
     return browser;
 }
 
-void AbstractPhotoEffect::emitEffectChange()
+bool PhotoEffectsLoader::registerEffect(AbstractPhotoEffectFactory * effectFactory)
+{
+    QString effectName = effectFactory->effectName();
+    registeredEffects.insert(effectName, effectFactory);
+}
+
+QStringList PhotoEffectsLoader::registeredEffectsNames()
+{
+    return registeredEffects.keys();
+}
+
+AbstractPhotoEffectInterface * PhotoEffectsLoader::getEffectByName(const QString & effectName)
+{
+    AbstractPhotoEffectFactory * factory = PhotoEffectsLoader::registeredEffects[effectName];
+    if (factory)
+        return factory->getEffectInstance();
+    return 0;
+}
+
+void PhotoEffectsLoader::postEffectChangedEvent()
 {
     sem.acquire();
     if (m_undo_command)
@@ -127,7 +148,7 @@ void AbstractPhotoEffect::emitEffectChange()
     sem.release();
 }
 
-void AbstractPhotoEffect::propertyChanged(QtProperty * property)
+void PhotoEffectsLoader::propertyChanged(QtProperty * property)
 {
     QtIntPropertyManager * manager = qobject_cast<QtIntPropertyManager*>(property->propertyManager());
     int opacity = m_opacity;

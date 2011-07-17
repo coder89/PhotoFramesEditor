@@ -7,20 +7,23 @@
 namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
-    class AbstractPhotoEffect;
+    class PhotoEffectsLoader;
+    class AbstractPhotoEffectInterface;
 
     class PhotoEffectsGroup : public QAbstractItemModel
     {
             Q_OBJECT
 
             AbstractPhoto * m_photo;
-            QList<AbstractPhotoEffect*> m_effects_list;
+            //QList<AbstractPhotoEffect*> m_effects_list;
+            QList<AbstractPhotoEffectInterface*> m_effects_list;
 
         public:
 
             explicit PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
             AbstractPhoto * photo() const;
-            AbstractPhotoEffect * getItem(const QModelIndex & index = QModelIndex()) const;
+            //AbstractPhotoEffect * getItem(const QModelIndex & index = QModelIndex()) const;
+            AbstractPhotoEffectInterface * getItem(const QModelIndex & index = QModelIndex()) const;
 
             // Reimplemented QAbstractItemModel methods
             virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
@@ -35,9 +38,15 @@ namespace KIPIPhotoFramesEditor
 
         public slots:
 
-            void push_back(AbstractPhotoEffect * effect);
-            void push_front(AbstractPhotoEffect * effect);
-            void emitEffectsChanged(AbstractPhotoEffect * effect);
+//            void push_back(AbstractPhotoEffect * effect);
+//            void push_front(AbstractPhotoEffect * effect);
+//            void emitEffectsChanged(AbstractPhotoEffect * effect);
+//            void emitEffectsChanged(AbstractPhotoEffectInterface * effect);
+//            QPixmap apply(const QPixmap & pixmap);
+
+            void push_back(AbstractPhotoEffectInterface * effect);
+            void push_front(AbstractPhotoEffectInterface * effect);
+            void emitEffectsChanged(AbstractPhotoEffectInterface * effect);
             QPixmap apply(const QPixmap & pixmap);
 
     };

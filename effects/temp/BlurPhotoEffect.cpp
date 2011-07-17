@@ -53,7 +53,7 @@ void BlurPhotoEffect::BlurUndoCommand::setRadius(int radius)
 }
 
 BlurPhotoEffect::BlurPhotoEffect(int radius, QObject * parent) :
-    AbstractPhotoEffect(i18n("Blur effect"), parent),
+    PhotoEffectsLoader(parent),
     m_radius(radius)
 {
 }
@@ -63,13 +63,13 @@ QImage BlurPhotoEffect::apply(const QImage & image)
     QImage result = image;
     QPainter p(&result);
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.drawImage(0,0,AbstractPhotoEffect::apply(blurred(image, image.rect(), m_radius)));
+    p.drawImage(0,0,PhotoEffectsLoader::apply(blurred(image, image.rect(), m_radius)));
     return result;
 }
 
 QtAbstractPropertyBrowser * BlurPhotoEffect::propertyBrowser() const
 {
-    QtAbstractPropertyBrowser * browser = AbstractPhotoEffect::propertyBrowser();
+    QtAbstractPropertyBrowser * browser = PhotoEffectsLoader::propertyBrowser();
     QtIntPropertyManager * intManager = new QtIntPropertyManager(browser);
     KSliderEditFactory * sliderFactory = new KSliderEditFactory(browser);
     browser->setFactoryForManager(intManager,sliderFactory);
@@ -82,7 +82,7 @@ QtAbstractPropertyBrowser * BlurPhotoEffect::propertyBrowser() const
 
     intManager->setValue(radius,m_radius);
     connect(intManager,SIGNAL(propertyChanged(QtProperty*)),this,SLOT(propertyChanged(QtProperty*)));
-    connect(sliderFactory,SIGNAL(editingFinished()),this,SLOT(emitEffectChange()));
+    connect(sliderFactory,SIGNAL(editingFinished()),this,SLOT(postEffectChangedEvent()));
 
     return browser;
 }
@@ -90,6 +90,11 @@ QtAbstractPropertyBrowser * BlurPhotoEffect::propertyBrowser() const
 QString BlurPhotoEffect::toString() const
 {
     return this->name() + " [" + RADIUS_STRING + "=" + QString::number(m_radius) + "]" ;
+}
+
+QString BlurPhotoEffect::effectName() const
+{
+    return i18n("Blur effect");
 }
 
 void BlurPhotoEffect::propertyChanged(QtProperty * property)
@@ -101,7 +106,7 @@ void BlurPhotoEffect::propertyChanged(QtProperty * property)
         radius = manager->value(property);
     else
     {
-        AbstractPhotoEffect::propertyChanged(property);
+        PhotoEffectsLoader::propertyChanged(property);
         return;
     }
 

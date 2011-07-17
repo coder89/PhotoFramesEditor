@@ -5,6 +5,8 @@
 #include "Canvas.h"
 #include "LayersSelectionModel.h"
 #include "UndoCommandEventFilter.h"
+#include "PhotoEffectsLoader.h"
+#include "AbstractPhotoEffectFactory.h"
 
 // Qt
 #include <QVBoxLayout>
@@ -18,6 +20,8 @@
 #include <QLabel>
 #include <QApplication>
 #include <QPushButton>
+#include <QDebug>
+#include <QPluginLoader>
 
 // KDE
 #include <kmenubar.h>
@@ -44,6 +48,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
 
     m_instance = this;
 
+    loadEffects();
     setupActions();
     createWidgets();
     refreshActions();
@@ -366,4 +371,38 @@ void PhotoFramesEditor::setGridVisible(bool /*isVisible*/)
 
 void PhotoFramesEditor::setupGrid()
 {
+}
+
+void PhotoFramesEditor::loadEffects()
+{
+    QDir effectsDir("./effects");
+    qDebug() << effectsDir.absolutePath();
+    QStringList filters;
+    filters << "*.so" << "*.dll";
+    QFileInfoList filesList = effectsDir.entryInfoList(filters, QDir::Files);
+    foreach (QFileInfo fileInfo, filesList)
+    {
+        QPluginLoader loader(fileInfo.absoluteFilePath());
+        QObject * plugin = loader.instance();
+        if (plugin)
+        {
+            AbstractPhotoEffectFactory * newEffectFactory = qobject_cast<AbstractPhotoEffectFactory*>(plugin);
+            if (newEffectFactory)
+            {
+                PhotoEffectsLoader::registerEffect(newEffectFactory);
+#ifdef QT_DEBUG
+                qDebug() << "LOADED!";
+#endif
+            }
+#ifdef QT_DEBUG
+            else
+                qDebug() << "Invalid class interface!";
+#endif
+        }
+#ifdef QT_DEBUG
+        else
+            qDebug() << loader.errorString();
+#endif
+    }
+    qDebug() << PhotoEffectsLoader::registeredEffectsNames();
 }

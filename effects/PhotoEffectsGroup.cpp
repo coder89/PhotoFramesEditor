@@ -1,8 +1,9 @@
 #include "PhotoEffectsGroup.h"
-#include "AbstractPhotoEffect.h"
+#include "PhotoEffectsLoader.h"
 #include "BlurPhotoEffect.h"
 #include "PixelizePhotoEffect.h"
 #include "AbstractPhoto.h"
+#include "AbstractPhotoEffectFactory.h"
 
 #include <QPainter>
 
@@ -14,27 +15,23 @@ PhotoEffectsGroup::PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent) :
     QAbstractItemModel(parent),
     m_photo(photo)
 {
-    this->push_back(new BlurPhotoEffect(2));
-    this->push_back(new BlurPhotoEffect(2));
-    this->push_back(new BlurPhotoEffect(3));
-    this->push_back(new BlurPhotoEffect(1));
-    this->push_back(new PixelizePhotoEffect(2));
+    QStringList names = PhotoEffectsLoader::registeredEffectsNames();
+    qDebug() << names;
+    this->push_back(PhotoEffectsLoader::getEffectByName(names.at(0)));
 }
 
-void PhotoEffectsGroup::push_back(AbstractPhotoEffect * effect)
+void PhotoEffectsGroup::push_back(AbstractPhotoEffectInterface * effect)
 {
     m_effects_list.push_back(effect);
     effect->setParent(this);
-    connect(effect,SIGNAL(effectChanged(AbstractPhotoEffect*)),this,SLOT(emitEffectsChanged(AbstractPhotoEffect*)));
     emitEffectsChanged(effect);
     emit layoutChanged();
 }
 
-void PhotoEffectsGroup::push_front(AbstractPhotoEffect * effect)
+void PhotoEffectsGroup::push_front(AbstractPhotoEffectInterface * effect)
 {
-    m_effects_list.push_front(effect);
+    m_effects_list.push_back(effect);
     effect->setParent(this);
-    connect(effect,SIGNAL(effectChanged(AbstractPhotoEffect*)),this,SLOT(emitEffectsChanged(AbstractPhotoEffect*)));
     emitEffectsChanged(effect);
     emit layoutChanged();
 }
@@ -42,7 +39,7 @@ void PhotoEffectsGroup::push_front(AbstractPhotoEffect * effect)
 QPixmap PhotoEffectsGroup::apply(const QPixmap & pixmap)
 {
     QImage image = pixmap.toImage();
-    foreach (AbstractPhotoEffect * effect, m_effects_list)
+    foreach (AbstractPhotoEffectInterface * effect, m_effects_list)
         if (effect)
             image = effect->apply(image);
     return QPixmap::fromImage(image);
@@ -53,9 +50,9 @@ AbstractPhoto * PhotoEffectsGroup::photo() const
     return m_photo;
 }
 
-AbstractPhotoEffect * PhotoEffectsGroup::getItem(const QModelIndex & index) const
+AbstractPhotoEffectInterface * PhotoEffectsGroup::getItem(const QModelIndex & index) const
 {
-    return static_cast<AbstractPhotoEffect*>(index.internalPointer());
+    return static_cast<AbstractPhotoEffectInterface*>(index.internalPointer());
 }
 
 int PhotoEffectsGroup::columnCount(const QModelIndex & parent) const
@@ -95,7 +92,7 @@ int PhotoEffectsGroup::rowCount(const QModelIndex & parent) const
     return this->m_effects_list.count();
 }
 
-void PhotoEffectsGroup::emitEffectsChanged(AbstractPhotoEffect * effect)
+void PhotoEffectsGroup::emitEffectsChanged(AbstractPhotoEffectInterface * effect)
 {
     m_photo->refreshPixmap();
     int row = m_effects_list.count()-m_effects_list.indexOf(effect)-1;

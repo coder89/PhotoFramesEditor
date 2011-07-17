@@ -1,7 +1,7 @@
 #ifndef BLURPHOTOEFFECT_H
 #define BLURPHOTOEFFECT_H
 
-#include "AbstractPhotoEffect.h"
+#include "PhotoEffectsLoader.h"
 
 #include <QImage>
 #include <QPainter>
@@ -9,7 +9,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class BlurPhotoEffect : public AbstractPhotoEffect
+    class BlurPhotoEffect : public PhotoEffectsLoader
     {
             Q_OBJECT
 
@@ -37,6 +37,11 @@ namespace KIPIPhotoFramesEditor
             {
                 return m_radius;
             }
+
+          /**
+            * Blur effect identifier (name).
+            */
+            virtual QString effectName() const;
 
         protected:
 

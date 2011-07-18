@@ -24,6 +24,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             UndoRemoveItem(AbstractPhoto * item, Scene * scene, LayersModel * model, QUndoCommand * parent = 0);
+            ~UndoRemoveItem();
             virtual void redo();
             virtual void undo();
 

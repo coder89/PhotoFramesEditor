@@ -1,19 +1,27 @@
 #include "ColorizePhotoEffect_p.h"
 
 #include <klocalizedstring.h>
+#include <QDebug>
+QColor ColorizePhotoEffect::m_last_color = QColor(255,255,255,0);
 
 ColorizePhotoEffect::ColorizePhotoEffect(QObject * parent) :
     AbstractPhotoEffectInterface(parent)
 {
-    Property * color = new Property("color");
-    color->name = i18n("Color");
-    color->value = Qt::white;
+    AbstractPhotoEffectProperty  * color = new AbstractPhotoEffectProperty("Color");
+    color->value = m_last_color;
     m_properties.push_back(color);
 }
 
 QImage ColorizePhotoEffect::apply(const QImage & image) const
 {
-    return AbstractPhotoEffectInterface::apply(image);
+    QColor tempColor = color();
+    if (!strength() || !tempColor.alpha())
+        return image;
+    QImage result = image;
+    QPainter p(&result);
+    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    p.drawImage(0,0,AbstractPhotoEffectInterface::apply(colorized(image, tempColor)));
+    return result;
 }
 
 QString ColorizePhotoEffect::effectName() const

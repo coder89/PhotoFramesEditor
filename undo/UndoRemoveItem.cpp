@@ -17,6 +17,12 @@ UndoRemoveItem::UndoRemoveItem(AbstractPhoto * item, Scene * scene, LayersModel 
 {
 }
 
+UndoRemoveItem::~UndoRemoveItem()
+{
+    if (!m_item->scene())
+        delete m_item;
+}
+
 void UndoRemoveItem::redo()
 {
     // Remove from model

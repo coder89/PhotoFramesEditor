@@ -6,6 +6,7 @@ QT_BEGIN_NAMESPACE
 #endif
 
 #include <qteditorfactory.h>
+#include <qtvariantproperty.h>
 #include <QMap>
 #include <QList>
 #include <QtProperty>
@@ -109,6 +110,8 @@ class KColorEditorFactory : public QtColorEditorFactory
     Q_OBJECT
 public:
     KColorEditorFactory(QObject *parent = 0);
+protected:
+    QWidget * createEditor(QtColorPropertyManager * manager, QtProperty * property, QWidget * parent);
 };
 
 class KFontEditorFactory : public QtFontEditorFactory
@@ -116,6 +119,15 @@ class KFontEditorFactory : public QtFontEditorFactory
     Q_OBJECT
 public:
     KFontEditorFactory(QObject *parent = 0);
+};
+
+class KVariantEditorFactory : public QtVariantEditorFactory
+{
+    Q_OBJECT
+public:
+    KVariantEditorFactory(QObject *parent = 0);
+protected:
+    QWidget * createEditor(QtVariantPropertyManager *manager, QtProperty *property, QWidget *parent);
 };
 
 class KSliderEditFactory : public QtAbstractEditorFactory<QtIntPropertyManager>

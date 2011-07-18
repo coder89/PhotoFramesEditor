@@ -5,18 +5,22 @@
 BlurPhotoEffect::BlurPhotoEffect(QObject * parent) :
     AbstractPhotoEffectInterface(parent)
 {
-    Property * radius = new Property("radius");
-    radius->name = i18n("Radius");
+    AbstractPhotoEffectProperty * radius = new AbstractPhotoEffectProperty("Radius");
     radius->value = 10;
+    radius->data.insert(AbstractPhotoEffectProperty::Maximum,200);
+    radius->data.insert(AbstractPhotoEffectProperty::Minimum,0);
     m_properties.push_back(radius);
 }
 
 QImage BlurPhotoEffect::apply(const QImage & image) const
 {
+    int tempRadius = radius();
+    if (!tempRadius)
+        return image;
     QImage result = image;
     QPainter p(&result);
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.drawImage(0,0,AbstractPhotoEffectInterface::apply(blurred(image, image.rect(), radius())));
+    p.drawImage(0,0,AbstractPhotoEffectInterface::apply(blurred(image, image.rect(), tempRadius)));
     return result;
 }
 

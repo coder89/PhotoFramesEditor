@@ -279,8 +279,7 @@ bool LayersModel::moveRows(int sourcePosition, int sourceCount, const QModelInde
             sourcePosition < srcItem->childCount()               &&
             sourcePosition+sourceCount <= srcItem->childCount()  &&
             destPosition <= destItem->childCount()               &&
-            sourcePosition != destPosition                       &&
-            sourcePosition != destPosition-1                     &&
+            ((srcItem != destItem) || (srcItem == destItem && sourcePosition != destPosition && sourcePosition != destPosition-1)) &&
             sourcePosition >= 0                                  &&
             destPosition >= 0)
     {

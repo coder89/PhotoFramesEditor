@@ -9,12 +9,14 @@
 #include <QtAbstractPropertyBrowser>
 #include <QtTreePropertyBrowser>
 #include <QtIntPropertyManager>
+#include <QtVariantPropertyManager>
 
 #include <kapplication.h>
 #include <klocalizedstring.h>
 
 using namespace KIPIPhotoFramesEditor;
 
+PhotoEffectsLoader * PhotoEffectsLoader::m_instance = 0;
 QMap<QString, AbstractPhotoEffectFactory*> PhotoEffectsLoader::registeredEffects;
 const QString PhotoEffectsLoader::OPACITY_STRING = i18n("Opacity");
 
@@ -65,6 +67,18 @@ PhotoEffectsLoader::PhotoEffectsLoader(QObject * parent) :
     m_opacity(100),
     m_undo_command(0)
 {
+}
+
+
+PhotoEffectsLoader * PhotoEffectsLoader::instance(QObject * parent)
+{
+    if (m_instance)
+    {
+        if (parent)
+            m_instance->setParent(parent);
+        return m_instance;
+    }
+    return (m_instance = new PhotoEffectsLoader(parent));
 }
 
 PhotoEffectsGroup * PhotoEffectsLoader::group() const
@@ -135,34 +149,127 @@ AbstractPhotoEffectInterface * PhotoEffectsLoader::getEffectByName(const QString
     return 0;
 }
 
-void PhotoEffectsLoader::postEffectChangedEvent()
+QtAbstractPropertyBrowser * PhotoEffectsLoader::propertyBrowser(AbstractPhotoEffectInterface * effect)
 {
-    sem.acquire();
-    if (m_undo_command)
+    PhotoEffectsLoader * loader = instance();
+    loader->postEffectChangedEvent();
+
+    QtAbstractPropertyBrowser * browser = new QtTreePropertyBrowser();
+
+    loader->m_effect = effect;
+    if (effect)
     {
-        UndoCommandEvent * event = new UndoCommandEvent();
-        event->setUndoCommand(m_undo_command);
-        KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(),event);
-        m_undo_command = 0;
+        // QVariant::Int
+        QtIntPropertyManager * intManager = new QtIntPropertyManager(browser);
+        KSliderEditFactory * sliderEditFactory = new KSliderEditFactory(browser);
+        browser->setFactoryForManager(intManager, sliderEditFactory);
+        // QVariant::Color
+        QtColorPropertyManager * colorManager = 0;
+        KColorEditorFactory * colorFactory = 0;
+        // QVariant others....
+        QtVariantPropertyManager * variantManager = 0;
+        KVariantEditorFactory * variantFactory = 0;
+        QList<AbstractPhotoEffectProperty*> effectProperties = effect->effectProperties();
+        foreach (AbstractPhotoEffectProperty * property, effectProperties)
+        {
+            QtProperty * qtproperty;
+            switch(property->value.type())
+            {
+                case QVariant::Int:
+                    qtproperty = intManager->addProperty(property->id);
+                    intManager->setValue(qtproperty,property->value.toInt());
+                    intManager->setMaximum(qtproperty,property->data[AbstractPhotoEffectProperty::Maximum].toInt());
+                    intManager->setMinimum(qtproperty,property->data[AbstractPhotoEffectProperty::Minimum].toInt());
+                    browser->addProperty(qtproperty);
+                    break;
+                case QVariant::Color:
+                    if (!colorManager || !colorFactory)
+                    {
+                        colorManager = new QtColorPropertyManager(browser);
+                        colorFactory = new KColorEditorFactory(browser);
+                        browser->setFactoryForManager(colorManager,colorFactory);
+                        connect(colorManager,SIGNAL(propertyChanged(QtProperty*)),loader,SLOT(propertyChanged(QtProperty*)));
+                        connect(colorFactory,SIGNAL(editingFinished()),loader,SLOT(postEffectChangedEvent()));
+                    }
+                    qtproperty = colorManager->addProperty(property->id);
+                    colorManager->setValue(qtproperty,property->value.value<QColor>());
+                    browser->addProperty(qtproperty);
+                    break;
+                default:
+                    if (!variantManager || !variantFactory)
+                    {
+                        variantManager = new QtVariantPropertyManager(browser);
+                        variantFactory = new KVariantEditorFactory(browser);
+                        browser->setFactoryForManager(variantManager,variantFactory);
+                        connect(variantManager,SIGNAL(propertyChanged(QtProperty*)),loader,SLOT(propertyChanged(QtProperty*)));
+                        connect(variantFactory,SIGNAL(editingFinished()),loader,SLOT(postEffectChangedEvent()));
+                    }
+                    break;
+            }
+        }
+        connect(intManager,SIGNAL(propertyChanged(QtProperty*)),loader,SLOT(propertyChanged(QtProperty*)));
+        connect(sliderEditFactory,SIGNAL(editingFinished()),loader,SLOT(postEffectChangedEvent()));
     }
-    sem.release();
+    else
+        browser->setEnabled(false);
+    return browser;
 }
 
 void PhotoEffectsLoader::propertyChanged(QtProperty * property)
 {
-    QtIntPropertyManager * manager = qobject_cast<QtIntPropertyManager*>(property->propertyManager());
-    int opacity = m_opacity;
-
-    if (property->propertyName() == OPACITY_STRING)
-        opacity = manager->value(property);
-
-    beginUndoCommandChange();
-    if (m_undo_command)
+    sem.acquire();
+    AbstractPhotoEffectProperty * tempProperty;
+    foreach (AbstractPhotoEffectProperty * currentProperty, m_effect_edited_properties)
     {
-        OpacityUndoCommand * undo = dynamic_cast<OpacityUndoCommand*>(m_undo_command);
-        undo->setOpacity(opacity);
+        if (currentProperty->id == property->propertyName())
+        {
+            setEffectPropertyValue(currentProperty, property);
+            goto _return;
+        }
     }
-    else
-        m_undo_command = new OpacityUndoCommand(this,opacity);
-    endUndoCommandChange();
+    foreach (AbstractPhotoEffectProperty * currentProperty, m_effect->effectProperties())
+    {
+        if (currentProperty->id == property->propertyName())
+        {
+            tempProperty = new AbstractPhotoEffectProperty(currentProperty->id);
+            tempProperty->value = currentProperty->value;
+            tempProperty->data = currentProperty->data;
+            setEffectPropertyValue(tempProperty, property);
+            m_effect_edited_properties.append(tempProperty);
+            goto _return;
+        }
+    }
+    _return:
+    sem.release();
+}
+
+void PhotoEffectsLoader::postEffectChangedEvent()
+{
+    qDebug() << "Command posted!";
+    sem.acquire();
+    QUndoCommand * command = m_effect->createChangeCommand(m_effect_edited_properties);
+    if (command)
+    {
+        UndoCommandEvent * event = new UndoCommandEvent();
+        event->setUndoCommand(command);
+        KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(),event);
+    }
+    m_effect_edited_properties.clear();
+    sem.release();
+}
+
+void PhotoEffectsLoader::setEffectPropertyValue(AbstractPhotoEffectProperty * effectProperty, QtProperty * property)
+{
+    switch (effectProperty->value.type())
+    {
+        case QVariant::Int:
+            effectProperty->value = qobject_cast<QtIntPropertyManager*>(property->propertyManager())->value(property);
+            return;
+        case QVariant::Color:
+            effectProperty->value = qobject_cast<QtColorPropertyManager*>(property->propertyManager())->value(property);
+            return;
+        default:
+            qDebug() << "Unexpected property type";
+            return;
+    }
 }

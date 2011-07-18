@@ -42,7 +42,6 @@ SOURCES += main.cpp\
     widgets/tools/ColorizeTool.cpp \
     widgets/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
-    effects/PixelizePhotoEffect.cpp \
     widgets/tools/EffectsEditorTool.cpp \
     widgets/tools/AbstractTool.cpp \
     effects/PhotoEffectsGroup.cpp \
@@ -84,7 +83,6 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/ColorizeTool.h \
     widgets/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
-    effects/PixelizePhotoEffect.h \
     widgets/tools/EffectsEditorTool.h \
     widgets/tools/AbstractTool.h \
     effects/PhotoEffectsGroup.h \

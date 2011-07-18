@@ -8,7 +8,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class PhotoEffectsLoader;
+    class AbstractPhotoEffectInterface;
     class EffectsEditorToolPrivate;
 
     class EffectsEditorTool : public AbstractTool
@@ -19,7 +19,10 @@ namespace KIPIPhotoFramesEditor
             explicit EffectsEditorTool(QWidget * parent = 0);
             virtual void currentItemChanged();
         protected slots:
-            void viewCurrentEffectEditor(PhotoEffectsLoader * effect);
+            void viewCurrentEffectEditor(const QModelIndex & index);
+            void removeSelected();
+            void moveSelectedDown();
+            void moveSelectedUp();
         private:
             void removeCurrentPropertyBrowser();
             EffectsEditorToolPrivate * d;
@@ -29,9 +32,19 @@ namespace KIPIPhotoFramesEditor
     {
             Q_OBJECT
         public:
-            EffectsListView(QWidget * parent = 0) : QListView(parent) {}
+            EffectsListView(QWidget * parent = 0) : QListView(parent)
+            {
+                this->setSelectionMode(QAbstractItemView::SingleSelection);
+            }
+            QModelIndex selectedIndex() const
+            {
+                QModelIndexList indexes = selectedIndexes();
+                if (indexes.count() == 1)
+                    return indexes.at(0);
+                return QModelIndex();
+            }
         signals:
-            void selectionChanged(PhotoEffectsLoader * effect);
+            void selectedIndex(const QModelIndex & index);
         protected:
             virtual void selectionChanged (const QItemSelection & selected, const QItemSelection & /*deselected*/)
             {
@@ -41,11 +54,11 @@ namespace KIPIPhotoFramesEditor
                     QModelIndex index = indexes.at(0);
                     if (index.isValid())
                     {
-                        emit selectionChanged(static_cast<PhotoEffectsLoader*>(index.internalPointer()));
+                        emit selectedIndex(index);
                         return;
                     }
                 }
-                emit selectionChanged(0);
+                emit selectedIndex(QModelIndex());
             }
     };
 }

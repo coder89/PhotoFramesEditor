@@ -82,9 +82,27 @@ KColorEditorFactory::KColorEditorFactory(QObject * parent) :
 {
 }
 
+QWidget * KColorEditorFactory::createEditor(QtColorPropertyManager * manager, QtProperty * property, QWidget * parent)
+{
+    QWidget * widget = QtColorEditorFactory::createEditor(manager,property,parent);
+    connect(widget,SIGNAL(destroyed()),this,SLOT(emitEditingFinished()));
+    return widget;
+}
+
 KFontEditorFactory::KFontEditorFactory(QObject * parent) :
     QtFontEditorFactory(parent)
 {
+}
+
+KVariantEditorFactory::KVariantEditorFactory(QObject *parent) :
+    QtVariantEditorFactory(parent)
+{}
+
+QWidget * KVariantEditorFactory::createEditor(QtVariantPropertyManager *manager, QtProperty *property, QWidget *parent)
+{
+    QWidget * widget = QtVariantEditorFactory::createEditor(manager,property,parent);
+    connect(widget,SIGNAL(destroyed()),this,SLOT(emitEditingFinished()));
+    return widget;
 }
 
 KSliderEditFactory::KSliderEditFactory(QObject *parent) :

@@ -7,6 +7,7 @@
 #include <QUndoCommand>
 #include <QSemaphore>
 #include <QMap>
+#include <QList>
 
 class QtProperty;
 class QtAbstractPropertyBrowser;
@@ -16,8 +17,8 @@ namespace KIPIPhotoFramesEditor
     class AbstractPhoto;
     class PhotoEffectsGroup;
     class AbstractPhotoEffectFactory;
+    class AbstractPhotoEffectProperty;
     class AbstractPhotoEffectInterface;
-
 
     class PhotoEffectsLoader : public QObject
     {
@@ -33,21 +34,22 @@ namespace KIPIPhotoFramesEditor
 
             static QMap<QString, AbstractPhotoEffectFactory*> registeredEffects;
 
+            static PhotoEffectsLoader * m_instance;
+            explicit PhotoEffectsLoader(QObject * parent);
+
         public:
 
-            explicit PhotoEffectsLoader(QObject * parent = 0);
+            static PhotoEffectsLoader * instance(QObject * parent = 0);
             PhotoEffectsGroup * group() const;
             AbstractPhoto * photo() const;
 
             virtual QImage apply(const QImage & image);
             virtual QtAbstractPropertyBrowser * propertyBrowser() const;
-            virtual QString toString() const = 0;
 
           /**
             * Effect name propetry
             */
-            Q_PROPERTY(QString m_effect_name READ effectName)
-            virtual QString effectName() const = 0;
+            //Q_PROPERTY(QString m_effect_name READ effectName)
 
           /**
             * Name propetry
@@ -92,11 +94,18 @@ namespace KIPIPhotoFramesEditor
             */
             static AbstractPhotoEffectInterface * getEffectByName(const QString & name);
 
+          /** Returns property browser for effect.
+            * \arg effect is the object of \class AbstractPhotoEffectInterface base type which represents effect with set of properties to configure.
+            */
+            static QtAbstractPropertyBrowser * propertyBrowser(AbstractPhotoEffectInterface * effect);
+
         protected:
 
             int m_opacity;
             QUndoCommand * m_undo_command;
             static const QString OPACITY_STRING;
+            AbstractPhotoEffectInterface * m_effect;
+            QList<AbstractPhotoEffectProperty*> m_effect_edited_properties;
 
           /// Use this function before/after modifying or creating new QUndoCommand for your effect
             void beginUndoCommandChange()
@@ -110,11 +119,6 @@ namespace KIPIPhotoFramesEditor
 
         protected slots:
 
-          /** Call this slot to post your QUndoCommand.
-            * \note It is good to connect this slot to \fn editingFinished() signal of your QtEditorFacroty objects.
-            */
-            void postEffectChangedEvent();
-
           /** This function if called when any QtProperty has changed.
             * If you are reimplementing this function remember to call yours parent's version to process it's
             * properties if \arg property is not your own.
@@ -122,7 +126,12 @@ namespace KIPIPhotoFramesEditor
             * \warning Also remember to connect this function to all of your QtPropertyManager's to
             * recieve all property change events.
             */
-            virtual void propertyChanged(QtProperty * property);
+            void propertyChanged(QtProperty * property);
+
+          /** Call this slot to post your QUndoCommand.
+            * \note It is good to connect this slot to \fn editingFinished() signal of your QtEditorFacroty objects.
+            */
+            void postEffectChangedEvent();
 
         signals:
 
@@ -131,6 +140,10 @@ namespace KIPIPhotoFramesEditor
             * (i.e. opacity has changed and repaint is needed)
             */
             void effectChanged(PhotoEffectsLoader * effect);
+
+        private:
+
+            void setEffectPropertyValue(AbstractPhotoEffectProperty * effectProperty, QtProperty * property);
 
         friend class AbstractPhotoEffectFactory;
     };

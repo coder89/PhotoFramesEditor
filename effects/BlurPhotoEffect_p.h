@@ -6,9 +6,11 @@
 #include <QImage>
 #include <QRect>
 
-class BlurPhotoEffect : public KIPIPhotoFramesEditor::AbstractPhotoEffectInterface
+using namespace KIPIPhotoFramesEditor;
+
+class BlurPhotoEffect : public AbstractPhotoEffectInterface
 {
-        Q_INTERFACES(KIPIPhotoFramesEditor::AbstractPhotoEffectInterface)
+        Q_INTERFACES(AbstractPhotoEffectInterface)
 
     public:
 
@@ -20,8 +22,8 @@ class BlurPhotoEffect : public KIPIPhotoFramesEditor::AbstractPhotoEffectInterfa
 
         int radius() const
         {
-            foreach (Property * property, m_properties)
-                if (property->id == "radius")
+            foreach (AbstractPhotoEffectProperty * property, m_properties)
+                if (property->id == "Radius")
                     return property->value.toInt();
             return 0;
         }
@@ -31,7 +33,7 @@ class BlurPhotoEffect : public KIPIPhotoFramesEditor::AbstractPhotoEffectInterfa
         static QImage blurred(const QImage & image, const QRect& rect, int radius)
         {
             int tab[] = { 14, 10, 8, 6, 5, 5, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2 };
-            int alpha = (radius < 1)  ? 16 : (radius > 17) ? 1 : tab[radius-1];
+            int alpha = (radius < 1)  ? 16 : (radius > sizeof(tab)) ? 1 : tab[radius-1];
 
             QImage result = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
             int r1 = rect.top();
@@ -41,7 +43,7 @@ class BlurPhotoEffect : public KIPIPhotoFramesEditor::AbstractPhotoEffectInterfa
 
             int bpl = result.bytesPerLine();
             int rgba[4];
-            unsigned char* p;
+            unsigned char * p;
 
             for (int col = c1; col <= c2; col++)
             {

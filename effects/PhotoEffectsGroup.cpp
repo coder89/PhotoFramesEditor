@@ -14,7 +14,7 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
+class KIPIPhotoFramesEditor::PhotoEffectsGroup::MoveItemsUndoCommand : public QUndoCommand
 {
         PhotoEffectsGroup * m_model;
         int m_starting_row;
@@ -23,7 +23,7 @@ class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
 
     public:
         MoveItemsUndoCommand(int sourcePosition, int sourceCount, int destPosition, PhotoEffectsGroup * model, QUndoCommand * parent = 0) :
-            QUndoCommand(parent),
+            QUndoCommand(i18n("Change effect layer"), parent),
             m_model(model),
             m_starting_row(sourcePosition),
             m_rows_count(sourceCount),
@@ -36,7 +36,7 @@ class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
 
 };
 
-void MoveItemsUndoCommand::redo()
+void PhotoEffectsGroup::MoveItemsUndoCommand::redo()
 {
     if (m_model)
     {
@@ -45,7 +45,7 @@ void MoveItemsUndoCommand::redo()
     }
 }
 
-void MoveItemsUndoCommand::undo()
+void PhotoEffectsGroup::MoveItemsUndoCommand::undo()
 {
     if (m_model)
     {
@@ -54,7 +54,7 @@ void MoveItemsUndoCommand::undo()
     }
 }
 
-void MoveItemsUndoCommand::reverse()
+void PhotoEffectsGroup::MoveItemsUndoCommand::reverse()
 {
     int temp = m_destination_row;
     m_destination_row = m_starting_row;
@@ -65,7 +65,7 @@ void MoveItemsUndoCommand::reverse()
         m_starting_row -= m_rows_count;
 }
 
-class KIPIPhotoFramesEditor::RemoveItemsUndoCommand : public QUndoCommand
+class KIPIPhotoFramesEditor::PhotoEffectsGroup::RemoveItemsUndoCommand : public QUndoCommand
 {
         int m_starting_pos;
         int m_count;
@@ -73,7 +73,7 @@ class KIPIPhotoFramesEditor::RemoveItemsUndoCommand : public QUndoCommand
         QList<AbstractPhotoEffectInterface*> tempItemsList;
     public:
         RemoveItemsUndoCommand(int startingPos, int count, PhotoEffectsGroup * model, QUndoCommand * parent = 0) :
-            QUndoCommand(parent),
+            QUndoCommand(i18n("Remove effect"), parent),
             m_starting_pos(startingPos),
             m_count(count),
             m_model(model)
@@ -86,27 +86,67 @@ class KIPIPhotoFramesEditor::RemoveItemsUndoCommand : public QUndoCommand
         virtual void undo();
 };
 
-void RemoveItemsUndoCommand::redo()
+void PhotoEffectsGroup::RemoveItemsUndoCommand::redo()
 {
     tempItemsList = m_model->removeRowsInModel(m_starting_pos, m_count);
 }
 
-void RemoveItemsUndoCommand::undo()
+void PhotoEffectsGroup::RemoveItemsUndoCommand::undo()
 {
-    m_model->insertRowsInModel(tempItemsList, m_starting_pos);
+    m_model->insertRemovedRowsInModel(tempItemsList, m_starting_pos);
     tempItemsList.clear();
+}
+
+class KIPIPhotoFramesEditor::PhotoEffectsGroup::InsertItemUndoCommand : public QUndoCommand
+{
+        int m_row;
+        AbstractPhotoEffectInterface * m_effect;
+        PhotoEffectsGroup * m_model;
+        bool commandCorupped;
+        bool done;
+    public:
+        InsertItemUndoCommand(int row, AbstractPhotoEffectInterface * effect, PhotoEffectsGroup * model, QUndoCommand * parent = 0) :
+            QUndoCommand(i18n("Add effect"), parent),
+            m_row(row),
+            m_effect(effect),
+            m_model(model),
+            commandCorupped(false),
+            done(false)
+        {}
+        ~InsertItemUndoCommand()
+        {
+            if (!done)
+                m_effect->deleteLater();
+        }
+        virtual void redo();
+        virtual void undo();
+};
+
+void PhotoEffectsGroup::InsertItemUndoCommand::redo()
+{
+    if (commandCorupped || !m_model)
+        return;
+    if (m_model->insertRow(m_row))
+        m_model->setEffectPointer(m_row,m_effect);
+    else
+        commandCorupped = true;
+    done = true;
+}
+
+void PhotoEffectsGroup::InsertItemUndoCommand::undo()
+{
+    if (commandCorupped || !m_model)
+        return;
+    QList<AbstractPhotoEffectInterface*> removedList = m_model->removeRowsInModel(m_row,1);
+    if (removedList.count() != 1 || removedList.at(0) != m_effect)
+        commandCorupped = true;
+    done = false;
 }
 
 PhotoEffectsGroup::PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent) :
     QAbstractItemModel(parent),
     m_photo(photo)
 {
-    QStringList names = PhotoEffectsLoader::registeredEffectsNames();
-    this->push_back(PhotoEffectsLoader::getEffectByName(names.at(0)));
-    this->push_back(PhotoEffectsLoader::getEffectByName(names.at(1)));
-    this->push_back(PhotoEffectsLoader::getEffectByName(names.at(0)));
-    this->push_back(PhotoEffectsLoader::getEffectByName(names.at(1)));
-    this->push_back(PhotoEffectsLoader::getEffectByName(names.at(0)));
 }
 
 void PhotoEffectsGroup::push_back(AbstractPhotoEffectInterface * effect)
@@ -164,7 +204,23 @@ bool PhotoEffectsGroup::moveRows(int sourcePosition, int sourceCount, int destPo
     return false;
 }
 
-int PhotoEffectsGroup::columnCount(const QModelIndex & parent) const
+bool PhotoEffectsGroup::insertRow(int row, AbstractPhotoEffectInterface * effect)
+{
+    if (row < 0 || row > rowCount() || !effect)
+        return false;
+    QUndoCommand * command = new InsertItemUndoCommand(row,effect,this);
+    UndoCommandEvent * event = new UndoCommandEvent();
+    event->setUndoCommand(command);
+    KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(), event);
+    return true;
+}
+
+bool PhotoEffectsGroup::insertRow(int row, const QModelIndex & index)
+{
+    return QAbstractItemModel::insertRow(row,index);
+}
+
+int PhotoEffectsGroup::columnCount(const QModelIndex & /*parent*/) const
 {
     return 1;
 }
@@ -177,7 +233,21 @@ QVariant PhotoEffectsGroup::data(const QModelIndex & index, int role) const
     if (!index.isValid())
         return i18n("Effect name");
     else
-        return getItem(index)->toString();
+    {
+        AbstractPhotoEffectInterface * effect = getItem(index);
+        if (effect)
+            return effect->toString();
+        else
+            return QVariant();
+    }
+}
+
+Qt::ItemFlags PhotoEffectsGroup::flags(const QModelIndex & index) const
+{
+    Qt::ItemFlags result = QAbstractItemModel::flags(index);
+    if (index.isValid() && !index.internalPointer())
+        result |= Qt::ItemIsEditable;
+    return result;
 }
 
 QModelIndex PhotoEffectsGroup::index(int row, int column, const QModelIndex & parent) const
@@ -191,7 +261,20 @@ QModelIndex PhotoEffectsGroup::index(int row, int column, const QModelIndex & pa
     return createIndex(row,column,m_effects_list.at(rowCount()-row-1));
 }
 
-QModelIndex PhotoEffectsGroup::parent(const QModelIndex & index) const
+bool PhotoEffectsGroup::insertRows(int row, int count, const QModelIndex & parent)
+{
+    if (row < 0 || row > rowCount() || count < 1 || parent.isValid())
+        return false;
+    beginInsertRows(parent, row, row+count-1);
+    row = rowCount()-row;
+    while(count--)
+        m_effects_list.insert(row,0);
+    endInsertRows();
+    emit layoutChanged();
+    return true;
+}
+
+QModelIndex PhotoEffectsGroup::parent(const QModelIndex & /*index*/) const
 {
     return QModelIndex();
 }
@@ -206,8 +289,16 @@ int PhotoEffectsGroup::rowCount(const QModelIndex & parent) const
 
 bool PhotoEffectsGroup::removeRows(int row, int count, const QModelIndex & parent)
 {
-    if (!count || row < 0 || row > rowCount(parent)-1)
+    if (!count || parent.isValid() || row < 0 || row >= rowCount() || row+count-1 >= rowCount())
         return false;
+    for (int i = row+count-1; i >= row; --i)
+    {
+        if (m_effects_list.at(rowCount()-i-1))
+            goto create_command;
+    }
+    removeRowsInModel(row,count);
+    return true;
+create_command:
     QUndoCommand * command = new RemoveItemsUndoCommand(row, count, this);
     UndoCommandEvent * event = new UndoCommandEvent();
     event->setUndoCommand(command);
@@ -268,7 +359,7 @@ QList<AbstractPhotoEffectInterface*> PhotoEffectsGroup::removeRowsInModel(int st
     return removedItems;
 }
 
-void PhotoEffectsGroup::insertRowsInModel(const QList<AbstractPhotoEffectInterface*> & itemList, int startingPosition)
+void PhotoEffectsGroup::insertRemovedRowsInModel(const QList<AbstractPhotoEffectInterface*> & itemList, int startingPosition)
 {
     beginInsertRows(QModelIndex(), startingPosition, startingPosition+itemList.count()-1);
 
@@ -284,4 +375,18 @@ void PhotoEffectsGroup::insertRowsInModel(const QList<AbstractPhotoEffectInterfa
     endInsertRows();
     emitEffectsChanged();
     emit layoutChanged();
+}
+
+void PhotoEffectsGroup::setEffectPointer(int row, AbstractPhotoEffectInterface * effect)
+{
+    if (row < 0 || row >= rowCount())
+        return;
+    int effectiveRow = rowCount()-row-1;
+    AbstractPhotoEffectInterface * temp = m_effects_list[effectiveRow];
+    if (temp)
+        delete temp;
+    m_effects_list[effectiveRow] = effect;
+    effect->setParent(this);
+    emitEffectsChanged(effect);
+    emit dataChanged(index(row,0),index(row,0));
 }

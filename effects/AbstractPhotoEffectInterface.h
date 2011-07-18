@@ -74,7 +74,7 @@ namespace KIPIPhotoFramesEditor
 
             QUndoCommand * createChangeCommand(const QList<AbstractPhotoEffectProperty*> & properties)
             {
-                if (properties.count())
+                if (properties.count() && group() && group()->photo())
                     return new AbstractPhotoEffectInterfaceCommand(this,properties);
                 else
                     return 0;
@@ -199,6 +199,7 @@ namespace KIPIPhotoFramesEditor
             };
 
         friend class AbstractPhotoEffectInterfaceCommand;
+        friend class PhotoEffectsLoader;
     };
 }
 

@@ -48,7 +48,8 @@ SOURCES += main.cpp\
     utils/KEditFactory.cpp \
     events/UndoCommandEvent.cpp \
     events/UndoCommandEventFilter.cpp \
-    effects/PhotoEffectsLoader.cpp
+    effects/PhotoEffectsLoader.cpp \
+    utils/global.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \

@@ -41,8 +41,8 @@ void QGraphicsEditionWidget::setSelection(const QList<QGraphicsItem*> & itemList
     QSet<QGraphicsItem*> itemSet = itemList.toSet();
     itemSet.remove(m_rot);
     qDebug() << itemSet;
-    qDebug() << m_sel->m_itemsList;
-    if (itemSet != m_sel->m_itemsList)
+    qDebug() << m_sel->selection();
+    if (itemSet != m_sel->selection())
     {
         qDebug() << "Selection changed";
         setPos(m_sel->setSelection(itemSet));
@@ -66,9 +66,9 @@ void QGraphicsEditionWidget::reset()
 
 void QGraphicsEditionWidget::refresh()
 {
-    qDebug() << m_sel->setSelection(m_sel->m_itemsList);
+    qDebug() << m_sel->setSelection(m_sel->selection());
     qDebug() << m_sel->shape();
-    setPos(m_sel->setSelection(m_sel->m_itemsList));
+    setPos(m_sel->setSelection(m_sel->selection()));
 }
 
 QRectF QGraphicsEditionWidget::boundingRect() const
@@ -100,7 +100,10 @@ void QGraphicsEditionWidget::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     QGraphicsWidget::mousePressEvent(event);
     if (event->isAccepted())
-    {}
+    {
+        qDebug() << "pressed";
+    }
+    m_sel->beginMoveUndoCommand();
 }
 
 void QGraphicsEditionWidget::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
@@ -114,7 +117,10 @@ void QGraphicsEditionWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
     QGraphicsWidget::mouseReleaseEvent(event);
     if (event->isAccepted())
-    {}
+    {
+        qDebug() << "release";
+    }
+    m_sel->endMoveUndoCommand();
 }
 
 void QGraphicsEditionWidget::setRotationAngle(qreal angle, bool round)

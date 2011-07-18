@@ -11,5 +11,7 @@
         <file>tool_effects.png</file>
         <file>action_add.png</file>
         <file>action_remove.png</file>
+        <file>action_check.png</file>
+        <file>action_delete.png</file>
     </qresource>
 </RCC>

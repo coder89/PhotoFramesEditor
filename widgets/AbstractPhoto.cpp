@@ -86,13 +86,13 @@ void AbstractPhoto::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     unselectedOption.state &= !QStyle::State_Selected;
     QGraphicsPixmapItem::paint(painter,&unselectedOption,widget);
 
-    // Selecting item
-    if ((option->state) & QStyle::State_Selected)
-    {
-        QPainterPath exposedPath = QPainterPath();
-        exposedPath.addRect(option->exposedRect);
-        painter->fillPath(m_complete_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
-    }
+//    // Selecting item
+//    if ((option->state) & QStyle::State_Selected)
+//    {
+//        QPainterPath exposedPath = QPainterPath();
+//        exposedPath.addRect(option->exposedRect);
+//        painter->fillPath(m_complete_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
+//    }
 
     if (this->borderWidth())
         painter->fillPath(m_border_path, this->borderColor());

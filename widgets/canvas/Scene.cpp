@@ -35,8 +35,8 @@ namespace KIPIPhotoFramesEditor
         };
 
         ScenePrivate(Scene * parent) :
-            m_parent(parent),
-            m_edit_widget(new QGraphicsEditionWidget)
+            m_edit_widget(new QGraphicsEditionWidget),
+            m_parent(parent)
         {
             m_edit_widget->setZValue(1.0/0.0);
             setMode(0);

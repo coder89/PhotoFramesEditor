@@ -8,8 +8,6 @@ namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
     class PhotoEffectsLoader;
-    class MoveItemsUndoCommand;
-    class RemoveItemsUndoCommand;
     class AbstractPhotoEffectInterface;
 
     class PhotoEffectsGroup : public QAbstractItemModel
@@ -19,19 +17,27 @@ namespace KIPIPhotoFramesEditor
             AbstractPhoto * m_photo;
             QList<AbstractPhotoEffectInterface*> m_effects_list;
 
+            class MoveItemsUndoCommand;
+            class RemoveItemsUndoCommand;
+            class InsertItemUndoCommand;
+
         public:
 
             explicit PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
             AbstractPhoto * photo() const;
             AbstractPhotoEffectInterface * getItem(const QModelIndex & index = QModelIndex()) const;
             bool moveRows(int sourcePosition, int sourceCount, int destPosition);
+            bool insertRow(int row, AbstractPhotoEffectInterface * effect);
+            bool insertRow(int row, const QModelIndex & index = QModelIndex());
 
             // Reimplemented QAbstractItemModel methods
-            virtual int columnCount( const QModelIndex & parent = QModelIndex() ) const;
-            virtual QVariant data( const QModelIndex & index, int role = Qt::DisplayRole ) const;
-            virtual QModelIndex index( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
-            virtual QModelIndex parent( const QModelIndex & index ) const;
-            virtual int rowCount( const QModelIndex & parent = QModelIndex() ) const;
+            virtual int columnCount(const QModelIndex & parent = QModelIndex()) const;
+            virtual QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+            virtual Qt::ItemFlags flags(const QModelIndex & index) const;
+            virtual QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+            virtual bool insertRows(int row, int count, const QModelIndex & parent = QModelIndex());
+            virtual QModelIndex parent(const QModelIndex & index) const;
+            virtual int rowCount(const QModelIndex & parent = QModelIndex()) const;
             virtual bool removeRows(int row, int count, const QModelIndex & parent);
 
         signals:
@@ -49,10 +55,12 @@ namespace KIPIPhotoFramesEditor
 
             void moveRowsInModel(int sourcePosition, int sourceCount, int destPosition);
             QList<AbstractPhotoEffectInterface*> removeRowsInModel(int startingPosition, int count);
-            void insertRowsInModel(const QList<AbstractPhotoEffectInterface*> & itemList, int startingPosition);
+            void insertRemovedRowsInModel(const QList<AbstractPhotoEffectInterface*> & itemList, int startingPosition);
+            void setEffectPointer(int row, AbstractPhotoEffectInterface * effect);
 
         friend class MoveItemsUndoCommand;
         friend class RemoveItemsUndoCommand;
+        friend class InsertItemUndoCommand;
     };
 }
 

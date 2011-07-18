@@ -30,7 +30,7 @@ class BlurPhotoEffect : public AbstractPhotoEffectInterface
 
     private:
 
-        static QImage blurred(const QImage & image, const QRect& rect, int radius)
+        static QImage blurred(const QImage & image, const QRect& rect, unsigned int radius)
         {
             int tab[] = { 14, 10, 8, 6, 5, 5, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2 };
             int alpha = (radius < 1)  ? 16 : (radius > sizeof(tab)) ? 1 : tab[radius-1];

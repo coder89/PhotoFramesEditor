@@ -14,10 +14,13 @@ namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
     class QGraphicsEditionWidget;
+    class QGraphicsSelectionItemPrivate;
 
     class QGraphicsSelectionItem : public QGraphicsWidget
     {
             Q_OBJECT
+
+            class MoveItemsUndoCommand;
 
         public:
 
@@ -26,30 +29,25 @@ namespace KIPIPhotoFramesEditor
         public:
 
             QPointF setSelection(const QSet<QGraphicsItem*> & items);
+            QSet<QGraphicsItem*> selection() const;
 
             virtual QRectF boundingRect() const;
             virtual bool contains(const QPointF & point) const;
             virtual QPainterPath opaqueArea() const;
             virtual QPainterPath shape() const;
 
-            virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
-            {
-                painter->setPen(Qt::DashLine);
-                painter->drawRect(m_shape.boundingRect());
-                painter->drawPath(m_shape);
-            }
-
+            virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
             virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
             virtual void hoverEnterEvent(QGraphicsSceneHoverEvent * event);
             virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent * event);
 
-        public Q_SLOTS:
+        public slots:
 
             void setRotation(qreal angle, const QPointF & rotPoint, bool round);
 
-        Q_SIGNALS:
+        signals:
 
             void selectionChanged();
 
@@ -57,15 +55,16 @@ namespace KIPIPhotoFramesEditor
 
             void addToShape(const QPainterPath & path);
             void removeFromShape(const QPainterPath & path);
+            void beginMoveUndoCommand();
+            void endMoveUndoCommand();
 
             QPainterPath calcShape() const;
             QPointF setupWidget();
 
-            QSet<QGraphicsItem*> m_itemsList;
-            QPainterPath m_shape;
-            int m_flags;
+            QGraphicsSelectionItemPrivate * d;
 
         friend class QGraphicsEditionWidget;
+        friend class QGraphicsSelectionItemPrivate;
     };
 }
 

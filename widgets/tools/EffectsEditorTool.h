@@ -5,11 +5,40 @@
 
 #include <QListView>
 #include <QModelIndex>
+#include <QStyledItemDelegate>
+
+#include <kpushbutton.h>
 
 namespace KIPIPhotoFramesEditor
 {
     class AbstractPhotoEffectInterface;
     class EffectsEditorToolPrivate;
+
+    class EffectListViewDelegate : public QWidget
+    {
+            KPushButton * m_acceptButton;
+            Q_OBJECT
+        public:
+            EffectListViewDelegate(QWidget * parent = 0);
+        signals:
+            void editorClosed();
+            void editorAccepted();
+            void effectSelected(const QString & effectName);
+        protected slots:
+            void emitEditorClosed()
+            {
+                emit editorClosed();
+            }
+            void emitEditorAccepted()
+            {
+                emit editorAccepted();
+            }
+            void emitEffectSelected(const QString & effectName)
+            {
+                m_acceptButton->setEnabled(!effectName.isEmpty());
+                emit effectSelected(effectName);
+            }
+    };
 
     class EffectsEditorTool : public AbstractTool
     {
@@ -20,6 +49,11 @@ namespace KIPIPhotoFramesEditor
             virtual void currentItemChanged();
         protected slots:
             void viewCurrentEffectEditor(const QModelIndex & index);
+            void viewEffectEditor(AbstractPhotoEffectInterface * effect);
+            void addEffect();
+            void editorEfectSelected(const QString & effectName);
+            void addEffectCommand();
+            void cancelAddEffect();
             void removeSelected();
             void moveSelectedDown();
             void moveSelectedUp();
@@ -46,7 +80,7 @@ namespace KIPIPhotoFramesEditor
         signals:
             void selectedIndex(const QModelIndex & index);
         protected:
-            virtual void selectionChanged (const QItemSelection & selected, const QItemSelection & /*deselected*/)
+            virtual void selectionChanged(const QItemSelection & selected, const QItemSelection & /*deselected*/)
             {
                 QModelIndexList indexes = selected.indexes();
                 if (indexes.count())
@@ -60,6 +94,8 @@ namespace KIPIPhotoFramesEditor
                 }
                 emit selectedIndex(QModelIndex());
             }
+
+        friend class EffectsEditorTool;
     };
 }
 

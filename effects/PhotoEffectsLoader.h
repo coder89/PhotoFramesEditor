@@ -43,14 +43,6 @@ namespace KIPIPhotoFramesEditor
             PhotoEffectsGroup * group() const;
             AbstractPhoto * photo() const;
 
-            virtual QImage apply(const QImage & image);
-            virtual QtAbstractPropertyBrowser * propertyBrowser() const;
-
-          /**
-            * Effect name propetry
-            */
-            //Q_PROPERTY(QString m_effect_name READ effectName)
-
           /**
             * Name propetry
             */
@@ -62,20 +54,6 @@ namespace KIPIPhotoFramesEditor
             virtual void setName(const QString & name)
             {
                 m_name = name;
-            }
-
-          /**
-            * Opacity property
-            */
-            Q_PROPERTY(int m_opacity READ opacity WRITE setOpacity)
-            void setOpacity(int opacity)
-            {
-                m_opacity = opacity;
-                emit effectChanged(this);
-            }
-            int opacity() const
-            {
-                return m_opacity;
             }
 
           /** Registers new effect using it's factory object.
@@ -101,9 +79,6 @@ namespace KIPIPhotoFramesEditor
 
         protected:
 
-            int m_opacity;
-            QUndoCommand * m_undo_command;
-            static const QString OPACITY_STRING;
             AbstractPhotoEffectInterface * m_effect;
             QList<AbstractPhotoEffectProperty*> m_effect_edited_properties;
 

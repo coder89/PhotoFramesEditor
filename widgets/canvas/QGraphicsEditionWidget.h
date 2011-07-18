@@ -35,7 +35,7 @@ namespace KIPIPhotoFramesEditor
             int maxSceneZValue() const;
 
             /// TODO : Remove after finish
-            virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+            virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem */*option*/, QWidget */*widget*/)
             {
                 painter->setPen(Qt::red);
                 painter->drawPath(shape());

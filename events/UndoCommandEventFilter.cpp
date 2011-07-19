@@ -1,6 +1,7 @@
 #include "UndoCommandEventFilter.h"
 #include "UndoCommandEvent.h"
 #include "global.h"
+#include "photoframeseditor.h"
 #include <QtGlobal>
 
 using namespace KIPIPhotoFramesEditor;

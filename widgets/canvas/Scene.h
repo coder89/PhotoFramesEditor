@@ -53,6 +53,8 @@ namespace KIPIPhotoFramesEditor
             QList<AbstractPhoto*> selectedItems() const;
             void setMode(EditMode mode);
             void setSelectionMode(SelectionMode selectionMode);
+            QDomNode toSvg(QDomDocument & document);
+            void fromSvg(QDomElement & svgImage);
             const QGraphicsScene * toGraphicsScene() const
             {
                 return this;

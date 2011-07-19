@@ -444,6 +444,55 @@ void Scene::setSelectionMode(SelectionMode selectionMode)
 
 //#####################################################################################################
 
+QDomNode Scene::toSvg(QDomDocument & document)
+{
+    QDomElement result = document.createElement("svg");
+    result.setAttribute("xmlns","http://www.w3.org/2000/svg");
+    result.setAttribute("width",QString::number(this->width()));
+    result.setAttribute("height",QString::number(this->height()));
+    QList<QGraphicsItem*> itemsList = this->items(Qt::AscendingOrder);
+    foreach (QGraphicsItem * item, itemsList)
+    {
+        AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(item);
+        if (photo)
+            result.appendChild(photo->toSvg(document));
+    }
+    return result;
+}
+
+//#####################################################################################################
+
+void Scene::fromSvg(QDomElement & svgImage)
+{
+    if (svgImage.tagName() != "svg")
+        return;
+    // Clear scene
+    foreach (QGraphicsItem * item, this->items())
+        this->QGraphicsScene::removeItem(item);
+    // Set size
+    qreal width = svgImage.attribute("width").toDouble();
+    qreal height = svgImage.attribute("height").toDouble();
+    this->setSceneRect(0,0,width,height);
+    // Create elements
+    QDomNodeList children = svgImage.childNodes();
+    for (int i = 0; i < children.count(); ++i)
+    {
+        QDomNode node = children.at(i);
+        if (!node.isElement())
+            continue;
+        QDomElement element = node.toElement();
+        QString itemClass = element.attribute("class");
+        if (itemClass == "PhotoItem")
+        {
+            PhotoItem * item = new PhotoItem();
+            item->fromSvg(element);
+            this->addItem(item);
+        }
+    }
+}
+
+//#####################################################################################################
+
 void Scene::updateChildernsGrid(qreal x, qreal y)
 {
     foreach(AbstractPhoto * p ,this->children)

@@ -33,18 +33,20 @@ namespace KIPIPhotoFramesEditor
             void open(const KUrl & fileUrl);
             void save();
             void saveAs();
+            void saveFile(const KUrl & fileUrl = KUrl(), bool setFileAsDefault = true);
             void exportFile();
-            void saveFile(const KUrl & fileUrl);
             void printPreview();
             void print();
             bool closeDocument();
             void setGridVisible(bool isVisible);
             void createCanvas(const QSizeF & dimension);
+            void createCanvas(const KUrl & fileUrl);
             void setupGrid();
 
         protected Q_SLOTS:
 
             bool queryClose();
+            void refreshActions();
 
         private:
 
@@ -52,9 +54,9 @@ namespace KIPIPhotoFramesEditor
             static PhotoFramesEditor * m_instance;
 
             void setupActions();
-            void refreshActions();
             void createWidgets();
             void loadEffects();
+            void prepareSignalsConnections();
 
             Canvas * m_canvas;
 

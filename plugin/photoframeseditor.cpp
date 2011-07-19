@@ -22,6 +22,7 @@
 #include <QPushButton>
 #include <QDebug>
 #include <QPluginLoader>
+#include <QFile>
 
 // KDE
 #include <kmenubar.h>
@@ -160,7 +161,7 @@ void PhotoFramesEditor::refreshActions()
         d->undoAction->setEnabled(m_canvas->undoStack()->canUndo());
         d->redoAction->setEnabled(m_canvas->undoStack()->canRedo());
     }
-    d->saveAction->setEnabled(isEnabledForCanvas);
+    d->saveAction->setEnabled(isEnabledForCanvas && !m_canvas->isSaved());
     d->saveAsAction->setEnabled(isEnabledForCanvas);
     d->exportFileAction->setEnabled(isEnabledForCanvas);
     d->printPreviewAction->setEnabled(isEnabledForCanvas);
@@ -223,12 +224,32 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
         m_canvas->deleteLater();
     }
     m_canvas = new Canvas(dimension, d->centralWidget);
+    this->prepareSignalsConnections();
+}
+
+void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
+{
+    if (m_canvas)
+    {
+        d->centralWidget->layout()->removeWidget(m_canvas);
+        m_canvas->deleteLater();
+    }
+    QFile file(fileUrl.path());
+    QDomDocument document;
+    document.setContent(&file, true);
+    m_canvas = new Canvas(document, d->centralWidget);
+    this->prepareSignalsConnections();
+}
+
+void PhotoFramesEditor::prepareSignalsConnections()
+{
     d->centralWidget->layout()->addWidget(m_canvas);
     d->tree->setModel(m_canvas->model());
     d->tree->setSelectionModel(m_canvas->selectionModel());
     for (int i = d->tree->model()->columnCount()-1; i >= 0; --i)
         d->tree->resizeColumnToContents(i);
     // model/tree/canvas synchronization signals
+    connect(m_canvas,SIGNAL(savedStateChanged()),this,SLOT(refreshActions()));
     connect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),d->redoAction,SLOT(setEnabled(bool)));
     connect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),d->undoAction,SLOT(setEnabled(bool)));
     connect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(undo()));
@@ -275,10 +296,8 @@ void PhotoFramesEditor::openDialog()
     d->fileDialog->setMode(KFile::File);
     d->fileDialog->setKeepLocation(true);
     int result = d->fileDialog->exec();
-    if (result == KFileDialog::Ok)
-    {
+    if (result == KFileDialog::Accepted)
         open(d->fileDialog->selectedUrl());
-    }
 }
 
 void PhotoFramesEditor::open(const KUrl & fileUrl)
@@ -290,14 +309,20 @@ void PhotoFramesEditor::open(const KUrl & fileUrl)
     }
     else
     {
-        // TODO : open file from url
-        //createCanvas(document);
+        closeDocument();
+        createCanvas(fileUrl);
+        refreshActions();
     }
 }
 
 void PhotoFramesEditor::save()
 {
-    // TODO : saving and testing unsaved changes
+    if (!m_canvas)
+        return;
+    if (m_canvas->file().fileName().isEmpty())
+        saveAs();
+    else
+        saveFile();
 }
 
 void PhotoFramesEditor::saveAs()
@@ -308,20 +333,33 @@ void PhotoFramesEditor::saveAs()
     d->fileDialog->setMode(KFile::File);
     d->fileDialog->setKeepLocation(true);
     int result = d->fileDialog->exec();
-    if (result == KFileDialog::Ok)
+    if (result == KFileDialog::Accepted)
     {
-        saveFile(d->fileDialog->selectedUrl());
+        KUrl url = d->fileDialog->selectedUrl();
+        saveFile(url);
     }
+}
+
+void PhotoFramesEditor::saveFile(const KUrl & fileUrl, bool setFileAsDefault)
+{
+    if (m_canvas)
+    {
+        QString error = m_canvas->save(fileUrl, setFileAsDefault);
+        if (!error.isEmpty())
+        {
+            KMessageBox::detailedError(this,
+                                       i18n("Can't save canvas to file!"),
+                                       error);
+        }
+    }
+    else
+        KMessageBox::error(this,
+                           i18n("There is nothing to save!"));
 }
 
 void PhotoFramesEditor::exportFile()
 {
     // TODO : exporting to images
-}
-
-void PhotoFramesEditor::saveFile(const KUrl & /*fileUrl*/)
-{
-    // TODO : saving file
 }
 
 void PhotoFramesEditor::printPreview()
@@ -338,18 +376,20 @@ bool PhotoFramesEditor::closeDocument()
 {
     if (m_canvas)
     {
-        // TODO : check unsaved?
-        //switch ( KMessageBox::warningYesNoCancel( this, i18n("Save changes to current frame?")) )
+        int saving = KMessageBox::No;
+        if (!m_canvas->isSaved())
+            saving = KMessageBox::warningYesNoCancel( this, i18n("Save changes to current frame?"));
+        switch (saving)
         {
-            //   case KMessageBox::Yes:
-            save();
-            //    case KMessageBox::No:
-            delete m_canvas;
-            m_canvas = 0;
-            refreshActions();
-            return true;
-            //    default:
-            return false;
+            case KMessageBox::Yes:
+                save();
+            case KMessageBox::No:
+                delete m_canvas;
+                m_canvas = 0;
+                refreshActions();
+                return true;
+            default:
+                return false;
         }
     }
     refreshActions();

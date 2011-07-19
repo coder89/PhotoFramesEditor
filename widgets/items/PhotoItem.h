@@ -9,7 +9,7 @@ namespace KIPIPhotoFramesEditor
     {
         public:
 
-            PhotoItem(const QImage & photo, QGraphicsScene * scene = 0);
+            PhotoItem(const QImage & photo = QImage(), QGraphicsScene * scene = 0);
     };
 }
 

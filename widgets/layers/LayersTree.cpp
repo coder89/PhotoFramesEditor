@@ -52,8 +52,8 @@ void LayersTree::setModel(QAbstractItemModel * model)
     if (!layersDelegate2)
         this->setItemDelegateForColumn(2,layersDelegate1);
 
-    this->header()->moveSection(1,0);
-    this->header()->moveSection(2,1);
+    if (this->header()->visualIndex(0) != 2)
+        this->header()->moveSection(0,2);
 }
 
 void LayersTree::setSingleSelection()
@@ -81,8 +81,8 @@ void LayersTree::contextMenuEvent(QContextMenuEvent * event)
         // Disables unsupported move operations
         QModelIndexList::iterator it = indexList.begin();
         QModelIndex startIndex = *it;
-        unsigned int minRow;
-        unsigned int maxRow;
+        int minRow;
+        int maxRow;
         unsigned int sumRows;
         if (!startIndex.isValid())
             goto end_moving_menus;      // It's not so bad as many people think ;) Here 'goto' simplyfies code!

@@ -11,6 +11,7 @@
 #include <QPainter>
 #include <QVariant>
 #include <qmath.h>
+#include <QBuffer>
 
 #include <QDebug>
 #include <QTime>
@@ -85,6 +86,111 @@ void AbstractPhoto::setupWidget(const QPixmap & photo)
     this->setBorderWidth(0);
     this->setBorderColor(Qt::black);
     this->setBorderCornersStyle(Qt::RoundJoin);
+}
+
+QDomNode AbstractPhoto::toSvg(QDomDocument & document)
+{
+    const QString imageID = "img_" + this->name().simplified().replace(" ","_");
+    const QString pathID = this->name().simplified().replace(" ","_");
+
+    QDomElement result = document.createElement("g");
+    result.setAttribute("transform","translate("+QString::number(this->pos().x())+","+QString::number(this->pos().y())+")");
+
+    // 'defs' tag
+    QDomElement defs = document.createElement("defs");
+    result.appendChild(defs);
+
+    // 'defs'->'clipPath'
+    QDomElement clipPath = document.createElement("clipPath");
+    clipPath.setAttribute("id",this->name().simplified().replace(" ","_"));
+    defs.appendChild(clipPath);
+
+    if (!m_image_path.isEmpty())
+    {
+        // 'defs'->'clipPath'->'path'
+        QDomElement path = document.createElement("path");
+        QString str_path_d;
+        int elementsCount = m_image_path.elementCount();
+        for (int i = 0; i < elementsCount; ++i)
+        {
+            QPainterPath::Element e = m_image_path.elementAt(i);
+            switch (e.type)
+            {
+                case QPainterPath::LineToElement:
+                    str_path_d.append("L " + QString::number(e.x) + " " + QString::number(e.y) + " ");
+                    break;
+                case QPainterPath::MoveToElement:
+                    str_path_d.append("M " + QString::number(e.x) + " " + QString::number(e.y) + " ");
+                    break;
+                case QPainterPath::CurveToElement:
+                    str_path_d.append("C " + QString::number(e.x) + " " + QString::number(e.y) + " ");
+                    break;
+                case QPainterPath::CurveToDataElement:
+                    str_path_d.append(QString::number(e.x) + " " + QString::number(e.y) + " ");
+                    break;
+                default:
+                    Q_ASSERT(e.type == QPainterPath::CurveToDataElement ||
+                             e.type == QPainterPath::CurveToElement ||
+                             e.type == QPainterPath::LineToElement ||
+                             e.type == QPainterPath::MoveToElement);
+            }
+        }
+        str_path_d.append("z");
+        path.setAttribute("d", str_path_d);
+        clipPath.appendChild(path);
+    }
+
+    // 'defs'->'image'
+    QByteArray byteArray;
+    QBuffer buffer(&byteArray);
+    m_pixmap.save(&buffer, "PNG");
+    QDomElement img = document.createElement("image");
+    img.setAttribute("width",m_pixmap.width());
+    img.setAttribute("height",m_pixmap.height());
+    img.setAttribute("xlink:href","data:image/png;base64,"+QString::fromLatin1(byteArray.toBase64().data()));
+    img.setAttribute("id",imageID);
+    defs.appendChild(img);
+
+    // 'defs'->'use'
+    QDomElement use = document.createElement("use");
+    use.setAttribute("xlink:href","#"+imageID);
+    use.setAttribute("style","clip-path: url(#" + pathID + ");");
+    result.appendChild(use);
+
+    // 'g'
+    QDomElement g2 = document.createElement("g");
+    result.appendChild(g2);
+
+    // 'g'->'use'
+    QDomElement use3 = document.createElement("use");
+    use3.setAttribute("xlink:href","#"+pathID);
+    g2.appendChild(use3);
+
+     /*
+      * <g>
+      *     <defs>
+      *         <clipPath>      // clippingPath == m_image_path
+      *             <path />
+      *         </clipPath>
+      *         <image />       // Image for view in SVG
+      *     </defs>
+      *     <use />             // Cuts image
+      *     <g>
+      *         <use />         // Print cutted image
+      *     </g>
+      * </g>
+      */
+
+    return result;
+}
+
+AbstractPhoto * AbstractPhoto::fromSvg(QDomElement & element)
+{
+    if (element.tagName() == "g")
+    {
+
+    }
+    return 0;
 }
 
 void AbstractPhoto::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)

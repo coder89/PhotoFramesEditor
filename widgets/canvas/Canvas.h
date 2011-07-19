@@ -10,9 +10,12 @@
 #include <QUndoStack>
 #include <QGraphicsView>
 #include <QWheelEvent>
+#include <QDomDocument>
+#include <QFile>
 
 // KDE
 #include <klocalizedstring.h>
+#include <kurl.h>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -43,7 +46,20 @@ namespace KIPIPhotoFramesEditor
             };
 
             explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
+            explicit Canvas(QDomDocument & dimension, QWidget * parent = 0);
             virtual void wheelEvent(QWheelEvent *event);
+
+            QDomDocument toSvg() const;
+
+            Q_PROPERTY(KUrl m_file READ file WRITE setFile)
+            KUrl file() const;
+            void setFile(const KUrl & file);
+
+            /// Saves canvas state to SVG format file
+            QString save(const KUrl & file, bool setAsDefault = true);
+
+            /// Check if canvas is saved
+            bool isSaved();
 
             /// Set selection mode
             void setSelectionMode(SelectionMode mode);
@@ -126,6 +142,10 @@ namespace KIPIPhotoFramesEditor
             /// Sets border style for selected item
             void borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color);
 
+            /// Conrtols saved-state of the canvas
+            void isSavedChanged(int currentCommandIndex);
+            void isSavedChanged(bool isStackClean);
+
             /// Groups operations into one undo operation
             void beginRowsRemoving()
             {
@@ -175,15 +195,26 @@ namespace KIPIPhotoFramesEditor
             void hasSelectionChanged(bool hasSelection);
             void selectedItem(AbstractPhoto * photo);
             void setInitialValues(qreal width, Qt::PenJoinStyle cornersStyle, const QColor & color);
+            void savedStateChanged();
+
+        protected slots:
+
+            /// Used for synchronization scene with model (adds to model item added directly from scene)
+            void addNewItemToModel(AbstractPhoto * item);
 
         private:
 
             void setupGUI();
+            void prepareSignalsConnection();
+            void fromSvg(QDomDocument & document);
+
+            KUrl m_file;
+            bool m_is_saved;
+            int m_saved_on_index;
 
             Scene * m_scene;
             LayersModel * m_model;
             LayersSelectionModel * m_selmodel;
-            QGraphicsItemGroup * m_items_group;
             QUndoStack * m_undo_stack;
 
             SelectionMode m_selection_mode;

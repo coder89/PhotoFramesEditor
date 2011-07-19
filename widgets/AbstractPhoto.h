@@ -10,6 +10,7 @@
 #include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneDragDropEvent>
 #include <QIcon>
+#include <QDomNode>
 
 // Local
 #include "canvasmouseevent.h"
@@ -26,8 +27,12 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
+            virtual ~AbstractPhoto();
             void setupWidget(const QPainterPath & path);
             void setupWidget(const QPixmap & photo);
+
+            virtual QDomNode toSvg(QDomDocument & document);
+            virtual AbstractPhoto * fromSvg(QDomElement & element);
 
             virtual bool contains(const QPointF & point) const
             {
@@ -128,7 +133,6 @@ namespace KIPIPhotoFramesEditor
         protected:
 
             explicit AbstractPhoto(QGraphicsScene * scene = 0);
-            virtual ~AbstractPhoto();
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }

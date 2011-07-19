@@ -18,7 +18,8 @@ using namespace KIPIPhotoFramesEditor;
 
 Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
     QGraphicsView(parent),
-    m_items_group(0),
+    m_is_saved(true),
+    m_saved_on_index(0),
     m_undo_stack(new QUndoStack(this))
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
@@ -27,12 +28,23 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
 
     this->setupGUI();
     this->enableViewingMode();
+    this->prepareSignalsConnection();
+}
 
-    // Signals connection
-    connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
-    connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
-    connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
-    connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+Canvas::Canvas(QDomDocument & document, QWidget *parent) :
+    QGraphicsView(parent),
+    m_is_saved(true),
+    m_saved_on_index(0),
+    m_undo_stack(new QUndoStack(this))
+{
+    m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(0,0)), this);
+    m_model = new LayersModel(this);
+    m_selmodel = new LayersSelectionModel(m_model, this);
+
+    this->setupGUI();
+    this->enableViewingMode();
+    this->fromSvg(document);
+    this->prepareSignalsConnection();
 }
 
 /** ###########################################################################################################################
@@ -61,6 +73,20 @@ void Canvas::setupGUI()
     this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
+}
+
+/** ###########################################################################################################################
+* Connect signals to slots
+#############################################################################################################################*/
+void Canvas::prepareSignalsConnection()
+{
+    connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addNewItemToModel(AbstractPhoto*)));
+    connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
+    connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
+    connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
+    connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+    connect(m_undo_stack, SIGNAL(indexChanged(int)), this, SLOT(isSavedChanged(int)));
+    connect(m_undo_stack, SIGNAL(cleanChanged(bool)), this, SLOT(isSavedChanged(bool)));
 }
 
 /** ###########################################################################################################################
@@ -127,6 +153,14 @@ void Canvas::addImage(const QImage & image)
 
     if (m_selmodel->hasSelection())
     {} /// TODO: add above selected
+}
+
+/** ###########################################################################################################################
+ * Add item (existing on the Scene) to the model
+ #############################################################################################################################*/
+void Canvas::addNewItemToModel(AbstractPhoto * item)
+{
+    m_model->prependItem(item);
 }
 
 /** ##########################################################################################################################
@@ -462,6 +496,97 @@ void Canvas::wheelEvent(QWheelEvent * event)
     centerOn( mapToScene(event->pos()) );
 
     factor *= scaleFactor;
+}
+
+/** ###########################################################################################################################
+ * Converts canvas to SVG image
+ #############################################################################################################################*/
+QDomDocument Canvas::toSvg() const
+{
+    QDomDocument result(" svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"");
+    result.appendChild(m_scene->toSvg(result));
+    return result;
+}
+
+/** ###########################################################################################################################
+ * Loads canvas state from SVG file
+ #############################################################################################################################*/
+void Canvas::fromSvg(QDomDocument & document)
+{
+}
+
+/** ###########################################################################################################################
+ * Returns file object connected with canvas
+ #############################################################################################################################*/
+KUrl Canvas::file() const
+{
+    return m_file;
+}
+
+/** ###########################################################################################################################
+ * Sets the file connected with canvas
+ #############################################################################################################################*/
+void Canvas::setFile(const KUrl & file)
+{
+    if (file.isValid() && !file.isEmpty())
+        m_file = file;
+}
+
+/** ###########################################################################################################################
+ * Sets the file connected with canvas
+ #############################################################################################################################*/
+QString Canvas::save(const KUrl & fileUrl, bool setAsDefault)
+{
+    KUrl tempFile = fileUrl;
+    if (fileUrl.isEmpty() || !fileUrl.isValid())
+    {
+        if (m_file.isEmpty() || !m_file.isValid())
+            return i18n("Invalid file path.");
+        tempFile = m_file;
+    }
+    QFile file(tempFile.path());
+    if (file.open(QFile::WriteOnly | QFile::Text))
+    {
+        file.write(this->toSvg().toString().toAscii());
+        file.close();
+        if (setAsDefault)
+            m_file = tempFile;
+        m_is_saved = true;
+        m_saved_on_index = m_undo_stack->index();
+        emit savedStateChanged();
+        return QString();
+    }
+    else
+        return file.errorString();
+}
+
+/** ###########################################################################################################################
+ * Check if canvas is saved
+ #############################################################################################################################*/
+bool Canvas::isSaved()
+{
+    return m_is_saved;
+}
+
+/** ###########################################################################################################################
+ * Controls changes on cavnas (based on QUndoStack state)
+ #############################################################################################################################*/
+void Canvas::isSavedChanged(int currentCommandIndex)
+{
+    m_is_saved = (m_saved_on_index == currentCommandIndex);
+    emit savedStateChanged();
+}
+
+/** ###########################################################################################################################
+ * Controls changes on cavnas (based on QUndoStack state)
+ #############################################################################################################################*/
+void Canvas::isSavedChanged(bool isStackClean)
+{
+    if (isStackClean)
+        m_is_saved |= isStackClean;
+    else
+        m_is_saved = (m_saved_on_index == m_undo_stack->index());
+    emit savedStateChanged();
 }
 
 #undef MAX_SCALE_LIMIT

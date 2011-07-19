@@ -6,7 +6,7 @@
 
 include(utils/qtpropertybrowser/src/qtpropertybrowser.pri)
 
-QT       += core gui console
+QT       += core gui console xml
 
 TARGET = photoframeseditor
 TEMPLATE = app
@@ -39,7 +39,7 @@ SOURCES += main.cpp\
     widgets/tools/ToolsDockWidget.cpp \
     widgets/tools/BorderEditTool.cpp \
     undo/UndoBorderChangeCommand.cpp \
-    widgets/AbstractPhoto.cpp \
+    widgets/items/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
     widgets/tools/EffectsEditorTool.cpp \
     widgets/tools/AbstractTool.cpp \
@@ -80,7 +80,7 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/ToolsDockWidget.h \
     widgets/tools/BorderEditTool.h \
     undo/UndoBorderChangeCommand.h \
-    widgets/AbstractPhoto.h \
+    widgets/items/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
     widgets/tools/EffectsEditorTool.h \
     widgets/tools/AbstractTool.h \

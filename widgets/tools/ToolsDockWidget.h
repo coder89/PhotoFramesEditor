@@ -49,9 +49,6 @@ namespace KIPIPhotoFramesEditor
             // Border tool selection signals
             void borderToolSelectionChanged(bool);
             void borderToolSelected();
-            // Colorize tool selection signals
-            void colorizeToolSelectionChanged(bool);
-            void colorizeToolSelected();
 
         public slots:
 
@@ -96,8 +93,6 @@ namespace KIPIPhotoFramesEditor
                     emit borderToolSelected();
                 }
             }
-
-            void setColorizeWidgetVisible(bool isSelected);
     };
 }
 

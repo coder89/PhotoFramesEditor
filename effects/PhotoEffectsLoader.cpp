@@ -21,7 +21,8 @@ QMap<QString, AbstractPhotoEffectFactory*> PhotoEffectsLoader::registeredEffects
 
 PhotoEffectsLoader::PhotoEffectsLoader(QObject * parent) :
     QObject(parent),
-    sem(1)
+    sem(1),
+    m_effect(0)
 {
 }
 
@@ -189,9 +190,7 @@ void PhotoEffectsLoader::postEffectChangedEvent()
 #ifdef QT_DEBUG
         qDebug() << "Command posted!";
 #endif
-        UndoCommandEvent * event = new UndoCommandEvent();
-        event->setUndoCommand(command);
-        KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(), event);
+        PFE_PostUndoCommand(command);
     }
     // If command can't be created just explicitly save effect properties to save effect state!
     else

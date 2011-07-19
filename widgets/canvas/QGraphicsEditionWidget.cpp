@@ -25,6 +25,11 @@ QGraphicsEditionWidget::QGraphicsEditionWidget(QGraphicsItem * parent) :
     setRotationVisible(false);
 }
 
+QGraphicsEditionWidget::~QGraphicsEditionWidget()
+{
+    qDeleteAll(this->childItems());
+}
+
 //#####################################################################################################
 
 void QGraphicsEditionWidget::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)

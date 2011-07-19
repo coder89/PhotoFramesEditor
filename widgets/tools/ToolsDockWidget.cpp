@@ -103,16 +103,6 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     formLayout->addWidget(m_tool_border, 1,1, Qt::AlignCenter);
     connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(emitBorderToolSelected(bool)));
 
-    // Colorize tool
-    m_tool_colorize_button = new KPushButton(KIcon(":tool_colorize.png"), "", widget);
-    m_tool_colorize_button->setFixedSize(32,32);
-    m_tool_colorize_button->setCheckable(true);
-    group->addButton(m_tool_colorize_button);
-    formLayout->addWidget(m_tool_colorize_button, 1,2, Qt::AlignCenter);
-    m_colorize_widget = new ColorizeTool(this);
-    m_tool_widget_layout->addWidget(m_colorize_widget);
-    connect(m_tool_colorize_button,SIGNAL(toggled(bool)),this,SLOT(setColorizeWidgetVisible(bool)));
-
     // Spacer
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,5);
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,5);
@@ -155,19 +145,6 @@ void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
         m_effects_widget->setCurrentItem(m_currentPhoto);
         emit requireSingleSelection();
         emit effectsToolSelected();
-        this->adjustSize();
-    }
-}
-
-void ToolsDockWidget::setColorizeWidgetVisible(bool isSelected)
-{
-    emit colorizeToolSelectionChanged(isSelected);
-    if (isSelected)
-    {
-        m_tool_widget_layout->setCurrentWidget(m_colorize_widget);
-        m_colorize_widget->setCurrentItem(m_currentPhoto);
-        emit requireSingleSelection();
-        emit colorizeToolSelected();
         this->adjustSize();
     }
 }

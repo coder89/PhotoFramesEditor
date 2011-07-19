@@ -16,6 +16,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit CanvasCreationDialog(QWidget *parent = 0);
+            ~CanvasCreationDialog();
             QSize canvasSize();
 
         Q_SIGNALS:

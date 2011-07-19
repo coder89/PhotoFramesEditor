@@ -49,8 +49,7 @@ namespace KIPIPhotoFramesEditor
 
             virtual ~AbstractPhotoEffectInterface()
             {
-                while (m_properties.count())
-                    delete m_properties.takeAt(0);
+                qDeleteAll(m_properties);
             }
 
             virtual QImage apply(const QImage & image) const

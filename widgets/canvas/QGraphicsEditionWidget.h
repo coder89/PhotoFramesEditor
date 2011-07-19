@@ -24,6 +24,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit QGraphicsEditionWidget(QGraphicsItem * parent = 0);
+            virtual ~QGraphicsEditionWidget();
             void setSelection(const QList<QGraphicsItem*> & itemList);
             void setRotationVisible(bool visible);
             virtual QRectF boundingRect() const;

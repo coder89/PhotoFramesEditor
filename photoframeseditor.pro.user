@@ -18,7 +18,7 @@
    <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">Qt4ProjectManager.Target.DesktopTarget</value>
    <value key="ProjectExplorer.Target.ActiveBuildConfiguration" type="int">0</value>
    <value key="ProjectExplorer.Target.ActiveDeployConfiguration" type="int">0</value>
-   <value key="ProjectExplorer.Target.ActiveRunConfiguration" type="int">0</value>
+   <value key="ProjectExplorer.Target.ActiveRunConfiguration" type="int">1</value>
    <valuemap key="ProjectExplorer.Target.BuildConfiguration.0" type="QVariantMap">
     <valuemap key="ProjectExplorer.BuildConfiguration.BuildStepList.0" type="QVariantMap">
      <valuemap key="ProjectExplorer.BuildStepList.Step.0" type="QVariantMap">
@@ -171,7 +171,7 @@
      <value type="QString">--tool=memcheck</value>
      <value type="QString">--leak-check=full</value>
      <value type="QString">--leak-resolution=low</value>
-     <value type="QString">--suppressions=/home/coder89/KDE/photoframeseditor/qt47sup.txt</value>
+     <value type="QString">--suppressions=/home/coder89/KDE/PFE/photoframeseditor/qt47sup.txt</value>
      <value type="QString">./photoframeseditor</value>
     </valuelist>
     <value key="ProjectExplorer.CustomExecutableRunConfiguration.BaseEnvironmentBase" type="int">2</value>

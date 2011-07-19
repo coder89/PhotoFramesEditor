@@ -99,6 +99,11 @@ QGraphicsSelectionItem::QGraphicsSelectionItem(QGraphicsItem * parent) :
     this->setFlag(QGraphicsItem::ItemIsSelectable, false);
 }
 
+QGraphicsSelectionItem::~QGraphicsSelectionItem()
+{
+    delete d;
+}
+
 //void QGraphicsSelectionItem::setRotationVisible(bool visible)
 //{
 //    if (visible)

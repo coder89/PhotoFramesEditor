@@ -25,6 +25,7 @@ namespace KIPIPhotoFramesEditor
         public:
 
             QGraphicsSelectionItem(QGraphicsItem * parent = 0);
+            ~QGraphicsSelectionItem();
 
         public:
 

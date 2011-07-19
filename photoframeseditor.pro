@@ -39,7 +39,6 @@ SOURCES += main.cpp\
     widgets/tools/ToolsDockWidget.cpp \
     widgets/tools/BorderEditTool.cpp \
     undo/UndoBorderChangeCommand.cpp \
-    widgets/tools/ColorizeTool.cpp \
     widgets/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
     widgets/tools/EffectsEditorTool.cpp \
@@ -81,7 +80,6 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/ToolsDockWidget.h \
     widgets/tools/BorderEditTool.h \
     undo/UndoBorderChangeCommand.h \
-    widgets/tools/ColorizeTool.h \
     widgets/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
     widgets/tools/EffectsEditorTool.h \

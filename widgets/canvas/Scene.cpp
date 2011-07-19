@@ -83,7 +83,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     d->m_edit_widget->setZValue(1.0/0.0);
 
     // Mouse interaction mode
-    //setMode(DEFAULT_EDITING_MODE);
+    setMode(DEFAULT_EDITING_MODE);
 
     // Create default grid
     setGrid(25,25);

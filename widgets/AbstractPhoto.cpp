@@ -21,13 +21,20 @@ const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
 AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
     QGraphicsPixmapItem(0,scene),
-    m_name("New layer")
+    m_name("New layer"),
+    m_pixmap_original(),
+    m_border_width(0)
 {
     //this->setAcceptDrops(true);
     this->setAcceptHoverEvents(true);
 
     // Effects group
     m_effects_group = new PhotoEffectsGroup(this);
+}
+
+AbstractPhoto::~AbstractPhoto()
+{
+    m_effects_group->deleteLater();
 }
 
 void AbstractPhoto::setupWidget(const QPainterPath & path)

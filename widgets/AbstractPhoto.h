@@ -128,6 +128,7 @@ namespace KIPIPhotoFramesEditor
         protected:
 
             explicit AbstractPhoto(QGraphicsScene * scene = 0);
+            virtual ~AbstractPhoto();
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }

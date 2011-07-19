@@ -34,7 +34,7 @@ class KIPIPhotoFramesEditor::EffectsEditorToolPrivate
     QPair<EffectListViewDelegate*,QPersistentModelIndex> m_opened_editor;
     AbstractPhotoEffectInterface * m_editors_effect;
 
-    void removeEditor()
+    void removeEffectChooser()
     {
         if (m_opened_editor.first)
             m_opened_editor.first->deleteLater();
@@ -122,21 +122,33 @@ EffectsEditorTool::EffectsEditorTool(QWidget * parent) :
     d->setButtonsEnabled(false);
 }
 
+
+EffectsEditorTool::~EffectsEditorTool()
+{
+    delete d;
+}
+
+void EffectsEditorTool::currentItemAboutToBeChanged()
+{
+    closeEffectPropertyBrowser();
+    addEffectCommand();
+    d->removeEffectChooser();
+}
+
 void EffectsEditorTool::currentItemChanged()
 {
-    d->removeEditor();
     AbstractPhoto * photo = this->currentItem();
     if (photo)
         d->m_list_widget->setModel(photo->effectsGroup());
     else
         d->m_list_widget->setModel(0);
-    removeCurrentPropertyBrowser();
+    d->setButtonsEnabled(true);
     d->setButtonsEnabled(true);
 }
 
 void EffectsEditorTool::viewCurrentEffectEditor(const QModelIndex & index)
 {
-    removeCurrentPropertyBrowser();
+    closeEffectPropertyBrowser();
     d->setButtonsEnabled(true);
     AbstractPhotoEffectInterface * effect = static_cast<AbstractPhotoEffectInterface*>(index.internalPointer());
     viewEffectEditor(effect);
@@ -168,7 +180,7 @@ void EffectsEditorTool::addEffect()
         d->m_list_widget->setIndexWidget(model->index(row,0),w);
         d->m_list_widget->setSelectionMode(QAbstractItemView::NoSelection);
         connect(w,SIGNAL(editorAccepted()),this,SLOT(addEffectCommand()));
-        connect(w,SIGNAL(editorClosed()),this,SLOT(cancelAddEffect()));
+        connect(w,SIGNAL(editorClosed()),this,SLOT(closeEffectChooser()));
         connect(w,SIGNAL(effectSelected(QString)),this,SLOT(editorEfectSelected(QString)));
         d->setButtonsEnabled(false);
         d->m_list_widget->setSelection(QRect(),QItemSelectionModel::Clear);
@@ -188,20 +200,23 @@ void EffectsEditorTool::editorEfectSelected(const QString & effectName)
 
 void EffectsEditorTool::addEffectCommand()
 {
-    AbstractPhotoEffectInterface * effect = d->m_editors_effect;
-    d->m_editors_effect = 0;
-    int row = d->m_opened_editor.second.row();
-    cancelAddEffect();
-    PhotoEffectsGroup * model = qobject_cast<PhotoEffectsGroup*>(d->m_list_widget->model());
-    model->insertRow(row, effect);
+    if (d->m_editors_effect)
+    {
+        AbstractPhotoEffectInterface * effect = d->m_editors_effect;
+        d->m_editors_effect = 0;
+        int row = d->m_opened_editor.second.row();
+        closeEffectChooser();
+        PhotoEffectsGroup * model = qobject_cast<PhotoEffectsGroup*>(d->m_list_widget->model());
+        model->insertRow(row, effect);
+    }
 }
 
-void EffectsEditorTool::cancelAddEffect()
+void EffectsEditorTool::closeEffectChooser()
 {
-    d->removeEditor();
+    closeEffectPropertyBrowser();
+    d->removeEffectChooser();
     d->m_list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
     d->setButtonsEnabled(true);
-    removeCurrentPropertyBrowser();
 }
 
 void EffectsEditorTool::removeSelected()
@@ -234,7 +249,7 @@ void EffectsEditorTool::moveSelectedUp()
         model->moveRows(index.row(),1,index.row()-1);
 }
 
-void EffectsEditorTool::removeCurrentPropertyBrowser()
+void EffectsEditorTool::closeEffectPropertyBrowser()
 {
     QLayoutItem * itemBrowser = static_cast<QGridLayout*>(layout())->itemAtPosition(2,0);
     if (!itemBrowser)

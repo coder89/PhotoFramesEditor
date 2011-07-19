@@ -245,7 +245,6 @@ void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
     connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableBordersToolMode()));
     connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBordersToolMode()));
-    connect(d->toolsWidget,SIGNAL(colorizeToolSelected()),m_canvas,SLOT(enableColorizeToolMode()));
     // tools specific signals
 //    connect(m_canvas,SIGNAL(setInitialValues(qreal,Qt::PenJoinStyle,QColor)),d->toolBorders,SLOT(setInitialValues(qreal,Qt::PenJoinStyle,QColor)));
 //    connect(d->toolBorders,SIGNAL(borderStyleChanged(qreal,Qt::PenJoinStyle,QColor)),m_canvas,SLOT(borderChangeCommand(qreal,Qt::PenJoinStyle,QColor)));

@@ -46,6 +46,8 @@ namespace KIPIPhotoFramesEditor
 
         public:
             explicit EffectsEditorTool(QWidget * parent = 0);
+            ~EffectsEditorTool();
+            virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();
         protected slots:
             void viewCurrentEffectEditor(const QModelIndex & index);
@@ -53,12 +55,12 @@ namespace KIPIPhotoFramesEditor
             void addEffect();
             void editorEfectSelected(const QString & effectName);
             void addEffectCommand();
-            void cancelAddEffect();
+            void closeEffectChooser();
             void removeSelected();
             void moveSelectedDown();
             void moveSelectedUp();
         private:
-            void removeCurrentPropertyBrowser();
+            void closeEffectPropertyBrowser();
             EffectsEditorToolPrivate * d;
     };
 

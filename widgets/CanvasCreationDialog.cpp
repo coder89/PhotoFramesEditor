@@ -45,6 +45,11 @@ namespace KIPIPhotoFramesEditor
         setupDialog();
     }
 
+    CanvasCreationDialog::~CanvasCreationDialog()
+    {
+        delete d;
+    }
+
     void CanvasCreationDialog::setupDialog()
     {
         QWidget * main = new QWidget(this);

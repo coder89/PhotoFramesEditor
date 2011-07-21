@@ -124,12 +124,14 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
 /// Default tool selection
 void ToolsDockWidget::setDefaultTool()
 {
+    qDebug() << "setDefaultTool";
     m_tool_hand->setChecked(true);
     this->emitHandToolSelected(true);
 }
 
 void ToolsDockWidget::itemSelected(AbstractPhoto * photo)
 {
+    qDebug() << "itemSelected" << photo;
     m_currentPhoto = photo;
     AbstractTool * tool =qobject_cast<AbstractTool*>(m_tool_widget_layout->currentWidget());
     if (tool)

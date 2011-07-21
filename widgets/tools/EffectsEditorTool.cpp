@@ -143,7 +143,6 @@ void EffectsEditorTool::currentItemChanged()
     else
         d->m_list_widget->setModel(0);
     d->setButtonsEnabled(true);
-    d->setButtonsEnabled(true);
 }
 
 void EffectsEditorTool::viewCurrentEffectEditor(const QModelIndex & index)

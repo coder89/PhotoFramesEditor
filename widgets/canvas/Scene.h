@@ -102,7 +102,6 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            void updateChildernsGrid(qreal x, qreal y);
             void setRotationWidgetVisible(bool visible);
 
             EditMode editingMode;
@@ -110,8 +109,6 @@ namespace KIPIPhotoFramesEditor
 
             SelectionMode selectionMode;
             static const SelectionMode DEFAULT_SELECTING_MODE = MultiSelection;
-
-            QGraphicsRectItem * shadow;
 
             QGraphicsPathItem * temp_widget;
             QPainterPath temp_path;

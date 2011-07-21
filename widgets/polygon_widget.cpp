@@ -7,19 +7,19 @@ namespace KIPIPhotoFramesEditor
     PolygonWidget::PolygonWidget(const QPainterPath & path, QGraphicsScene * scene) :
         AbstractPhoto(scene)
     {
-        this->setupWidget(path);
+        this->setupItem(path);
     }
 
     PolygonWidget::PolygonWidget(const QPainterPath & path, QGraphicsItem * parent) :
         AbstractPhoto(0)
     {
-        this->setupWidget(path);
+        this->setupItem(path);
     }
 
     PolygonWidget::PolygonWidget(const QPainterPath & path, QGraphicsItem * parent, QGraphicsScene * scene) :
         AbstractPhoto(scene)
     {
-        this->setupWidget(path);
+        this->setupItem(path);
     }
 
     AbstractPhoto * PolygonWidget::getInstance()
@@ -32,7 +32,7 @@ namespace KIPIPhotoFramesEditor
     {
         m_image_path.lineTo(point);
         m_image_path.closeSubpath();
-        this->setupWidget(m_image_path);
+        this->setupItem(m_image_path);
     }
 
     void PolygonWidget::mouseMoved(const QPointF & point)

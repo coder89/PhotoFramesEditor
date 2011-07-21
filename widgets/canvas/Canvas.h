@@ -46,10 +46,10 @@ namespace KIPIPhotoFramesEditor
             };
 
             explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
-            explicit Canvas(QDomDocument & dimension, QWidget * parent = 0);
             virtual void wheelEvent(QWheelEvent *event);
 
             QDomDocument toSvg() const;
+            static Canvas * fromSvg(QDomDocument & document);
 
             Q_PROPERTY(KUrl m_file READ file WRITE setFile)
             KUrl file() const;
@@ -184,6 +184,11 @@ namespace KIPIPhotoFramesEditor
                 setInteractionMode(ColorizeToolMode);
             }
 
+            void enableSingleSelectionMode()
+            {
+                setSelectionMode(SingleSelcting);
+            }
+
             /// Refresh widgets connections to canvas signals
             void refreshWidgetConnections(bool isVisible);
 
@@ -206,7 +211,6 @@ namespace KIPIPhotoFramesEditor
 
             void setupGUI();
             void prepareSignalsConnection();
-            void fromSvg(QDomDocument & document);
 
             KUrl m_file;
             bool m_is_saved;
@@ -216,6 +220,7 @@ namespace KIPIPhotoFramesEditor
             LayersModel * m_model;
             LayersSelectionModel * m_selmodel;
             QUndoStack * m_undo_stack;
+            double m_scale_factor;
 
             SelectionMode m_selection_mode;
             InteractionMode m_interaction_mode;

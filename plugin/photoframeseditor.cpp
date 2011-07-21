@@ -169,7 +169,6 @@ void PhotoFramesEditor::refreshActions()
     d->closeAction->setEnabled(isEnabledForCanvas);
     d->gridActionMenu->setEnabled(isEnabledForCanvas);
     d->treeWidget->setEnabled(isEnabledForCanvas);
-    d->toolsWidget->setDefaultTool();
     d->toolsWidget->setEnabled(isEnabledForCanvas);
 }
 
@@ -237,8 +236,17 @@ void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
     QFile file(fileUrl.path());
     QDomDocument document;
     document.setContent(&file, true);
-    m_canvas = new Canvas(document, d->centralWidget);
-    this->prepareSignalsConnections();
+    m_canvas = Canvas::fromSvg(document);
+    if (m_canvas)
+    {
+        m_canvas->setParent(d->centralWidget);
+        this->prepareSignalsConnections();
+    }
+    else
+    {
+        KMessageBox::error(this,
+                           i18n("Can't read image file."));
+    }
 }
 
 void PhotoFramesEditor::prepareSignalsConnections()
@@ -264,8 +272,9 @@ void PhotoFramesEditor::prepareSignalsConnections()
     connect(m_canvas,SIGNAL(selectedItem(AbstractPhoto*)),d->toolsWidget,SLOT(itemSelected(AbstractPhoto*)));
     connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(enableDefaultSelectionMode()));
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
-    connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableBordersToolMode()));
+    connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableSingleSelectionMode()));
     connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBordersToolMode()));
+    d->toolsWidget->setDefaultTool();
     // tools specific signals
 //    connect(m_canvas,SIGNAL(setInitialValues(qreal,Qt::PenJoinStyle,QColor)),d->toolBorders,SLOT(setInitialValues(qreal,Qt::PenJoinStyle,QColor)));
 //    connect(d->toolBorders,SIGNAL(borderStyleChanged(qreal,Qt::PenJoinStyle,QColor)),m_canvas,SLOT(borderChangeCommand(qreal,Qt::PenJoinStyle,QColor)));

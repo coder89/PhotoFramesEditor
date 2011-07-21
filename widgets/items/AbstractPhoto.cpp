@@ -11,7 +11,6 @@
 #include <QPainter>
 #include <QVariant>
 #include <qmath.h>
-#include <QBuffer>
 
 #include <QDebug>
 #include <QTime>
@@ -21,13 +20,11 @@ using namespace KIPIPhotoFramesEditor;
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
 AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
-    QGraphicsPixmapItem(0,scene),
+    QGraphicsItem(0,scene),
     m_name("New layer"),
-    m_pixmap_original(),
     m_border_width(0)
 {
-    //this->setAcceptDrops(true);
-    this->setAcceptHoverEvents(true);
+    this->setupItem();
 
     // Effects group
     m_effects_group = new PhotoEffectsGroup(this);
@@ -38,48 +35,30 @@ AbstractPhoto::~AbstractPhoto()
     m_effects_group->deleteLater();
 }
 
-void AbstractPhoto::setupWidget(const QPainterPath & path)
+//void AbstractPhoto::setupWidget(const QPainterPath & path)
+//{
+//    //this->setAcceptDrops(true);
+//    this->setAcceptHoverEvents(true);
+
+//    this->m_image_path = path.translated(-path.boundingRect().topLeft());
+//    this->m_image_path = m_image_path.simplified();
+//    //m_pixmap_original = QPixmap(m_image_path.boundingRect().size().toSize());
+//    //m_pixmap_original.fill(Qt::transparent);
+//    //this->recalcShape();
+
+//    // Create effective pixmap
+//    //this->refreshPixmap();
+
+//    this->setFlag(QGraphicsItem::ItemIsSelectable);
+
+//    // Default border style
+//    this->setBorderWidth(0);
+//    this->setBorderColor(Qt::black);
+//    this->setBorderCornersStyle(Qt::RoundJoin);
+//}
+
+void AbstractPhoto::setupItem()
 {
-    this->m_image_path = path.translated(-path.boundingRect().topLeft());
-    this->m_image_path = m_image_path.simplified();
-    m_pixmap_original = QPixmap(m_image_path.boundingRect().size().toSize());
-    m_pixmap_original.fill(Qt::transparent);
-    this->recalcShape();
-
-    // Create effective pixmap
-    this->refreshPixmap();
-
-    this->setFlag(QGraphicsItem::ItemIsSelectable);
-
-    // Default border style
-    this->setBorderWidth(0);
-    this->setBorderColor(Qt::black);
-    this->setBorderCornersStyle(Qt::RoundJoin);
-}
-
-void AbstractPhoto::setupWidget(const QPixmap & photo)
-{
-    m_pixmap_original = photo;
-
-    // Scaling if to big
-    QSize s = photo.size();
-    QRect r = photo.rect();
-    QSize sceneSize = scene()->sceneRect().size().toSize();
-    if (sceneSize.width()<s.width() || sceneSize.height()<s.height())
-    {
-        s.scale(sceneSize*0.8, Qt::KeepAspectRatio);
-        r.setSize(s);
-    }
-
-    QPainterPath p;
-    p.addRect(r);
-    m_image_path = p;
-    this->m_image_path = m_image_path.simplified();
-    this->recalcShape();
-
-    // Create effective pixmap
-    this->refreshPixmap();
-
     this->setFlag(QGraphicsItem::ItemIsSelectable);
 
     // Default border style
@@ -90,8 +69,7 @@ void AbstractPhoto::setupWidget(const QPixmap & photo)
 
 QDomNode AbstractPhoto::toSvg(QDomDocument & document)
 {
-    const QString imageID = "img_" + this->name().simplified().replace(" ","_");
-    const QString pathID = this->name().simplified().replace(" ","_");
+    const QString pathID = QString("clipPath_").append(this->name().simplified().replace(" ","_"));
 
     QDomElement result = document.createElement("g");
     result.setAttribute("transform","translate("+QString::number(this->pos().x())+","+QString::number(this->pos().y())+")");
@@ -102,58 +80,25 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document)
 
     // 'defs'->'clipPath'
     QDomElement clipPath = document.createElement("clipPath");
-    clipPath.setAttribute("id",this->name().simplified().replace(" ","_"));
+    clipPath.setAttribute("id", pathID);
     defs.appendChild(clipPath);
 
-    if (!m_image_path.isEmpty())
+    // Convert visible area to SVG 'd' attribute
+    QPainterPath visibleArea = this->opaqueArea();
+    if (!visibleArea.isEmpty())
     {
         // 'defs'->'clipPath'->'path'
         QDomElement path = document.createElement("path");
-        QString str_path_d;
-        int elementsCount = m_image_path.elementCount();
-        for (int i = 0; i < elementsCount; ++i)
-        {
-            QPainterPath::Element e = m_image_path.elementAt(i);
-            switch (e.type)
-            {
-                case QPainterPath::LineToElement:
-                    str_path_d.append("L " + QString::number(e.x) + " " + QString::number(e.y) + " ");
-                    break;
-                case QPainterPath::MoveToElement:
-                    str_path_d.append("M " + QString::number(e.x) + " " + QString::number(e.y) + " ");
-                    break;
-                case QPainterPath::CurveToElement:
-                    str_path_d.append("C " + QString::number(e.x) + " " + QString::number(e.y) + " ");
-                    break;
-                case QPainterPath::CurveToDataElement:
-                    str_path_d.append(QString::number(e.x) + " " + QString::number(e.y) + " ");
-                    break;
-                default:
-                    Q_ASSERT(e.type == QPainterPath::CurveToDataElement ||
-                             e.type == QPainterPath::CurveToElement ||
-                             e.type == QPainterPath::LineToElement ||
-                             e.type == QPainterPath::MoveToElement);
-            }
-        }
-        str_path_d.append("z");
-        path.setAttribute("d", str_path_d);
+        path.setAttribute("d", pathToString(visibleArea));
         clipPath.appendChild(path);
     }
 
-    // 'defs'->'image'
-    QByteArray byteArray;
-    QBuffer buffer(&byteArray);
-    m_pixmap.save(&buffer, "PNG");
-    QDomElement img = document.createElement("image");
-    img.setAttribute("width",m_pixmap.width());
-    img.setAttribute("height",m_pixmap.height());
-    img.setAttribute("xlink:href","data:image/png;base64,"+QString::fromLatin1(byteArray.toBase64().data()));
-    img.setAttribute("id",imageID);
-    defs.appendChild(img);
+    QDomElement visibleData = this->svgVisibleArea(document);
+    defs.appendChild(visibleData);
 
     // 'defs'->'use'
     QDomElement use = document.createElement("use");
-    use.setAttribute("xlink:href","#"+imageID);
+    use.setAttribute("xlink:href","#"+visibleData.attribute("id"));
     use.setAttribute("style","clip-path: url(#" + pathID + ");");
     result.appendChild(use);
 
@@ -172,7 +117,7 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document)
       *         <clipPath>      // clippingPath == m_image_path
       *             <path />
       *         </clipPath>
-      *         <image />       // Image for view in SVG
+      *         .........       // Children data
       *     </defs>
       *     <use />             // Cuts image
       *     <g>
@@ -184,31 +129,27 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document)
     return result;
 }
 
-AbstractPhoto * AbstractPhoto::fromSvg(QDomElement & element)
+bool AbstractPhoto::fromSvg(QDomElement & element)
 {
-    if (element.tagName() == "g")
-    {
-    }
-    return 0;
+    return false;
 }
 
-void AbstractPhoto::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
-{
-    QStyleOptionGraphicsItem unselectedOption = (*option);
-    unselectedOption.state &= !QStyle::State_Selected;
-    QGraphicsPixmapItem::paint(painter,&unselectedOption,widget);
+//void AbstractPhoto::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+//{
+//    QStyleOptionGraphicsItem unselectedOption = (*option);
+//    unselectedOption.state &= !QStyle::State_Selected;
 
-//    // Selecting item
-//    if ((option->state) & QStyle::State_Selected)
-//    {
-//        QPainterPath exposedPath = QPainterPath();
-//        exposedPath.addRect(option->exposedRect);
-//        painter->fillPath(m_complete_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
-//    }
+////    // Selecting item
+////    if ((option->state) & QStyle::State_Selected)
+////    {
+////        QPainterPath exposedPath = QPainterPath();
+////        exposedPath.addRect(option->exposedRect);
+////        painter->fillPath(m_complete_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
+////    }
 
-    if (this->borderWidth())
-        painter->fillPath(m_border_path, this->borderColor());
-}
+//    if (this->borderWidth())
+//        painter->fillPath(m_border_path, this->borderColor());
+//}
 
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
 {
@@ -236,7 +177,7 @@ void AbstractPhoto::dropEvent(QGraphicsSceneDragDropEvent * event)
 
 void AbstractPhoto::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsPixmapItem::mouseMoveEvent(event);
+    QGraphicsItem::mouseMoveEvent(event);
     if (QGraphicsItem::flags() & ItemIsMovable)
     {
         if (event->modifiers() & Qt::ShiftModifier)
@@ -249,87 +190,90 @@ void AbstractPhoto::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
             this->setPos(p.rx(),p.ry());
         }
         else
-            QGraphicsPixmapItem::mouseMoveEvent(event);
+            QGraphicsItem::mouseMoveEvent(event);
 //            p = this->pos() + event->pos() - event->lastPos();
     }
 }
 
 void AbstractPhoto::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsPixmapItem::mousePressEvent(event);
+    QGraphicsItem::mousePressEvent(event);
     if (this->isSelected())
         this->setCursor(QCursor(Qt::ClosedHandCursor));
 }
 
 void AbstractPhoto::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsPixmapItem::mouseReleaseEvent(event);
+    QGraphicsItem::mouseReleaseEvent(event);
     if (this->isSelected())
         this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 void AbstractPhoto::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
 {
-    QGraphicsPixmapItem::hoverEnterEvent(event);
+    QGraphicsItem::hoverEnterEvent(event);
     if (this->isSelected())
         this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 void AbstractPhoto::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
 {
-    QGraphicsPixmapItem::hoverLeaveEvent(event);
+    QGraphicsItem::hoverLeaveEvent(event);
     this->unsetCursor();
 }
 
-void AbstractPhoto::updateIcon()
+QString AbstractPhoto::pathToString(const QPainterPath & path)
 {
-    m_icon = QIcon(m_pixmap.scaled(100,100,Qt::KeepAspectRatioByExpanding));
-}
-
-void AbstractPhoto::selectStateChanged(bool state)
-{
-    this->setSelected(state);
-}
-
-void AbstractPhoto::showStateChanged(bool state)
-{
-    this->setVisible(state);
-}
-
-void AbstractPhoto::lockStateChanged(bool state)
-{
-    this->setFlag(QGraphicsItem::ItemIsMovable, state);
+    QString str_path_d;
+    int elementsCount = path.elementCount();
+    for (int i = 0; i < elementsCount; ++i)
+    {
+        QPainterPath::Element e = path.elementAt(i);
+        switch (e.type)
+        {
+            case QPainterPath::LineToElement:
+                str_path_d.append("L " + QString::number(e.x) + " " + QString::number(e.y) + " ");
+                break;
+            case QPainterPath::MoveToElement:
+                str_path_d.append("M " + QString::number(e.x) + " " + QString::number(e.y) + " ");
+                break;
+            case QPainterPath::CurveToElement:
+                str_path_d.append("C " + QString::number(e.x) + " " + QString::number(e.y) + " ");
+                break;
+            case QPainterPath::CurveToDataElement:
+                str_path_d.append(QString::number(e.x) + " " + QString::number(e.y) + " ");
+                break;
+            default:
+                Q_ASSERT(e.type == QPainterPath::CurveToDataElement ||
+                         e.type == QPainterPath::CurveToElement ||
+                         e.type == QPainterPath::LineToElement ||
+                         e.type == QPainterPath::MoveToElement);
+        }
+    }
+    str_path_d.append("z");
+    return str_path_d;
 }
 
 void AbstractPhoto::recalcShape()
 {
-    if (m_border_width)
-    {
-        QPainterPathStroker s;
-        s.setWidth(m_border_width);
-        s.setJoinStyle(m_border_corner_style);
-        m_border_path = s.createStroke(m_image_path);
-    }
-    else
-        m_border_path = QPainterPath();
-    m_complete_path = m_border_path.united(m_image_path);
-    prepareGeometryChange();
+//    if (m_border_width)
+//    {
+//        QPainterPathStroker s;
+//        s.setWidth(m_border_width);
+//        s.setJoinStyle(m_border_corner_style);
+//        m_border_path = s.createStroke(m_image_path);
+//    }
+//    else
+//        m_border_path = QPainterPath();
+//    m_complete_path = m_border_path.united(m_image_path);
+//    prepareGeometryChange();
 
-    try // I'm not sure how to properly/safely cast from QGraphicsScene* -> Scene*
-    {
-        Scene * m_scene = (Scene*)this->scene();
-        if (m_scene)
-            m_scene->updateSelection();
-    }
-    catch(...)
-    {}
-}
-
-void AbstractPhoto::refreshPixmap()
-{
-    if (m_pixmap_original.isNull())
-        return;
-    this->m_pixmap = m_effects_group->apply(m_pixmap_original.scaled(this->boundingRect().size().toSize(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
-    this->updateIcon();
-    QGraphicsPixmapItem::setPixmap(m_pixmap);
+//    try // I'm not sure how to properly/safely cast from QGraphicsScene* -> Scene*
+//    {
+//        Scene * m_scene = (Scene*)this->scene();
+//        if (m_scene)
+//            m_scene->updateSelection();
+//    }
+//    catch(...)
+//    {}
 }

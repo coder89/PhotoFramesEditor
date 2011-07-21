@@ -20,69 +20,53 @@ namespace KIPIPhotoFramesEditor
     class Scene;
     class LayersModelItem;
     class PhotoEffectsGroup;
+    class AbstractPhotoEffectInterface;
 
-    class AbstractPhoto : public QGraphicsPixmapItem
+    class AbstractPhoto : public QGraphicsItem
     {
             QString m_name;
 
         public:
 
             virtual ~AbstractPhoto();
-            void setupWidget(const QPainterPath & path);
-            void setupWidget(const QPixmap & photo);
 
+            /** Converts item data into SVG format
+              * Each derived class should has its own implementation of this method to save its specific data.
+              * \note You should save everything inside your <defs> tag because \class AbstractPhoto's implementation
+              * of \fn toSvg() saves presentation data.
+              * \note In your implementation you have to call this method to save presentation data in correct format,
+              * independendly to your class.
+              */
             virtual QDomNode toSvg(QDomDocument & document);
-            virtual AbstractPhoto * fromSvg(QDomElement & element);
 
-            virtual bool contains(const QPointF & point) const
-            {
-                return m_complete_path.contains(point);
-            }
+            /// Reads item data from SVG structure
+            static bool fromSvg(QDomElement & element);
 
-            virtual QPainterPath shape() const
-            {
-                return m_complete_path;
-            }
-
-            virtual QPainterPath opaqueArea() const
-            {
-                return m_complete_path;
-            }
-
-            virtual QRectF boundingRect() const
-            {
-                return m_complete_path.boundingRect();
-            }
-
-            static const QColor SELECTED_ITEM_COLOR;
-
-            void setGridLines(qreal /*x*/, qreal/* y*/)
-            {}
-
-            /// Name of layer [Getter/Setter]
+            /// Name of item property
+            Q_PROPERTY(QString name READ name WRITE setName)
             void setName(const QString & name)
             {
                 if (name.isEmpty())
                     return;
                 m_name = name;
             }
-
             QString name() const
             {
                 return m_name;
             }
 
             /// Border width [Getter/Setter]
+            Q_PROPERTY(qreal m_border_width READ borderWidth WRITE setBorderWidth)
             void setBorderWidth(qreal width)
             {
                 if (width >= 0)
                 {
                     m_border_width = width;
                     recalcShape();
-                    this->update(this->boundingRect());
+                    //this->update(this->boundingRect());
                 }
             }
-            int borderWidth() const
+            qreal borderWidth() const
             {
                 return m_border_width;
             }
@@ -91,7 +75,7 @@ namespace KIPIPhotoFramesEditor
             void setBorderColor(const QColor & color)
             {
                 m_border_color = color;
-                this->update(this->boundingRect());
+               // this->update(this->boundingRect());
             }
             QColor borderColor() const
             {
@@ -103,16 +87,15 @@ namespace KIPIPhotoFramesEditor
             {
                 m_border_corner_style = cornersStyle;
                 recalcShape();
-                this->update(this->boundingRect());
+               // this->update(this->boundingRect());
             }
             Qt::PenJoinStyle borderCornersStyle() const
             {
                 return m_border_corner_style;
             }
 
-          /**
-            * Icon getters
-            */
+            /// Icon of the item [50px x 50px]
+            Q_PROPERTY(QIcon m_icon READ icon)
             QIcon & icon()
             {
                 return m_icon;
@@ -122,13 +105,15 @@ namespace KIPIPhotoFramesEditor
                 return m_icon;
             }
 
-            /// Effects group object
+            /// Effects group property
+            Q_PROPERTY(PhotoEffectsGroup * m_effects_group READ effectsGroup)
             PhotoEffectsGroup * effectsGroup() const
             {
                 return m_effects_group;
             }
 
-            void refreshPixmap();
+            /// Refreshes item
+            virtual void refresh() = 0;
 
         protected:
 
@@ -136,6 +121,17 @@ namespace KIPIPhotoFramesEditor
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }
+
+            /** Returns SVG visible part of data.
+              * This is a pure virtual method which should returns QDomElement with part of SVG document
+              * with visible data. For example it could be <image> tag if the item describes QGraphicsItem with image
+              * or <text> tag if the item is the QGraphicsItem drawing text.
+              * This data also should include applied all effects because this data will be directly presented to the user.
+              * Data will be also cutted to fit their visual shape.
+              */
+            virtual QDomElement svgVisibleArea(QDomDocument & document) const = 0;
+
+            static QString pathToString(const QPainterPath & path);
 
             // Recalculate item shape
             void recalcShape();
@@ -151,46 +147,26 @@ namespace KIPIPhotoFramesEditor
             virtual void hoverEnterEvent(QGraphicsSceneHoverEvent * event);
             virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent * event);
 
-            // Paining method
-            virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-            // Pixmap data
-            QPixmap m_pixmap_original;
-            QPixmap m_pixmap;
-            QPixmap & pixmap()
+            // Updates icon
+            virtual void updateIcon() = 0;
+            // Sets icon for item
+            void setIcon(const QIcon & icon)
             {
-                return m_pixmap;
+                if (icon.isNull())
+                    return;
+                m_icon = icon;
             }
-            const QPixmap & pixmap() const
-            {
-                return m_pixmap;
-            }
-            void setPixmap(const QPixmap & pixmap)
-            {
-                this->setupWidget(pixmap);
-            }
-
-            // Icon
-            QIcon m_icon;
-            void updateIcon();
 
             // Widget path
-            QPainterPath m_image_path;
             QPainterPath m_border_path;
-            QPainterPath m_complete_path;
 
             // Photo resizer class
             class AbstractPhotoResizer;
             friend class AbstractPhotoResizer;
 
-        protected Q_SLOTS:
-
-            // Model item synchronization
-            virtual void selectStateChanged(bool state);
-            virtual void showStateChanged(bool state);
-            virtual void lockStateChanged(bool state);
-
         private:
+
+            void setupItem();
 
             PhotoEffectsGroup * m_effects_group;
 
@@ -201,7 +177,13 @@ namespace KIPIPhotoFramesEditor
             qreal x_grid;
             qreal y_grid;
 
+            // Icon object
+            QIcon m_icon;
+
+            static const QColor SELECTED_ITEM_COLOR;
+
             friend class Scene;
+            friend class PhotoEffectsGroup;
     };
 }
 

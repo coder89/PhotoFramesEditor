@@ -20,7 +20,8 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
     QGraphicsView(parent),
     m_is_saved(true),
     m_saved_on_index(0),
-    m_undo_stack(new QUndoStack(this))
+    m_undo_stack(new QUndoStack(this)),
+    m_scale_factor(1)
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
     m_model = new LayersModel(this);
@@ -28,22 +29,6 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
 
     this->setupGUI();
     this->enableViewingMode();
-    this->prepareSignalsConnection();
-}
-
-Canvas::Canvas(QDomDocument & document, QWidget *parent) :
-    QGraphicsView(parent),
-    m_is_saved(true),
-    m_saved_on_index(0),
-    m_undo_stack(new QUndoStack(this))
-{
-    m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(0,0)), this);
-    m_model = new LayersModel(this);
-    m_selmodel = new LayersSelectionModel(m_model, this);
-
-    this->setupGUI();
-    this->enableViewingMode();
-    this->fromSvg(document);
     this->prepareSignalsConnection();
 }
 
@@ -143,7 +128,7 @@ void Canvas::setInteractionMode(InteractionMode mode)
 void Canvas::addImage(const QImage & image)
 {
     // Create & setup item
-    PhotoItem * it = new PhotoItem(image,m_scene);
+    PhotoItem * it = new PhotoItem(image, m_scene);
     it->setName(image.text("File").append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount()+1);
 
@@ -481,21 +466,20 @@ void Canvas::newUndoCommand(QUndoCommand * command)
 void Canvas::wheelEvent(QWheelEvent * event)
 {
     // Scaling limitation
-    static double factor = 1;
-    if ( !scene() || (factor > MAX_SCALE_LIMIT && event->delta() > 0) || (factor < MIN_SCALE_LIMIT && event->delta() < 0) )
+    if ( !scene() || (m_scale_factor > MAX_SCALE_LIMIT && event->delta() > 0) || (m_scale_factor < MIN_SCALE_LIMIT && event->delta() < 0) )
         return;
 
     double scaleFactor;
     if(event->delta() > 0)
-        scaleFactor = (factor + 0.1) / factor;
+        scaleFactor = (m_scale_factor + 0.1) / m_scale_factor;
     else
-        scaleFactor = (factor - 0.1) / factor;
+        scaleFactor = (m_scale_factor - 0.1) / m_scale_factor;
 
     scale(scaleFactor, scaleFactor);
 
     centerOn( mapToScene(event->pos()) );
 
-    factor *= scaleFactor;
+    m_scale_factor *= scaleFactor;
 }
 
 /** ###########################################################################################################################
@@ -511,8 +495,41 @@ QDomDocument Canvas::toSvg() const
 /** ###########################################################################################################################
  * Loads canvas state from SVG file
  #############################################################################################################################*/
-void Canvas::fromSvg(QDomDocument & document)
+Canvas * Canvas::fromSvg(QDomDocument & document)
 {
+    QDomNodeList childs = document.childNodes();
+    if (childs.count())
+    {
+        int i = 0;
+        QDomNode node;
+        QDomElement element;
+        while (childs.count() > i)
+        {
+            node = childs.at(i++);
+            if (node.isElement())
+            {
+                element = node.toElement();
+                if (element.tagName() == "svg")
+                    break;
+                else
+                    element = QDomElement();
+            }
+        }
+        if (!element.isNull())
+        {
+            qreal width = element.attribute("width").toDouble();
+            qreal height = element.attribute("width").toDouble();
+            qDebug() << width << height;
+            QSizeF dimension(width,height);
+            if (dimension.isValid())
+            {
+                Canvas * result = new Canvas(dimension);
+                result->m_scene->fromSvg(element);
+                return result;
+            }
+        }
+    }
+    return 0;
 }
 
 /** ###########################################################################################################################

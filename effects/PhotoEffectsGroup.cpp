@@ -308,7 +308,7 @@ create_command:
 
 void PhotoEffectsGroup::emitEffectsChanged(AbstractPhotoEffectInterface * effect)
 {
-    m_photo->refreshPixmap();
+    m_photo->refresh();
     if (effect)
     {
         int row = m_effects_list.count()-m_effects_list.indexOf(effect)-1;

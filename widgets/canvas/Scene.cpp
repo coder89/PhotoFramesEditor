@@ -21,6 +21,7 @@
 // KDE
 #include <kapplication.h>
 #include <kmessagebox.h>
+#include <klocalizedstring.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -38,9 +39,17 @@ namespace KIPIPhotoFramesEditor
             m_edit_widget(new QGraphicsEditionWidget),
             m_parent(parent)
         {
-            m_edit_widget->setZValue(1.0/0.0);
+            // Editing widget
             setMode(0);
             QObject::connect(m_edit_widget, SIGNAL(deleteSelectedItems()), parent, SLOT(removeSelectedItems()));
+            parent->QGraphicsScene::addItem(m_edit_widget);
+            m_edit_widget->setZValue(1.0/0.0);
+
+            // Background
+            m_background = new QGraphicsRectItem(parent->sceneRect(), 0, parent);
+            m_background->setZValue(-1.0/0.0);
+            m_background->setBrush(Qt::white);
+            m_background->setPen(QPen(Qt::transparent, 0));
         }
 
         void setMode(int mode)
@@ -54,6 +63,8 @@ namespace KIPIPhotoFramesEditor
         QGraphicsEditionWidget * m_edit_widget;
         // Parent scene
         QGraphicsScene * m_parent;
+        // Background item
+        QGraphicsRectItem * m_background;
 
         int m_mode;
 
@@ -64,24 +75,12 @@ namespace KIPIPhotoFramesEditor
 Scene::Scene(const QRectF & dimension, QObject * parent) :
     QGraphicsScene(dimension, parent),
     d(new ScenePrivate(this)),
-    shadow(0),
     x_grid(0),
     y_grid(0),
     grid_visible(false),
     grid_item(0),
     grid_changed(true)
 {
-    if (1)                                            /// TODO : personalization of default canvas background
-    {
-        shadow = new QGraphicsRectItem(dimension, 0,this);
-        shadow->setZValue(-1.0/0.0);
-        shadow->setBrush(Qt::white);
-        shadow->setPen(QPen(Qt::white, 0));
-    }
-
-    QGraphicsScene::addItem(d->m_edit_widget);
-    d->m_edit_widget->setZValue(1.0/0.0);
-
     // Mouse interaction mode
     setMode(DEFAULT_EDITING_MODE);
 
@@ -233,14 +232,14 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
                 QGraphicsScene::mouseDoubleClickEvent(event);
                 break;
             case Drawing:
-                {
-                    temp_path.closeSubpath();
-                    PolygonWidget * tempItem = new PolygonWidget(temp_path, this);
-                    this->addItem(tempItem);
-                    QPointF p = temp_path.boundingRect().topLeft();
-                    tempItem->moveBy(p.rx(),p.ry());
-                    disableitemsDrawing();
-                }
+//                {
+//                    temp_path.closeSubpath();
+//                    PolygonWidget * tempItem = new PolygonWidget(temp_path, this);
+//                    this->addItem(tempItem);
+//                    QPointF p = temp_path.boundingRect().topLeft();
+//                    tempItem->moveBy(p.rx(),p.ry());
+//                    disableitemsDrawing();
+//                }
                 break;
             default:
                 goto    others;
@@ -381,8 +380,8 @@ void Scene::setGrid(qreal x, qreal y)
             delete *it;
         }
 
-        if (grid_visible)
-            updateChildernsGrid(x,y);
+//        if (grid_visible)
+//            updateChildernsGrid(x,y);
     }
 }
 
@@ -393,10 +392,10 @@ void Scene::setGridVisible(bool visible)
     if (grid_visible == visible)
         return;
     grid_item->setVisible((grid_visible = visible));
-    if (visible)
-        updateChildernsGrid(x_grid,y_grid);
-    else
-        updateChildernsGrid(1,1);
+//    if (visible)
+//        updateChildernsGrid(x_grid,y_grid);
+//    else
+//        updateChildernsGrid(1,1);
 }
 
 //#####################################################################################################
@@ -435,8 +434,7 @@ void Scene::setSelectionMode(SelectionMode selectionMode)
             this->selectionMode = selectionMode;
             break;
         case SingleSelection:
-            if (this->selectedItems().count() > 1)
-                this->setSelectionArea(QPainterPath());
+            this->setSelectionArea(QPainterPath());
             this->selectionMode = selectionMode;
             break;
     }
@@ -467,13 +465,12 @@ void Scene::fromSvg(QDomElement & svgImage)
     if (svgImage.tagName() != "svg")
         return;
     // Clear scene
-    foreach (QGraphicsItem * item, this->items())
-        this->QGraphicsScene::removeItem(item);
-    // Set size
-    qreal width = svgImage.attribute("width").toDouble();
-    qreal height = svgImage.attribute("height").toDouble();
-    this->setSceneRect(0,0,width,height);
+    delete d;
+    this->clear();
+    d = new ScenePrivate(this);
+
     // Create elements
+    int errorsCount = 0;
     QDomNodeList children = svgImage.childNodes();
     for (int i = 0; i < children.count(); ++i)
     {
@@ -484,19 +481,20 @@ void Scene::fromSvg(QDomElement & svgImage)
         QString itemClass = element.attribute("class");
         if (itemClass == "PhotoItem")
         {
-            PhotoItem * item = new PhotoItem();
-            item->fromSvg(element);
-            this->addItem(item);
+            PhotoItem * item = PhotoItem::fromSvg(element);
+            if (item)
+                this->addItem(item);
+            else
+                ++errorsCount;
         }
     }
-}
 
-//#####################################################################################################
-
-void Scene::updateChildernsGrid(qreal x, qreal y)
-{
-    foreach(AbstractPhoto * p ,this->children)
-        p->setGridLines(x,y);
+    // Show error message
+    if (errorsCount)
+    {
+        KMessageBox::error(0,
+                           i18n("I was unable to read %d elements!\nInvalid or corrupted image file!", errorsCount));
+    }
 }
 
 //#####################################################################################################

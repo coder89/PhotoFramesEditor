@@ -60,6 +60,7 @@ AbstractPhoto::~AbstractPhoto()
 void AbstractPhoto::setupItem()
 {
     this->setFlag(QGraphicsItem::ItemIsSelectable);
+    this->setFlag(QGraphicsItem::ItemIsMovable);
 
     // Default border style
     this->setBorderWidth(0);
@@ -67,10 +68,8 @@ void AbstractPhoto::setupItem()
     this->setBorderCornersStyle(Qt::RoundJoin);
 }
 
-QDomNode AbstractPhoto::toSvg(QDomDocument & document)
+QDomNode AbstractPhoto::toSvg(QDomDocument & document) const
 {
-    const QString pathID = QString("clipPath_").append(this->name().simplified().replace(" ","_"));
-
     QDomElement result = document.createElement("g");
     result.setAttribute("transform","translate("+QString::number(this->pos().x())+","+QString::number(this->pos().y())+")");
 
@@ -80,7 +79,7 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document)
 
     // 'defs'->'clipPath'
     QDomElement clipPath = document.createElement("clipPath");
-    clipPath.setAttribute("id", pathID);
+    clipPath.setAttribute("id", "clipPath_"+this->id());
     defs.appendChild(clipPath);
 
     // Convert visible area to SVG 'd' attribute
@@ -94,12 +93,13 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document)
     }
 
     QDomElement visibleData = this->svgVisibleArea(document);
+    visibleData.setAttribute("id", "data_" + this->id());
     defs.appendChild(visibleData);
 
     // 'defs'->'use'
     QDomElement use = document.createElement("use");
     use.setAttribute("xlink:href","#"+visibleData.attribute("id"));
-    use.setAttribute("style","clip-path: url(#" + pathID + ");");
+    use.setAttribute("style","clip-path: url(#clipPath_" + this->id() + ");");
     result.appendChild(use);
 
     // 'g'
@@ -108,7 +108,7 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document)
 
     // 'g'->'use'
     QDomElement use3 = document.createElement("use");
-    use3.setAttribute("xlink:href","#"+pathID);
+    use3.setAttribute("xlink:href","#clipPath_" + this->id());
     g2.appendChild(use3);
 
      /*
@@ -220,6 +220,13 @@ void AbstractPhoto::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
 {
     QGraphicsItem::hoverLeaveEvent(event);
     this->unsetCursor();
+}
+
+QString AbstractPhoto::id() const
+{
+    if (m_id.isEmpty())
+        m_id = QString::number((long long)this, 16);
+    return m_id;
 }
 
 QString AbstractPhoto::pathToString(const QPainterPath & path)

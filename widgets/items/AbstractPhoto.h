@@ -25,6 +25,7 @@ namespace KIPIPhotoFramesEditor
     class AbstractPhoto : public QGraphicsItem
     {
             QString m_name;
+            mutable QString m_id;
 
         public:
 
@@ -37,7 +38,7 @@ namespace KIPIPhotoFramesEditor
               * \note In your implementation you have to call this method to save presentation data in correct format,
               * independendly to your class.
               */
-            virtual QDomNode toSvg(QDomDocument & document);
+            virtual QDomNode toSvg(QDomDocument & document) const;
 
             /// Reads item data from SVG structure
             static bool fromSvg(QDomElement & element);
@@ -112,6 +113,9 @@ namespace KIPIPhotoFramesEditor
                 return m_effects_group;
             }
 
+            Q_PROPERTY(QString m_id READ id WRITE setId)
+            QString id() const;
+
             /// Refreshes item
             virtual void refresh() = 0;
 
@@ -147,8 +151,6 @@ namespace KIPIPhotoFramesEditor
             virtual void hoverEnterEvent(QGraphicsSceneHoverEvent * event);
             virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent * event);
 
-            // Updates icon
-            virtual void updateIcon() = 0;
             // Sets icon for item
             void setIcon(const QIcon & icon)
             {

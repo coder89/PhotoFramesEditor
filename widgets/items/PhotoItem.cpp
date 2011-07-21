@@ -56,8 +56,6 @@ void PhotoItem::setPixmap(const QPixmap & pixmap)
 
 QDomElement PhotoItem::svgVisibleArea(QDomDocument & document) const
 {
-    const QString imageID = "img_" + this->name().simplified().replace(" ","_");
-
     // 'defs'->'image'
     QByteArray byteArray;
     QBuffer buffer(&byteArray);
@@ -66,8 +64,6 @@ QDomElement PhotoItem::svgVisibleArea(QDomDocument & document) const
     img.setAttribute("width",m_pixmap.width());
     img.setAttribute("height",m_pixmap.height());
     img.setAttribute("xlink:href","data:image/png;base64,"+QString::fromLatin1(byteArray.toBase64().data()));
-    img.setAttribute("id",imageID);
-
     return img;
 }
 

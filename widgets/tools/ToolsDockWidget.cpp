@@ -94,6 +94,19 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_widget_layout->addWidget(m_effects_widget);
     connect(m_effects_button,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
 
+    // Text tool
+    m_text_button = new KPushButton(KGuiItem("", ":tool_text.png",
+                                              i18n("Text editor"),
+                                              i18n("This tool allows you to write text on the canvas. It's simple - just click on the canvas where you want to add some text and write it!")), widget);
+    m_text_button->setIconSize(QSize(24,24));
+    m_text_button->setFixedSize(32,32);
+    m_text_button->setCheckable(true);
+    group->addButton(m_text_button);
+    formLayout->addWidget(m_text_button, 0,4, Qt::AlignCenter);
+    //m_text_widget = new EffectsEditorTool(this);
+    //m_tool_widget_layout->addWidget(m_text_widget);
+    connect(m_text_button,SIGNAL(toggled(bool)),this,SLOT(setTextWidgetVisible(bool)));
+
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
     m_tool_border->setIconSize(QSize(24,24));
@@ -149,4 +162,17 @@ void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
         emit effectsToolSelected();
         this->adjustSize();
     }
+}
+
+void ToolsDockWidget::setTextWidgetVisible(bool isVisible)
+{
+//    emit effectsToolSelectionChanged(isVisible);
+//    if (isVisible)
+//    {
+//        m_tool_widget_layout->setCurrentWidget(m_effects_widget);
+//        m_effects_widget->setCurrentItem(m_currentPhoto);
+//        emit requireSingleSelection();
+//        emit effectsToolSelected();
+//        this->adjustSize();
+//    }
 }

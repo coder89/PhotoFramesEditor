@@ -46,7 +46,8 @@ SOURCES += main.cpp\
     events/UndoCommandEvent.cpp \
     events/UndoCommandEventFilter.cpp \
     effects/PhotoEffectsLoader.cpp \
-    utils/global.cpp
+    utils/global.cpp \
+    widgets/items/TextItem.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -86,7 +87,8 @@ HEADERS  += plugin/photoframeseditor.h \
     events/UndoCommandEventFilter.h \
     effects/AbstractPhotoEffectFactory.h \
     effects/AbstractPhotoEffectInterface.h \
-    effects/PhotoEffectsLoader.h
+    effects/PhotoEffectsLoader.h \
+    widgets/items/TextItem.h
 
 LIBS += \
     -L/usr \

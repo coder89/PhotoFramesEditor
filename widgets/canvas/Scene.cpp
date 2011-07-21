@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "QGraphicsEditionWidget.h"
+#include "global.h"
 
 // Qt
 #include <QGraphicsTextItem>
@@ -17,6 +18,7 @@
 #include <QMap>
 #include <QGraphicsWidget>
 #include <qmath.h>
+#include <QUndoCommand>
 
 // KDE
 #include <kapplication.h>
@@ -25,51 +27,127 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-namespace KIPIPhotoFramesEditor
+QColor Scene::OUTSIDE_SCENE_COLOR;
+
+class KIPIPhotoFramesEditor::ScenePrivate
 {
-    class ScenePrivate
+    enum
     {
-        enum
-        {
-            Rotation = 1,
-            Moving = 2,
-        };
-
-        ScenePrivate(Scene * parent) :
-            m_edit_widget(new QGraphicsEditionWidget),
-            m_parent(parent)
-        {
-            // Editing widget
-            setMode(0);
-            QObject::connect(m_edit_widget, SIGNAL(deleteSelectedItems()), parent, SLOT(removeSelectedItems()));
-            parent->QGraphicsScene::addItem(m_edit_widget);
-            m_edit_widget->setZValue(1.0/0.0);
-
-            // Background
-            m_background = new QGraphicsRectItem(parent->sceneRect(), 0, parent);
-            m_background->setZValue(-1.0/0.0);
-            m_background->setBrush(Qt::white);
-            m_background->setPen(QPen(Qt::transparent, 0));
-        }
-
-        void setMode(int mode)
-        {
-            m_mode = mode;
-            m_edit_widget->setRotationVisible(mode & Rotation);
-            m_edit_widget->reset();
-        }
-
-        // Edition widget
-        QGraphicsEditionWidget * m_edit_widget;
-        // Parent scene
-        QGraphicsScene * m_parent;
-        // Background item
-        QGraphicsRectItem * m_background;
-
-        int m_mode;
-
-        friend class Scene;
+        Rotation = 1,
+        Moving = 2,
     };
+
+    ScenePrivate(Scene * parent) :
+        //m_edit_widget(new QGraphicsEditionWidget),
+        m_parent(parent),
+        m_pressed_item(0),
+        m_selected_items_all_movable(true),
+        m_selection_visible(true)
+    {
+        // Editing widget
+        setMode(0);
+        //QObject::connect(m_edit_widget, SIGNAL(deleteSelectedItems()), parent, SLOT(removeSelectedItems()));
+        //parent->QGraphicsScene::addItem(m_edit_widget);
+        //m_edit_widget->setZValue(1.0/0.0);
+
+        // Background
+        m_background = new QGraphicsRectItem(parent->sceneRect(), 0, parent);
+        m_background->setZValue(-1.0/0.0);
+        m_background->setBrush(Qt::white);
+        m_background->setPen(QPen(Qt::transparent, 0));
+    }
+
+    void setMode(int mode)
+    {
+        m_mode = mode;
+        //m_edit_widget->setRotationVisible(mode & Rotation);
+        //m_edit_widget->reset();
+    }
+
+    // Parent scene
+    QGraphicsScene * m_parent;
+    // Background item
+    QGraphicsRectItem * m_background;
+
+    // Used for selecting items
+    void deselectSelected()
+    {
+        m_selected_items_all_movable = true;
+        foreach (AbstractPhoto * photo, m_selected_items)
+            photo->setSelected(false);
+        m_selected_items.clear();
+        m_selected_items_path = QPainterPath();
+        setSelectionInitialPosition();
+    }
+    bool selectPressed()
+    {
+        if (m_pressed_item)
+        {
+            if (!m_pressed_item->isSelected())
+            {
+                m_selected_items.append(m_pressed_item);
+                m_selected_items_path = m_selected_items_path.united(m_pressed_item->mapToScene(m_pressed_item->shape()));
+                m_selected_items_all_movable &= m_pressed_item->flags() & QGraphicsItem::ItemIsMovable;
+                m_pressed_item->setSelected(true);
+                setSelectionInitialPosition();
+            }
+            return true;
+        }
+        return false;
+    }
+    void setSelectionInitialPosition()
+    {
+        if (m_selected_items_path.isEmpty())
+            m_selected_items_path_initial_pos = QPointF();
+        m_selected_items_path_initial_pos = m_selected_items_path.boundingRect().topLeft();
+    }
+    QList<AbstractPhoto*> m_selected_items;
+    AbstractPhoto * m_pressed_item;
+    QPainterPath m_selected_items_path;
+    QPointF m_selected_items_path_initial_pos;
+    bool m_selected_items_all_movable;
+    bool m_selection_visible;
+
+    int m_mode;
+    friend class Scene;
+};
+
+class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
+{
+        QList<AbstractPhoto*> m_items;
+        QPointF m_movement;
+        Scene * m_scene;
+        bool done;
+    public:
+        MoveItemsUndoCommand(QList<AbstractPhoto*> items, QPointF movement, Scene * scene, QUndoCommand * parent = 0) :
+            QUndoCommand(parent),
+            m_items(items),
+            m_movement(movement),
+            m_scene(scene),
+            done(true)
+        {}
+        virtual void redo();
+        virtual void undo();
+};
+void MoveItemsUndoCommand::redo()
+{
+    if (!done)
+    {
+        foreach (AbstractPhoto * item, m_items)
+            item->setPos(item->pos() + m_movement);
+        done = !done;
+        m_scene->calcSelectionBoundingRect();
+    }
+}
+void MoveItemsUndoCommand::undo()
+{
+    if (done)
+    {
+        foreach (AbstractPhoto * item, m_items)
+            item->setPos(item->pos() - m_movement);
+        done = !done;
+        m_scene->calcSelectionBoundingRect();
+    }
 }
 
 Scene::Scene(const QRectF & dimension, QObject * parent) :
@@ -81,6 +159,13 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     grid_item(0),
     grid_changed(true)
 {
+    if (!OUTSIDE_SCENE_COLOR.isValid())
+    {
+        QPalette pal = this->palette();
+        OUTSIDE_SCENE_COLOR = pal.color(QPalette::Window);
+        OUTSIDE_SCENE_COLOR.setAlpha(190);
+    }
+
     // Mouse interaction mode
     setMode(DEFAULT_EDITING_MODE);
 
@@ -93,28 +178,24 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
 }
 
 //#####################################################################################################
-
 Scene::~Scene()
 {
     delete d;
 }
 
 //#####################################################################################################
-
 void Scene::removeItem(AbstractPhoto * item)
 {
     emit itemAboutToBeRemoved(item);
 }
 
 //#####################################################################################################
-
 void Scene::removeItems(const QList<AbstractPhoto *> & items)
 {
     emit itemsAboutToBeRemoved(items);
 }
 
 //#####################################################################################################
-
 void Scene::enableItemsDrawing()
 {
     this->editingMode = Drawing;
@@ -125,7 +206,6 @@ void Scene::enableItemsDrawing()
 }
 
 //#####################################################################################################
-
 void Scene::disableitemsDrawing()
 {
     this->QGraphicsScene::removeItem(temp_widget);
@@ -135,14 +215,12 @@ void Scene::disableitemsDrawing()
 }
 
 //#####################################################################################################
-
 void Scene::removeSelectedItems()
 {
     removeItems(selectedItems());
 }
 
 //#####################################################################################################
-
 void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 {
     QGraphicsScene::contextMenuEvent(event);
@@ -156,7 +234,6 @@ void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 }
 
 //#####################################################################################################
-
 void Scene::keyPressEvent(QKeyEvent * event)
 {
     switch(event->key())
@@ -175,53 +252,89 @@ void Scene::keyPressEvent(QKeyEvent * event)
 }
 
 //#####################################################################################################
-
-bool Scene::event(QEvent * event)
-{
-    switch(event->type())
-    {
-        default:
-            return QGraphicsScene::event(event);
-    }
-}
-
-//#####################################################################################################
-
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        qDebug() << "isContains:" << event->scenePos() << d->m_edit_widget->contains(event->scenePos()-d->m_edit_widget->pos()) << d->m_edit_widget->shape();
+        // Get initial selection position
+        d->setSelectionInitialPosition();
+
+        // If single selection mode, clear CTRL modifier
         if (selectionMode & SingleSelection)
             event->setModifiers(event->modifiers() & !Qt::ControlModifier);
-        if (d->m_edit_widget->contains(event->scenePos()-d->m_edit_widget->pos()) && (!(event->modifiers() & Qt::ControlModifier)))
-            goto press_others;
-        d->m_edit_widget->setVisible(false);
-        QGraphicsItem * clickedItem = this->itemAt(event->scenePos());
-        if (!clickedItem)
-            goto press_others;
-        if (!(event->modifiers() & Qt::ControlModifier))
+        // Check if selected
+        if (d->m_selected_items_path.contains(event->scenePos()))
         {
-            this->setSelectionArea(QPainterPath());
-            clickedItem->setSelected(!clickedItem->isSelected());
+            qDebug() << "contains:" << d->m_selected_items_path.contains(event->scenePos()) << event->scenePos();
+            event->setAccepted(true);
+            return;
         }
-        this->calcSelectionBoundingRect();
-        d->m_edit_widget->setVisible(true);
-        d->m_edit_widget->setSelected(true);
+        // If not selected, then save item for further selection
+        else
+        {
+            d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
+            if (!(event->modifiers() & Qt::ControlModifier))
+                d->deselectSelected();
+            if (d->m_pressed_item && !(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
+                d->m_pressed_item = 0;
+            event->setAccepted(d->m_pressed_item);
+        }
     }
-    press_others:
+    else
         QGraphicsScene::mousePressEvent(event);
 }
 
 //#####################################################################################################
+void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
+{
+    if (event->buttons() & Qt::LeftButton)
+    {
+        // Selecting pressed item
+        event->setAccepted(d->selectPressed());
 
+        // Moving items
+        if (d->m_selected_items_all_movable)
+        {
+            // Calculate movement
+            QPointF distance = event->scenePos() - event->buttonDownScenePos(Qt::LeftButton) + d->m_selected_items_path_initial_pos;
+            if (event->modifiers() & Qt::ShiftModifier && this->isGridVisible())
+            {
+                distance.setX(x_grid*round(distance.rx()/x_grid));
+                distance.setY(y_grid*round(distance.ry()/y_grid));
+            }
+            QPointF difference = d->m_selected_items_path.boundingRect().topLeft();
+            d->m_selected_items_path.translate(-difference);
+            difference = distance - difference;
+            d->m_selected_items_path.translate(distance);
+            foreach (AbstractPhoto * item, d->m_selected_items)
+                item->setPos(item->pos() + difference);
+        }
+    }
+    else
+        QGraphicsScene::mouseMoveEvent(event);
+}
+
+//#####################################################################################################
 void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsScene::mouseReleaseEvent(event);
+    if (event->button() == Qt::LeftButton)
+    {
+        // Selecting pressed item
+        event->setAccepted(d->selectPressed());
+
+        // Post move command to QUndoStack
+        if (d->m_selected_items_path.boundingRect().topLeft() != d->m_selected_items_path_initial_pos)
+        {
+            QPointF movement = d->m_selected_items_path.boundingRect().topLeft()-d->m_selected_items_path_initial_pos;
+            QUndoCommand * command = new MoveItemsUndoCommand(d->m_selected_items, movement, this);
+            PFE_PostUndoCommand(command);
+        }
+    }
+    else
+        QGraphicsScene::mouseReleaseEvent(event);
 }
 
 // #####################################################################################################
-
 void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
@@ -254,35 +367,6 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 }
 
 //#####################################################################################################
-
-void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
-{
-    if (event->buttons() & Qt::LeftButton)
-    {
-        switch(this->editingMode)
-        {
-            case Drawing:
-                {
-                    if (temp_path.elementCount() == 0)
-                        break;
-                    QPainterPath path = temp_path;
-                    path.lineTo(event->scenePos());
-                    temp_widget->setPath(path);
-                }
-                break;
-            default:
-                goto    others;
-        }
-    }
-    else
-    {
-        others:
-            QGraphicsScene::mouseMoveEvent(event);
-    }
-}
-
-//#####################################################################################################
-
 void Scene::dropEvent(QGraphicsSceneDragDropEvent *event)
 {
     // scene()->addItem(it);
@@ -290,28 +374,39 @@ void Scene::dropEvent(QGraphicsSceneDragDropEvent *event)
 }
 
 //#####################################################################################################
-
 void Scene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 {
     QGraphicsScene::dragMoveEvent(event);
 }
 
 //#####################################################################################################
-
 void Scene::drawBackground(QPainter * painter, const QRectF & rect)
 {
     QGraphicsScene::drawBackground(painter, rect.intersect(this->sceneRect()));
 }
 
 //#####################################################################################################
-
 void Scene::drawForeground(QPainter * painter, const QRectF & rect)
 {
     QGraphicsScene::drawForeground(painter, rect.intersect(this->sceneRect()));
+
+    // Fill scene outside sceneRect with semi-transparent window color
+    QPainterPath p;
+    p.addRect(rect);
+    QPainterPath s;
+    s.addRect(this->sceneRect());
+    painter->fillPath(p.subtracted(s), OUTSIDE_SCENE_COLOR);
+
+    // Draw selected items shape
+    if (isSelectionVisible())
+    {
+        painter->save();
+        painter->drawPath(d->m_selected_items_path);
+        painter->restore();
+    }
 }
 
 //#####################################################################################################
-
 void Scene::setGrid(qreal x, qreal y)
 {
     // Grid can't be 0
@@ -386,7 +481,6 @@ void Scene::setGrid(qreal x, qreal y)
 }
 
 //#####################################################################################################
-
 void Scene::setGridVisible(bool visible)
 {
     if (grid_visible == visible)
@@ -399,7 +493,12 @@ void Scene::setGridVisible(bool visible)
 }
 
 //#####################################################################################################
+bool Scene::isGridVisible()
+{
+    return this->grid_visible;
+}
 
+//#####################################################################################################
 void Scene::setMode(EditMode mode)
 {
     switch(mode)
@@ -421,7 +520,6 @@ void Scene::setMode(EditMode mode)
 }
 
 //#####################################################################################################
-
 void Scene::setSelectionMode(SelectionMode selectionMode)
 {
     switch(selectionMode)
@@ -441,7 +539,6 @@ void Scene::setSelectionMode(SelectionMode selectionMode)
 }
 
 //#####################################################################################################
-
 QDomNode Scene::toSvg(QDomDocument & document)
 {
     QDomElement result = document.createElement("svg");
@@ -459,7 +556,6 @@ QDomNode Scene::toSvg(QDomDocument & document)
 }
 
 //#####################################################################################################
-
 void Scene::fromSvg(QDomElement & svgImage)
 {
     if (svgImage.tagName() != "svg")
@@ -479,14 +575,16 @@ void Scene::fromSvg(QDomElement & svgImage)
             continue;
         QDomElement element = node.toElement();
         QString itemClass = element.attribute("class");
+        AbstractPhoto * item;
         if (itemClass == "PhotoItem")
-        {
-            PhotoItem * item = PhotoItem::fromSvg(element);
-            if (item)
-                this->addItem(item);
-            else
-                ++errorsCount;
-        }
+            item = PhotoItem::fromSvg(element);
+        else if (itemClass == "TextItem")
+            item = TextItem::fromSvg(element);
+
+        if (item)
+            this->addItem(item);
+        else
+            ++errorsCount;
     }
 
     // Show error message
@@ -498,14 +596,12 @@ void Scene::fromSvg(QDomElement & svgImage)
 }
 
 //#####################################################################################################
-
 void Scene::updateSelection()
 {
-    d->m_edit_widget->refresh();
+    //d->m_edit_widget->refresh();
 }
 
 //#####################################################################################################
-
 void Scene::addItem(AbstractPhoto * item)
 {
     if (item->scene() != this)
@@ -515,7 +611,6 @@ void Scene::addItem(AbstractPhoto * item)
 }
 
 //#####################################################################################################
-
 QList<AbstractPhoto*> Scene::selectedItems() const
 {
     QList<AbstractPhoto*> result;
@@ -526,8 +621,28 @@ QList<AbstractPhoto*> Scene::selectedItems() const
 }
 
 //#####################################################################################################
-
 void Scene::calcSelectionBoundingRect()
 {
-    d->m_edit_widget->setSelection(this->QGraphicsScene::selectedItems());
+    d->m_selected_items.clear();
+    d->m_selected_items_path = QPainterPath();
+    QList<AbstractPhoto*> itemsList = this->selectedItems();
+    foreach (AbstractPhoto * item, itemsList)
+    {
+        if (d->m_selected_items.contains(item))
+            continue;
+        d->m_selected_items.append(item);
+        d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
+    }
+}
+
+//#####################################################################################################
+bool Scene::isSelectionVisible()
+{
+    return d->m_selection_visible;
+}
+
+//#####################################################################################################
+void Scene::setSelectionVisible(bool isVisible)
+{
+    d->m_selection_visible = isVisible;
 }

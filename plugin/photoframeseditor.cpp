@@ -3,6 +3,7 @@
 #include "photoframeseditor_p.h"
 #include "CanvasCreationDialog.h"
 #include "Canvas.h"
+#include "Scene.h"
 #include "LayersSelectionModel.h"
 #include "UndoCommandEventFilter.h"
 #include "PhotoEffectsLoader.h"
@@ -23,6 +24,7 @@
 #include <QDebug>
 #include <QPluginLoader>
 #include <QFile>
+#include <QPrintPreviewDialog>
 
 // KDE
 #include <kmenubar.h>
@@ -287,6 +289,7 @@ void PhotoFramesEditor::open()
     closeDocument();
 
     CanvasCreationDialog * newCanvas = new CanvasCreationDialog(this);
+    newCanvas->setModal(true);
     int result = newCanvas->exec();
 
     if (result == KDialog::Accepted)
@@ -368,12 +371,20 @@ void PhotoFramesEditor::saveFile(const KUrl & fileUrl, bool setFileAsDefault)
 
 void PhotoFramesEditor::exportFile()
 {
+
     // TODO : exporting to images
 }
 
 void PhotoFramesEditor::printPreview()
 {
-    // TODO : print preview
+    QImage img;
+     QPainter p(&img);
+     if (m_canvas && m_canvas->scene())
+     {
+         QPrintPreviewDialog dialog(this);
+         connect(&dialog, SIGNAL(paintRequested(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
+         dialog.exec();
+     }
 }
 
 void PhotoFramesEditor::print()
@@ -413,12 +424,21 @@ bool PhotoFramesEditor::queryClose()
         return false;
 }
 
-void PhotoFramesEditor::setGridVisible(bool /*isVisible*/)
+void PhotoFramesEditor::setGridVisible(bool isVisible)
 {
+    if (m_canvas && m_canvas->scene())
+        m_canvas->scene()->setGridVisible(isVisible);
 }
 
 void PhotoFramesEditor::setupGrid()
 {
+
+    if (m_canvas && m_canvas->scene())
+    {
+        qreal x = 25;
+        qreal y = 25;
+        m_canvas->scene()->setGrid(x, y);
+    }
 }
 
 void PhotoFramesEditor::loadEffects()

@@ -26,6 +26,12 @@ namespace KIPIPhotoFramesEditor
         protected Q_SLOTS:
 
             void recalculatePaperSize(const QString & paperSize);
+            void sizeUnitsChanged(const QString & unit);
+            void resolutionUnitsChanged(const QString & unit);
+            void setHorizontal(bool);
+            void setVertical(bool);
+            void widthChanged(double width);
+            void heightChanged(double height);
 
         private:
 

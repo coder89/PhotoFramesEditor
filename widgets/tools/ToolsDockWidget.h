@@ -20,6 +20,7 @@ namespace KIPIPhotoFramesEditor
             KPushButton * m_tool_pointer;
             KPushButton * m_tool_hand;
             KPushButton * m_effects_button;
+            KPushButton * m_text_button;
             KPushButton * m_tool_border;
             KPushButton * m_tool_colorize_button;
 
@@ -27,6 +28,7 @@ namespace KIPIPhotoFramesEditor
 
             QStackedLayout * m_tool_widget_layout;
             AbstractTool * m_effects_widget;
+            AbstractTool * m_text_widget;
             AbstractTool * m_colorize_widget;
 
             AbstractPhoto * m_currentPhoto;
@@ -46,6 +48,9 @@ namespace KIPIPhotoFramesEditor
             // Effects tool selection signals
             void effectsToolSelectionChanged(bool);
             void effectsToolSelected();
+            // Text tool selection signals
+            void textToolSelectionChanged(bool);
+            void textToolSelected();
             // Border tool selection signals
             void borderToolSelectionChanged(bool);
             void borderToolSelected();
@@ -63,6 +68,7 @@ namespace KIPIPhotoFramesEditor
             }
 
             void setEffectsWidgetVisible(bool isVisible);
+            void setTextWidgetVisible(bool isVisible);
 
             void emitPointerToolSelected(bool isSelected)
             {

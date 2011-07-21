@@ -10,6 +10,7 @@
 
 // Local
 #include "PhotoItem.h"
+#include "TextItem.h"
 #include "polygon_widget.h"
 #include "canvasmouseevent.h"
 
@@ -18,6 +19,7 @@ namespace KIPIPhotoFramesEditor
     class Canvas;
     class CanvasWidget;
     class ScenePrivate;
+    class MoveItemsUndoCommand;
 
     class Scene : protected QGraphicsScene
     {
@@ -53,6 +55,7 @@ namespace KIPIPhotoFramesEditor
             QList<AbstractPhoto*> selectedItems() const;
             void setMode(EditMode mode);
             void setSelectionMode(SelectionMode selectionMode);
+            bool isSelectionVisible();
             QDomNode toSvg(QDomDocument & document);
             void fromSvg(QDomElement & svgImage);
             const QGraphicsScene * toGraphicsScene() const
@@ -80,11 +83,12 @@ namespace KIPIPhotoFramesEditor
             void removeSelectedItems();
             void setGrid(qreal x, qreal y);
             void setGridVisible(bool visible);
+            bool isGridVisible();
             void updateSelection();
+            void setSelectionVisible(bool isVisible);
 
         protected:
 
-            virtual bool event(QEvent * event);
             virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             virtual void drawBackground(QPainter * painter, const QRectF & rect);
             virtual void drawForeground(QPainter * painter, const QRectF & rect);
@@ -122,10 +126,13 @@ namespace KIPIPhotoFramesEditor
             QGraphicsItemGroup * grid_item;
             bool grid_changed;
 
+            static QColor OUTSIDE_SCENE_COLOR;
+
             friend class Canvas;
             friend class CanvasWidget;
             friend class ScenePrivate;
             friend class AbstractPhoto;
+            friend class MoveItemsUndoCommand;
     };
 
 }

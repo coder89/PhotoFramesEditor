@@ -7,6 +7,8 @@
 #include "UndoMoveRowsCommand.h"
 #include "UndoBorderChangeCommand.h"
 
+#include <QPrinter>
+
 #include <kapplication.h>
 #include <kmessagebox.h>
 #include <klocalizedstring.h>
@@ -58,6 +60,7 @@ void Canvas::setupGUI()
     this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
+    this->addText("Jakiś tam sobie tekst");
 }
 
 /** ###########################################################################################################################
@@ -130,6 +133,24 @@ void Canvas::addImage(const QImage & image)
     // Create & setup item
     PhotoItem * it = new PhotoItem(image, m_scene);
     it->setName(image.text("File").append(QString::number(m_model->rowCount())));
+    it->setZValue(m_model->rowCount()+1);
+
+    // Add item to scene & model
+    m_scene->addItem(it);
+    m_model->prependItem(it);
+
+    if (m_selmodel->hasSelection())
+    {} /// TODO: add above selected
+}
+
+/** ###########################################################################################################################
+ * Add new text item
+ #############################################################################################################################*/
+void Canvas::addText(const QString & text)
+{
+    // Create & setup item
+    TextItem * it = new TextItem(QString::fromUtf8(text.toAscii()), m_scene);
+    it->setName(it->text().append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount()+1);
 
     // Add item to scene & model
@@ -604,6 +625,29 @@ void Canvas::isSavedChanged(bool isStackClean)
     else
         m_is_saved = (m_saved_on_index == m_undo_stack->index());
     emit savedStateChanged();
+}
+
+/** ###########################################################################################################################
+ * Draws canvas content onto the QPaintDevice
+ #############################################################################################################################*/
+void Canvas::renderCanvas(QPaintDevice * device)
+{
+    if (scene())
+    {
+        scene()->setSelectionVisible(false);
+        QPainter p(device);
+        scene()->render(&p, scene()->sceneRect(), scene()->sceneRect());
+        p.end();
+        scene()->setSelectionVisible(true);
+    }
+}
+
+/** ###########################################################################################################################
+ * Draws canvas content onto the printer
+ #############################################################################################################################*/
+void Canvas::renderCanvas(QPrinter * device)
+{
+    renderCanvas(static_cast<QPaintDevice*>(device));
 }
 
 #undef MAX_SCALE_LIMIT

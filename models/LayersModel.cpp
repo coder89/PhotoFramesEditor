@@ -144,6 +144,10 @@ bool LayersModel::appendItem(AbstractPhoto * item, const QModelIndex & parent)
 
 bool LayersModel::prependItem(AbstractPhoto * item, const QModelIndex & parent)
 {
+    QList<AbstractPhoto*> items;
+    items << item;
+    if (this->itemsToIndexes(items).count())
+        return false;
     bool result = this->insertRow(0,parent);
     if (result)
         static_cast<LayersModelItem*>(index(0,0,parent).internalPointer())->setPhoto(item);

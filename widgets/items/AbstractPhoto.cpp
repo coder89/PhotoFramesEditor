@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "photo_context_menu.h"
 #include "PhotoEffectsGroup.h"
+#include "global.h"
 
 #include <QMenu>
 #include <QStyle>
@@ -68,10 +69,31 @@ void AbstractPhoto::setupItem()
     this->setBorderCornersStyle(Qt::RoundJoin);
 }
 
-QDomNode AbstractPhoto::toSvg(QDomDocument & document) const
+QDomElement AbstractPhoto::toSvg(QDomDocument & document, bool /*embedAll*/) const
 {
+    QString translate = "translate("+
+                        QString::number(this->pos().x())+
+                        ","+
+                        QString::number(this->pos().y())+
+                        ")";
+    QTransform transform = this->transform();
+    QString matrix = "matrix("+
+                     QString::number(transform.m11())+
+                     ","+
+                     QString::number(transform.m12())+
+                     ","+
+                     QString::number(transform.m13())+
+                     ","+
+                     QString::number(transform.m21())+
+                     ","+
+                     QString::number(transform.m22())+
+                     ","+
+                     QString::number(transform.m23())+
+                     ")";
     QDomElement result = document.createElement("g");
-    result.setAttribute("transform","translate("+QString::number(this->pos().x())+","+QString::number(this->pos().y())+")");
+    result.setAttribute("transform", translate + " " + matrix);
+    result.setAttribute("id", this->id());
+    result.setAttribute("name", this->name());
 
     // 'defs' tag
     QDomElement defs = document.createElement("defs");
@@ -82,13 +104,12 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document) const
     clipPath.setAttribute("id", "clipPath_"+this->id());
     defs.appendChild(clipPath);
 
-    // Convert visible area to SVG 'd' attribute
+    // Convert visible area to SVG path's 'd' attribute
     QPainterPath visibleArea = this->opaqueArea();
     if (!visibleArea.isEmpty())
     {
         // 'defs'->'clipPath'->'path'
-        QDomElement path = document.createElement("path");
-        path.setAttribute("d", pathToString(visibleArea));
+        QDomElement path = KIPIPhotoFramesEditor::pathToSvg(visibleArea, document);
         clipPath.appendChild(path);
     }
 
@@ -131,7 +152,56 @@ QDomNode AbstractPhoto::toSvg(QDomDocument & document) const
 
 bool AbstractPhoto::fromSvg(QDomElement & element)
 {
-    return false;
+    if (element.tagName() != "g")
+        return false;
+
+    // Position & transformation
+    this->setPos(0,0);
+    QString transform = element.attribute("transform");
+    if (!transform.isEmpty())
+    {
+        QRegExp tr("translate\\([0-9.]+,[0-9.]+\\)");
+        if (tr.indexIn(transform) >= 0)
+        {
+            QStringList list = tr.capturedTexts();
+            QString translate = list.at(0);
+            list = translate.split(',');
+            QString x = list.at(0);
+            QString y = list.at(1);
+            this->setPos( x.right(x.length()-10).toDouble(),
+                          y.left(y.length()-1).toDouble());
+        }
+        QRegExp rot("matrix\\([0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+\\)");
+        if (rot.indexIn(transform) >= 0)
+        {
+            QStringList list = rot.capturedTexts();
+            QString matrix = list.at(0);
+            list = matrix.split(',');
+            QString a = list.at(0);
+            QString b = list.at(1);
+            QString c = list.at(2);
+            QString d = list.at(3);
+            QString e = list.at(4);
+            QString f = list.at(5);
+            this->setTransform(QTransform(a.toDouble(), c.toDouble(), e.toDouble(),
+                                          b.toDouble(), d.toDouble(), f.toDouble(),
+                                          0, 0, 1));
+        }
+    }
+
+    // ID & name
+    m_id = element.attribute("id");
+    setName(element.attribute("name"));
+
+    // Validation purpose
+    QDomElement defs = element.firstChildElement("defs");
+    if (defs.isNull())
+        return false;
+    QDomElement clipPath = defs.firstChildElement("clipPath");
+    if (clipPath.isNull() || clipPath.attribute("id") != "clipPath_"+this->id())
+        return false;
+
+    return true;
 }
 
 //void AbstractPhoto::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
@@ -227,38 +297,6 @@ QString AbstractPhoto::id() const
     if (m_id.isEmpty())
         m_id = QString::number((long long)this, 16);
     return m_id;
-}
-
-QString AbstractPhoto::pathToString(const QPainterPath & path)
-{
-    QString str_path_d;
-    int elementsCount = path.elementCount();
-    for (int i = 0; i < elementsCount; ++i)
-    {
-        QPainterPath::Element e = path.elementAt(i);
-        switch (e.type)
-        {
-            case QPainterPath::LineToElement:
-                str_path_d.append("L " + QString::number(e.x) + " " + QString::number(e.y) + " ");
-                break;
-            case QPainterPath::MoveToElement:
-                str_path_d.append("M " + QString::number(e.x) + " " + QString::number(e.y) + " ");
-                break;
-            case QPainterPath::CurveToElement:
-                str_path_d.append("C " + QString::number(e.x) + " " + QString::number(e.y) + " ");
-                break;
-            case QPainterPath::CurveToDataElement:
-                str_path_d.append(QString::number(e.x) + " " + QString::number(e.y) + " ");
-                break;
-            default:
-                Q_ASSERT(e.type == QPainterPath::CurveToDataElement ||
-                         e.type == QPainterPath::CurveToElement ||
-                         e.type == QPainterPath::LineToElement ||
-                         e.type == QPainterPath::MoveToElement);
-        }
-    }
-    str_path_d.append("z");
-    return str_path_d;
 }
 
 void AbstractPhoto::recalcShape()

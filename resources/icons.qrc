@@ -13,5 +13,7 @@
         <file>horizontal_orientation.png</file>
         <file>vertical_orientation.png</file>
         <file>tool_text.png</file>
+        <file>pointer.png</file>
+        <file>hand.png</file>
     </qresource>
 </RCC>

@@ -11,6 +11,7 @@
 #include <QGraphicsSceneDragDropEvent>
 #include <QIcon>
 #include <QDomNode>
+#include <QtAbstractPropertyBrowser>
 
 // Local
 #include "canvasmouseevent.h"
@@ -38,10 +39,10 @@ namespace KIPIPhotoFramesEditor
               * \note In your implementation you have to call this method to save presentation data in correct format,
               * independendly to your class.
               */
-            virtual QDomNode toSvg(QDomDocument & document) const;
+            virtual QDomElement toSvg(QDomDocument & document, bool embedAll) const;
 
             /// Reads item data from SVG structure
-            static bool fromSvg(QDomElement & element);
+            bool fromSvg(QDomElement & element);
 
             /// Name of item property
             Q_PROPERTY(QString name READ name WRITE setName)
@@ -49,7 +50,12 @@ namespace KIPIPhotoFramesEditor
             {
                 if (name.isEmpty())
                     return;
-                m_name = name;
+                m_name = QString::fromUtf8(name.toAscii()).simplified();
+                if (m_name.length() > 20)
+                {
+                    m_name = m_name.left(20);
+                    m_name.append("...");
+                }
             }
             QString name() const
             {
@@ -119,6 +125,9 @@ namespace KIPIPhotoFramesEditor
             /// Refreshes item
             virtual void refresh() = 0;
 
+            /// Returns item's property browser
+            virtual QtAbstractPropertyBrowser * propertyBrowser() = 0;
+
         protected:
 
             explicit AbstractPhoto(QGraphicsScene * scene = 0);
@@ -134,8 +143,6 @@ namespace KIPIPhotoFramesEditor
               * Data will be also cutted to fit their visual shape.
               */
             virtual QDomElement svgVisibleArea(QDomDocument & document) const = 0;
-
-            static QString pathToString(const QPainterPath & path);
 
             // Recalculate item shape
             void recalcShape();

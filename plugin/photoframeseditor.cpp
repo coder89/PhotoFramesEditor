@@ -25,6 +25,7 @@
 #include <QPluginLoader>
 #include <QFile>
 #include <QPrintPreviewDialog>
+#include <QImageWriter>
 
 // KDE
 #include <kmenubar.h>
@@ -256,8 +257,6 @@ void PhotoFramesEditor::prepareSignalsConnections()
     d->centralWidget->layout()->addWidget(m_canvas);
     d->tree->setModel(m_canvas->model());
     d->tree->setSelectionModel(m_canvas->selectionModel());
-    for (int i = d->tree->model()->columnCount()-1; i >= 0; --i)
-        d->tree->resizeColumnToContents(i);
     // model/tree/canvas synchronization signals
     connect(m_canvas,SIGNAL(savedStateChanged()),this,SLOT(refreshActions()));
     connect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),d->redoAction,SLOT(setEnabled(bool)));
@@ -371,8 +370,63 @@ void PhotoFramesEditor::saveFile(const KUrl & fileUrl, bool setFileAsDefault)
 
 void PhotoFramesEditor::exportFile()
 {
-
-    // TODO : exporting to images
+    if (!m_canvas)
+        return;
+    KFileDialog fileDialog(KUrl(), "*.bpm|(*.bmp) Windows Bitmap\n"
+                                   "*.jpg|(*.jpg) JPG\n"
+                                   "*.jpeg|(*.jpeg) JPEG\n"
+                                   "*.png|(*.png) Portable Network Graphics\n"
+                                   "*.ppm|(*.ppm) Portable Pixmap\n"
+                                   "*.tif|(*.tif) Tagged Image File Format\n"
+                                   "*.xbm|(*.xbm) X11 Bitmap\n"
+                                   "*.xpm|(*.xpm) X11 Pixmap", this);
+    fileDialog.setOperationMode(KFileDialog::Saving);
+    fileDialog.setMode(KFile::File);
+    fileDialog.setKeepLocation(true);
+    int result = fileDialog.exec();
+    if (result == KFileDialog::Accepted)
+    {
+        QString filter = fileDialog.currentFilter();
+        const char * format;
+        if (filter == "*.bpm")
+            format = "BMP";
+        else if (filter == "*.jpg")
+            format = "JPG";
+        else if (filter == "*.jpeg")
+            format = "JPEG";
+        else if (filter == "*.png")
+            format = "PNG";
+        else if (filter == "*.ppm")
+            format = "PPM";
+        else if (filter == "*.tif")
+            format = "TIFF";
+        else if (filter == "*.xbm")
+            format = "XBM";
+        else if (filter == "*.xpm")
+            format = "XPM";
+        else
+        {
+            KMessageBox::error(this,
+                               i18n("Currently this file type (%s) is unsupported.\nPleas notify the author and ask for it in the next versions of the application.", filter.toAscii().constData()),
+                               i18n("The image can't be saved!"));
+            return;
+        }
+        QPixmap image(m_canvas->sceneRect().size().toSize());
+        m_canvas->renderCanvas(&image);
+        QImageWriter writer(fileDialog.selectedFile());
+        writer.setFormat(format);
+        if (!writer.canWrite())
+        {
+            KMessageBox::error(this,
+                               i18n("Image can't be saved in selected file."));
+        }
+        if (!writer.write(image.toImage()))
+        {
+            KMessageBox::detailedError(this,
+                               i18n("Unexpected error while saving an image!"),
+                               writer.errorString());
+        }
+    }
 }
 
 void PhotoFramesEditor::printPreview()
@@ -404,7 +458,8 @@ bool PhotoFramesEditor::closeDocument()
             case KMessageBox::Yes:
                 save();
             case KMessageBox::No:
-                delete m_canvas;
+                d->tree->setModel(0);
+                m_canvas->deleteLater();
                 m_canvas = 0;
                 refreshActions();
                 return true;
@@ -444,7 +499,6 @@ void PhotoFramesEditor::setupGrid()
 void PhotoFramesEditor::loadEffects()
 {
     QDir effectsDir("./effects");
-    qDebug() << effectsDir.absolutePath();
     QStringList filters;
     filters << "*.so" << "*.dll";
     QFileInfoList filesList = effectsDir.entryInfoList(filters, QDir::Files);

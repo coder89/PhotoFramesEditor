@@ -3,6 +3,7 @@
 
 // Qt
 #include <QUndoStack>
+#include <QDebug>
 
 // KDE
 #include <kxmlguiwindow.h>
@@ -57,6 +58,10 @@ namespace KIPIPhotoFramesEditor
             void createWidgets();
             void loadEffects();
             void prepareSignalsConnections();
+            virtual void inputMethodEvent(QInputMethodEvent *)
+            {
+                qDebug() << "pfs::input";
+            }
 
             Canvas * m_canvas;
 

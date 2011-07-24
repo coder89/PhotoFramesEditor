@@ -12,6 +12,7 @@
 #include <QWheelEvent>
 #include <QDomDocument>
 #include <QFile>
+#include <QDebug>
 
 // KDE
 #include <klocalizedstring.h>
@@ -46,6 +47,8 @@ namespace KIPIPhotoFramesEditor
             };
 
             explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
+            explicit Canvas(Scene * scene, QWidget * parent = 0);
+
             virtual void wheelEvent(QWheelEvent *event);
 
             QDomDocument toSvg() const;
@@ -216,6 +219,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
+            void init();
             void setupGUI();
             void prepareSignalsConnection();
 

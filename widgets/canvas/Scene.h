@@ -57,7 +57,7 @@ namespace KIPIPhotoFramesEditor
             void setSelectionMode(SelectionMode selectionMode);
             bool isSelectionVisible();
             QDomNode toSvg(QDomDocument & document);
-            void fromSvg(QDomElement & svgImage);
+            static Scene * fromSvg(QDomElement & svgImage);
             const QGraphicsScene * toGraphicsScene() const
             {
                 return this;
@@ -66,7 +66,6 @@ namespace KIPIPhotoFramesEditor
             {
                 return this;
             }
-
 
         Q_SIGNALS:
 

@@ -37,6 +37,9 @@ int main(int argc, char *argv[])
     w->move(d->rect().center()-w->frameGeometry().center());
     w->show();
 
-    return a.exec();
+    int result = a.exec();
+
     QResource::unregisterResource("resources/icons.qcc");
+
+    return result;
 }

@@ -19,13 +19,40 @@
 using namespace KIPIPhotoFramesEditor;
 
 Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
-    QGraphicsView(parent),
-    m_is_saved(true),
-    m_saved_on_index(0),
-    m_undo_stack(new QUndoStack(this)),
-    m_scale_factor(1)
+    QGraphicsView(parent)
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
+    this->init();
+}
+
+Canvas::Canvas(Scene * scene, QWidget *parent) :
+    QGraphicsView(parent)
+{
+    m_scene = scene;
+    m_scene->setParent(this);
+    this->setScene(m_scene);
+
+    this->init();
+
+    QList<QGraphicsItem*> items = m_scene->items();
+    foreach (QGraphicsItem * item, items)
+    {
+        AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(item);
+        if (photo)
+            this->addNewItemToModel(photo);
+    }
+}
+
+/** ###########################################################################################################################
+* Initialize Canvas object
+#############################################################################################################################*/
+void Canvas::init()
+{
+    m_is_saved = true;
+    m_saved_on_index = 0;
+    m_undo_stack = new QUndoStack(this);
+    m_scale_factor = 1;
+
     m_model = new LayersModel(this);
     m_selmodel = new LayersSelectionModel(m_model, this);
 
@@ -60,7 +87,8 @@ void Canvas::setupGUI()
     this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
-    this->addText("Jakiś tam sobie tekst");
+    this->addText(QString::fromAscii("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
+    this->addText(QString::fromAscii("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
 }
 
 /** ###########################################################################################################################
@@ -518,6 +546,7 @@ QDomDocument Canvas::toSvg() const
  #############################################################################################################################*/
 Canvas * Canvas::fromSvg(QDomDocument & document)
 {
+    Canvas * result = 0;
     QDomNodeList childs = document.childNodes();
     if (childs.count())
     {
@@ -544,13 +573,13 @@ Canvas * Canvas::fromSvg(QDomDocument & document)
             QSizeF dimension(width,height);
             if (dimension.isValid())
             {
-                Canvas * result = new Canvas(dimension);
-                result->m_scene->fromSvg(element);
-                return result;
+                Scene * scene = Scene::fromSvg(element);
+                if (scene)
+                    result = new Canvas(scene);
             }
         }
     }
-    return 0;
+    return result;
 }
 
 /** ###########################################################################################################################

@@ -5,17 +5,26 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class TextItemPrivate;
+
     class TextItem : public AbstractPhoto
     {
             QColor m_color;
             QFont m_font;
-            QString m_text;
 
             QPainterPath m_complete_path;
             QPainterPath m_text_path;
+            QFontMetrics m_metrics;
+
+            TextItemPrivate * d;
 
         public:
-            TextItem(const QString & text, QGraphicsScene * scene = 0);
+
+            TextItem(const QString & text = QString(), QGraphicsScene * scene = 0);
+            virtual void focusInEvent(QFocusEvent *event);
+            virtual void focusOutEvent(QFocusEvent *event);
+            virtual void keyPressEvent(QKeyEvent * event);
+            virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
 
             Q_PROPERTY(QColor m_color READ color WRITE setColor)
             QColor color() const;
@@ -37,9 +46,17 @@ namespace KIPIPhotoFramesEditor
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
             virtual void refresh();
 
-            virtual QDomNode toSvg(QDomDocument & document) const;
+            virtual QDomElement toSvg(QDomDocument & document, bool embedAll) const;
             virtual QDomElement svgVisibleArea(QDomDocument &document) const;
             static TextItem * fromSvg(QDomElement & element);
+
+            /// Returns item's property browser
+            virtual QtAbstractPropertyBrowser * propertyBrowser();
+
+        private:
+
+            QPainterPath getLinePath(const QString & string);
+            void setCursorPositionVisible(bool isVisible);
     };
 }
 

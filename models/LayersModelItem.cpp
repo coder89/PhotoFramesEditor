@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <QDebug>
 #include <QIcon>
+#include <QString>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -19,16 +20,6 @@ LayersModelItem::LayersModelItem(AbstractPhoto * photo, LayersModelItem * parent
             parent->childItems.append(this);
     }
 
-    qDebug() << this;
-//    QList<QVariant> data;
-//    data << "sfa" << QIcon(":eye.png") << QIcon(":padlock.png") << QString().append("Name=").append(QString::number(QTime::currentTime().msec()));
-//    LayersModelItem::setData(data);
-}
-
-LayersModelItem::LayersModelItem() :
-    parentItem(0),
-    itemPhoto(0)
-{
     qDebug() << this;
 }
 
@@ -73,7 +64,6 @@ int LayersModelItem::columnCount() const
 
 int LayersModelItem::childCount() const
 {
-    //qDebug() << "childCount" << childItems.count();
     return childItems.count();
 }
 
@@ -129,7 +119,7 @@ void LayersModelItem::setPhoto(AbstractPhoto * photo)
         int newZValue = this->parent()->childCount()-this->parent()->childItems.indexOf(this);
         #ifdef QT_DEBUG
                 if (photo->zValue() != newZValue)
-                    qDebug() << "ZValue changed!" << photo << "Current:" << photo->zValue() << "New:" << newZValue;
+                    qDebug() << "ZValue changed!" << (QGraphicsItem*)photo << "Current:" << photo->zValue() << "New:" << newZValue;
         #endif
         photo->setZValue(newZValue);
     }
@@ -168,6 +158,7 @@ bool LayersModelItem::insertChildren(int position, LayersModelItem * item)
     childItems.insert(position, item);
     if (item != 0)
         item->setParent(this);
+    qDebug() << item->photo();
     this->refreshZValues();
     return true;
 }

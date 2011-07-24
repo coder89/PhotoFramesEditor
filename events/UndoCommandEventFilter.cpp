@@ -3,6 +3,7 @@
 #include "global.h"
 #include "photoframeseditor.h"
 #include <QtGlobal>
+#include <QDebug>
 
 using namespace KIPIPhotoFramesEditor;
 

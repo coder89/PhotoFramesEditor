@@ -22,8 +22,7 @@ namespace KIPIPhotoFramesEditor
                 EyeIcon = 1, PadLockIcon, NameString = COLUMN_COUNT-1, Thumbnail
             };
 
-            LayersModelItem(AbstractPhoto * item, LayersModelItem * parent = 0);
-            LayersModelItem();
+            LayersModelItem(AbstractPhoto * item = 0, LayersModelItem * parent = 0);
             virtual ~LayersModelItem();
             void removeChild(LayersModelItem * child);
             LayersModelItem * parent() const;

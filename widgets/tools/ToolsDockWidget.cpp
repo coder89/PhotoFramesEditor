@@ -60,7 +60,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
 
     // Selection tool
 
-    m_tool_pointer = new KPushButton(KGuiItem("",":tool_pointer.png",
+    m_tool_pointer = new KPushButton(KGuiItem("",":pointer.png",
                                               i18n("Allows to select and move images on canvas"),
                                               i18n("Tool which allows to select and move images on canvas. Any other operations are disabled.")), widget);
     m_tool_pointer->setIconSize(QSize(24,24));
@@ -71,7 +71,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     connect(m_tool_pointer,SIGNAL(toggled(bool)),this,SLOT(emitPointerToolSelected(bool)));
 
     // View tool
-    m_tool_hand = new KPushButton(KGuiItem("",":tool_hand.png",
+    m_tool_hand = new KPushButton(KGuiItem("",":hand.png",
                                            i18n("Viewing tool"),
                                            i18n("This tool allows to view whole canvas in read-only mode. Only scrolling and zooming are available.")), widget);
     m_tool_hand->setIconSize(QSize(24,24));
@@ -164,7 +164,7 @@ void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
     }
 }
 
-void ToolsDockWidget::setTextWidgetVisible(bool isVisible)
+void ToolsDockWidget::setTextWidgetVisible(bool /*isVisible*/)
 {
 //    emit effectsToolSelectionChanged(isVisible);
 //    if (isVisible)

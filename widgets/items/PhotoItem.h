@@ -12,7 +12,7 @@ namespace KIPIPhotoFramesEditor
             PhotoItem(const QImage & photo = QImage(), QGraphicsScene * scene = 0);
 
             /// Convert photo item to SVG format
-            virtual QDomNode toSvg(QDomDocument & document);
+            virtual QDomElement toSvg(QDomDocument & document, bool embedAll) const;
 
             /// Create Photo item from SVG format code
             static PhotoItem * fromSvg(QDomElement & element);
@@ -54,6 +54,9 @@ namespace KIPIPhotoFramesEditor
             {
                 return m_complete_path.boundingRect();
             }
+
+            /// Returns item's property browser
+            virtual QtAbstractPropertyBrowser * propertyBrowser();
 
         protected:
 

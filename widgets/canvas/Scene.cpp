@@ -74,7 +74,11 @@ class KIPIPhotoFramesEditor::ScenePrivate
     {
         m_selected_items_all_movable = true;
         foreach (AbstractPhoto * photo, m_selected_items)
+        {
             photo->setSelected(false);
+            if (photo->hasFocus())
+                photo->clearFocus();
+        }
         m_selected_items.clear();
         m_selected_items_path = QPainterPath();
         setSelectionInitialPosition();
@@ -236,11 +240,18 @@ void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 //#####################################################################################################
 void Scene::keyPressEvent(QKeyEvent * event)
 {
+    if (d->m_selected_items.count() == 1 && (d->m_selected_items.at(0)->hasFocus()))
+    {
+        this->setFocusItem(d->m_selected_items.at(0));
+        QGraphicsScene::keyPressEvent(event);
+        event->setAccepted(true);
+        return;
+    }
     switch(event->key())
     {
         case Qt::Key_Delete:
             this->removeItems(selectedItems());
-            event->accept();
+            event->setAccepted(true);
             break;
         case Qt::Key_Escape:
             disableitemsDrawing();
@@ -263,20 +274,38 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
         if (selectionMode & SingleSelection)
             event->setModifiers(event->modifiers() & !Qt::ControlModifier);
         // Check if selected
-        if (d->m_selected_items_path.contains(event->scenePos()))
-        {
-            qDebug() << "contains:" << d->m_selected_items_path.contains(event->scenePos()) << event->scenePos();
-            event->setAccepted(true);
-            return;
-        }
+//        if (d->m_selected_items_path.contains(event->scenePos()))
+//        {
+//            qDebug() << "contains:" << d->m_selected_items_path.contains(event->scenePos()) << event->scenePos();
+//            d->
+//            event->setAccepted(true);
+//            return;
+//        }
         // If not selected, then save item for further selection
-        else
+        //else
         {
             d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
-            if (!(event->modifiers() & Qt::ControlModifier))
+            if (!(event->modifiers() & Qt::ControlModifier) && !d->m_selected_items_path.contains(event->scenePos()))
                 d->deselectSelected();
-            if (d->m_pressed_item && !(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
-                d->m_pressed_item = 0;
+            if (d->m_pressed_item)
+            {
+                // If not selectable -> deselect item
+                if (!(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
+                    d->m_pressed_item = 0;
+                else
+                {
+                    // If is selectable and focusable try to set focus and post mousepressevent to it
+                    d->m_pressed_item->setFocus(Qt::MouseFocusReason);
+                    if (d->m_pressed_item->hasFocus())
+                    {
+                        event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
+                        event->setButtonDownPos(event->button(),
+                                                d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
+                        event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
+                        d->m_pressed_item->mousePressEvent(event);
+                    }
+                }
+            }
             event->setAccepted(d->m_pressed_item);
         }
     }
@@ -400,6 +429,7 @@ void Scene::drawForeground(QPainter * painter, const QRectF & rect)
     // Draw selected items shape
     if (isSelectionVisible())
     {
+        painter->setCompositionMode(QPainter::CompositionMode_Exclusion);
         painter->save();
         painter->drawPath(d->m_selected_items_path);
         painter->restore();
@@ -550,20 +580,22 @@ QDomNode Scene::toSvg(QDomDocument & document)
     {
         AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(item);
         if (photo)
-            result.appendChild(photo->toSvg(document));
+            result.appendChild(photo->toSvg(document, true)); /// TODO : true (should be able to set to false!)
     }
     return result;
 }
 
 //#####################################################################################################
-void Scene::fromSvg(QDomElement & svgImage)
+Scene * Scene::fromSvg(QDomElement & svgImage)
 {
     if (svgImage.tagName() != "svg")
-        return;
-    // Clear scene
-    delete d;
-    this->clear();
-    d = new ScenePrivate(this);
+        return 0;
+
+    // Scene dimension
+    qreal width = svgImage.attribute("width").toDouble();
+    qreal height = svgImage.attribute("width").toDouble();
+    QRectF dimension(0,0,width,height);
+    Scene * result = new Scene(dimension);
 
     // Create elements
     int errorsCount = 0;
@@ -580,9 +612,14 @@ void Scene::fromSvg(QDomElement & svgImage)
             item = PhotoItem::fromSvg(element);
         else if (itemClass == "TextItem")
             item = TextItem::fromSvg(element);
+        else
+            item = 0;
 
         if (item)
-            this->addItem(item);
+        {
+            result->addItem(item);
+            item->setZValue(i+1);
+        }
         else
             ++errorsCount;
     }
@@ -593,6 +630,8 @@ void Scene::fromSvg(QDomElement & svgImage)
         KMessageBox::error(0,
                            i18n("I was unable to read %d elements!\nInvalid or corrupted image file!", errorsCount));
     }
+
+    return result;
 }
 
 //#####################################################################################################

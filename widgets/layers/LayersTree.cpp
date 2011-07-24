@@ -36,7 +36,13 @@ LayersTree::LayersTree(QWidget * parent) :
 
 void LayersTree::setModel(QAbstractItemModel * model)
 {
+    qDebug() << this->model() << this->model()->disconnect(this);
     QTreeView::setModel(model);
+
+    qDebug() << model << this->model();
+
+    if (!model)
+        return;
 
     QAbstractItemDelegate * delegate1 = this->itemDelegateForColumn(1);
     QAbstractItemDelegate * delegate2 = this->itemDelegateForColumn(2);
@@ -54,6 +60,9 @@ void LayersTree::setModel(QAbstractItemModel * model)
 
     if (this->header()->visualIndex(0) != 2)
         this->header()->moveSection(0,2);
+
+    for (int i = model->columnCount()-1; i >= 0; --i)
+        this->resizeColumnToContents(i);
 }
 
 void LayersTree::setSingleSelection()

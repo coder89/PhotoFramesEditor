@@ -8,6 +8,7 @@
 #include "UndoCommandEventFilter.h"
 #include "PhotoEffectsLoader.h"
 #include "AbstractPhotoEffectFactory.h"
+#include "ImageFileDialog.h"
 
 // Qt
 #include <QVBoxLayout>
@@ -51,6 +52,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
     setObjectName("Photo Frames Editor");
 
     m_instance = this;
+    d->settings = PFESettings::instance(this);
 
     loadEffects();
     setupActions();
@@ -372,59 +374,29 @@ void PhotoFramesEditor::exportFile()
 {
     if (!m_canvas)
         return;
-    KFileDialog fileDialog(KUrl(), "*.bpm|(*.bmp) Windows Bitmap\n"
-                                   "*.jpg|(*.jpg) JPG\n"
-                                   "*.jpeg|(*.jpeg) JPEG\n"
-                                   "*.png|(*.png) Portable Network Graphics\n"
-                                   "*.ppm|(*.ppm) Portable Pixmap\n"
-                                   "*.tif|(*.tif) Tagged Image File Format\n"
-                                   "*.xbm|(*.xbm) X11 Bitmap\n"
-                                   "*.xpm|(*.xpm) X11 Pixmap", this);
-    fileDialog.setOperationMode(KFileDialog::Saving);
-    fileDialog.setMode(KFile::File);
-    fileDialog.setKeepLocation(true);
-    int result = fileDialog.exec();
+    ImageFileDialog imageDialog(KUrl(), this);
+    imageDialog.setOperationMode(KFileDialog::Saving);
+    int result = imageDialog.exec();
     if (result == KFileDialog::Accepted)
     {
-        QString filter = fileDialog.currentFilter();
-        const char * format;
-        if (filter == "*.bpm")
-            format = "BMP";
-        else if (filter == "*.jpg")
-            format = "JPG";
-        else if (filter == "*.jpeg")
-            format = "JPEG";
-        else if (filter == "*.png")
-            format = "PNG";
-        else if (filter == "*.ppm")
-            format = "PPM";
-        else if (filter == "*.tif")
-            format = "TIFF";
-        else if (filter == "*.xbm")
-            format = "XBM";
-        else if (filter == "*.xpm")
-            format = "XPM";
-        else
+        const char * format = imageDialog.format();
+        if (format)
         {
-            KMessageBox::error(this,
-                               i18n("Currently this file type (%s) is unsupported.\nPleas notify the author and ask for it in the next versions of the application.", filter.toAscii().constData()),
-                               i18n("The image can't be saved!"));
-            return;
-        }
-        QPixmap image(m_canvas->sceneRect().size().toSize());
-        m_canvas->renderCanvas(&image);
-        QImageWriter writer(fileDialog.selectedFile());
-        writer.setFormat(format);
-        if (!writer.canWrite())
-        {
-            KMessageBox::error(this,
-                               i18n("Image can't be saved in selected file."));
-        }
-        if (!writer.write(image.toImage()))
-        {
-            KMessageBox::detailedError(this,
-                               i18n("Unexpected error while saving an image!"),
-                               writer.errorString());
+            QPixmap image(m_canvas->sceneRect().size().toSize());
+            m_canvas->renderCanvas(&image);
+            QImageWriter writer(imageDialog.selectedFile());
+            writer.setFormat(format);
+            if (!writer.canWrite())
+            {
+                KMessageBox::error(this,
+                                   i18n("Image can't be saved in selected file."));
+            }
+            if (!writer.write(image.toImage()))
+            {
+                KMessageBox::detailedError(this,
+                                   i18n("Unexpected error while saving an image!"),
+                                   writer.errorString());
+            }
         }
     }
 }

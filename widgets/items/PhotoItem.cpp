@@ -1,7 +1,9 @@
 #include "PhotoItem.h"
 #include "PhotoEffectsGroup.h"
 #include "PhotoEffectsLoader.h"
+#include "ImageFileDialog.h"
 #include "global.h"
+#include "PFESettings.h"
 
 #include <QBuffer>
 #include <QStyleOptionGraphicsItem>
@@ -9,18 +11,69 @@
 #include <QImageReader>
 
 #include <kapplication.h>
+#include <kmessagebox.h>
+#include <klocalizedstring.h>
+#include <kstandarddirs.h>
 
 using namespace KIPIPhotoFramesEditor;
 
+class KIPIPhotoFramesEditor::PhotoItemPrivate
+{
+    PhotoItemPrivate(PhotoItem * item) :
+        m_item(item)
+    {}
+
+    static QString locateFile(const QString & filePath);
+
+    PhotoItem * m_item;
+
+    friend class PhotoItem;
+};
+
+QString PhotoItemPrivate::locateFile(const QString & filePath)
+{
+    QString resultPath = filePath;
+    if (!resultPath.isEmpty())
+    {
+        // Try to open existing file
+        if (!QFile::exists(resultPath))
+        {
+            int result = KMessageBox::questionYesNo(0,
+                                                    i18n("Can't find image file in this location:\n %s\n\n"
+                                                         "Would you like to set new location of this file?\n"
+                                                         "If not this image will be removed from the composition.").append(resultPath.toAscii()),
+                                                    i18n("File reading error"));
+            if (result != KMessageBox::Yes)
+                resultPath = QString();
+            else
+            {
+                KUrl fileUrl(filePath);
+                ImageFileDialog dialog(fileUrl);
+                result = dialog.exec();
+                resultPath = dialog.selectedFile();
+                if (result != ImageFileDialog::Accepted || !QFile::exists(resultPath))
+                    resultPath = QString();
+            }
+        }
+    }
+    return resultPath;
+}
+
 PhotoItem::PhotoItem(const QImage & photo, QGraphicsScene * scene) :
-    AbstractPhoto(scene)
+    AbstractPhoto(scene),
+    d(new PhotoItemPrivate(this))
 {
     this->setupItem(QPixmap::fromImage(photo));
 }
 
-QDomElement PhotoItem::toSvg(QDomDocument & document, bool embedAll) const
+PhotoItem::~PhotoItem()
 {
-    QDomElement result = AbstractPhoto::toSvg(document, embedAll);
+    delete d;
+}
+
+QDomElement PhotoItem::toSvg(QDomDocument & document) const
+{
+    QDomElement result = AbstractPhoto::toSvg(document);
     result.setAttribute("class", "PhotoItem");
 
     // 'defs' tag
@@ -43,7 +96,8 @@ QDomElement PhotoItem::toSvg(QDomDocument & document, bool embedAll) const
     }
 
     QDomElement image = document.createElement("image");
-    if (embedAll && !m_pixmap_original.isNull())
+    // Saving image data
+    if (PFESettings::embedImagesData() && !m_pixmap_original.isNull())
     {
         QByteArray byteArray;
         QBuffer buffer(&byteArray);
@@ -51,10 +105,12 @@ QDomElement PhotoItem::toSvg(QDomDocument & document, bool embedAll) const
         QString data(byteArray);
         image.setAttribute("data", data);
     }
-    else
-    {
-        /// TODO : saving digiKam file "ID??" or file path
-    }
+    /// TODO : saving digiKam file "ID??"
+    //if ()
+    //{}
+    // Saving image path
+    if (!m_file_path.isEmpty())
+        image.setAttribute("xlink:href", m_file_path);
 
     return result;
 }
@@ -62,7 +118,7 @@ QDomElement PhotoItem::toSvg(QDomDocument & document, bool embedAll) const
 PhotoItem * PhotoItem::fromSvg(QDomElement & element)
 {
     PhotoItem * item = new PhotoItem();
-    if (item->AbstractPhoto::fromSvg(element));
+    if (item->AbstractPhoto::fromSvg(element))
     {
         // Gets data field
         QDomElement defs = element.firstChildElement("defs");
@@ -84,37 +140,37 @@ PhotoItem * PhotoItem::fromSvg(QDomElement & element)
 
         // m_pixmap_original
         QDomElement image = data.firstChildElement("image");
-        QString imageData = image.attribute("data");
+        QString imageAttribute;
         QImage img;
-        // Fullsize image is embedded in SVG file!
-        if (!imageData.isEmpty())
+        // Try to find file from path attribute
+        if ( !(imageAttribute = PhotoItemPrivate::locateFile( image.attribute("xlink:href") )).isEmpty() )
         {
-            QBuffer buf(&imageData.toAscii());
+            QImageReader reader(imageAttribute);
+            if (!reader.canRead())
+                goto _delete;
+            reader.setAutoDetectImageFormat(true);
+            img = QImage(reader.size(), QImage::Format_ARGB32_Premultiplied);
+            if (!reader.read(&img))
+                goto _delete;
+        }
+        // Try to load from digikam database
+        else if (!(imageAttribute = image.attribute("digikam")).isEmpty())
+        {}
+        // Fullsize image is embedded in SVG file!
+        else if (!(imageAttribute = image.attribute("data")).isEmpty())
+        {
+            QByteArray array = imageAttribute.toAscii();
+            QBuffer buf(&array);
             QImageReader reader(&buf);
             reader.setAutoDetectImageFormat(true);
             if (!reader.canRead())
                 goto _delete;
-            img = QImage(reader.size(), QImage::Format_ARGB32);
+            img = QImage(reader.size(), QImage::Format_ARGB32_Premultiplied);
             if (!reader.read(&img))
                 goto _delete;
         }
-        // Try to find file from path attribute or digiKam's database
         else
-        {
-            /// TODO
-//            QString fileName = image.attribute("path");
-//            if (fileName.isEmpty())
-//                goto _delete;
-//            if (!QFile::exists(fileName))
-//            {}
-//            QImageReader reader(fileName);
-//            if (!reader.canRead())
-//                goto _delete;
-//            reader.setAutoDetectImageFormat(true);
-//            QImage image(reader.size());
-//            if (!reader.read(&image))
-//                goto _delete;
-        }
+            goto _delete;
         item->setPixmap(QPixmap::fromImage(img));
 
         return item;
@@ -150,12 +206,14 @@ void PhotoItem::updateIcon()
     this->setIcon(QIcon(m_pixmap.scaled(100,100,Qt::KeepAspectRatioByExpanding)));
 }
 
-void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
 {
     if (!m_pixmap.isNull())
     {
         QRect myRect = this->boundingRect().toRect();
-        painter->drawPixmap(m_pixmap.rect(), m_pixmap, option->rect.intersected(myRect));
+        painter->drawPixmap(m_pixmap.rect(),
+                            m_pixmap,
+                            option->rect.intersected(myRect));
     }
 }
 
@@ -163,7 +221,9 @@ void PhotoItem::refresh()
 {
     if (m_pixmap_original.isNull())
         return;
-    this->m_pixmap = effectsGroup()->apply(m_pixmap_original.scaled(this->boundingRect().size().toSize(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+    this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->boundingRect().size().toSize(),
+                                                                     Qt::IgnoreAspectRatio,
+                                                                     Qt::SmoothTransformation));
     this->updateIcon();
     this->recalcShape();
     this->update(this->boundingRect());

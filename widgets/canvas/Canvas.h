@@ -54,6 +54,10 @@ namespace KIPIPhotoFramesEditor
             QDomDocument toSvg() const;
             static Canvas * fromSvg(QDomDocument & document);
 
+            void scale(qreal factor, const QPoint & center = QPoint());
+            void scale(const QRect & rect);
+
+            /// Hold URL to the file connected with this canvas.
             Q_PROPERTY(KUrl m_file READ file WRITE setFile)
             KUrl file() const;
             void setFile(const KUrl & file);

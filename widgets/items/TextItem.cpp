@@ -89,7 +89,7 @@ class KIPIPhotoFramesEditor::TextItemPrivate
 
     void removeTextBefore()
     {
-        if (m_cursor_character > 0 && m_string_list.at(m_cursor_line).length() > m_cursor_character)
+        if (m_cursor_character > 0 && m_string_list.at(m_cursor_line).length() >= m_cursor_character)
             m_string_list[m_cursor_line].remove(--m_cursor_character, 1);
         else if (m_cursor_line > 0)
         {
@@ -257,7 +257,9 @@ QString TextItem::text() const
 
 void TextItem::setText(const QString & text)
 {
-    d->m_string_list = text.split('\n');
+    QString temp = text;
+    temp.remove('\t');
+    d->m_string_list = temp.split('\n');
     this->refresh();
 }
 
@@ -297,7 +299,13 @@ void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option
         painter->setCompositionMode(QPainter::CompositionMode_ColorBurn);
         painter->setPen(Qt::black);
         int y = m_metrics.lineSpacing() * d->m_cursor_line;
-        int x = m_metrics.width(d->m_string_list.at(d->m_cursor_line), d->m_cursor_character) - m_metrics.leftBearing(d->m_string_list.at(d->m_cursor_line).at(0));
+        int x = 0;
+        if ( !d->m_string_list.at(d->m_cursor_line).isEmpty() )
+        {
+            x = m_metrics.width(d->m_string_list.at(d->m_cursor_line),
+                                d->m_cursor_character)
+                - m_metrics.leftBearing(d->m_string_list.at(d->m_cursor_line).at(0));
+        }
         painter->drawLine(x, y, x, y+m_metrics.lineSpacing());
         painter->restore();
     }
@@ -335,9 +343,9 @@ void TextItem::refresh()
     this->prepareGeometryChange();
 }
 
-QDomElement TextItem::toSvg(QDomDocument & document, bool embedAll) const
+QDomElement TextItem::toSvg(QDomDocument & document) const
 {
-    QDomElement result = AbstractPhoto::toSvg(document, embedAll);
+    QDomElement result = AbstractPhoto::toSvg(document);
     result.setAttribute("class", "TextItem");
 
     // 'defs' tag

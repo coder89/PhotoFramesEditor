@@ -39,7 +39,7 @@ namespace KIPIPhotoFramesEditor
               * \note In your implementation you have to call this method to save presentation data in correct format,
               * independendly to your class.
               */
-            virtual QDomElement toSvg(QDomDocument & document, bool embedAll) const;
+            virtual QDomElement toSvg(QDomDocument & document) const;
 
             /// Reads item data from SVG structure
             bool fromSvg(QDomElement & element);

@@ -58,14 +58,6 @@ namespace KIPIPhotoFramesEditor
             bool isSelectionVisible();
             QDomNode toSvg(QDomDocument & document);
             static Scene * fromSvg(QDomElement & svgImage);
-            const QGraphicsScene * toGraphicsScene() const
-            {
-                return this;
-            }
-            QGraphicsScene * toGraphicsScene()
-            {
-                return this;
-            }
 
         Q_SIGNALS:
 
@@ -98,6 +90,14 @@ namespace KIPIPhotoFramesEditor
             virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
+            const QGraphicsScene * toGraphicsScene() const
+            {
+                return this;
+            }
+            QGraphicsScene * toGraphicsScene()
+            {
+                return this;
+            }
 
         private Q_SLOTS:
 

@@ -273,41 +273,31 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
         // If single selection mode, clear CTRL modifier
         if (selectionMode & SingleSelection)
             event->setModifiers(event->modifiers() & !Qt::ControlModifier);
-        // Check if selected
-//        if (d->m_selected_items_path.contains(event->scenePos()))
-//        {
-//            qDebug() << "contains:" << d->m_selected_items_path.contains(event->scenePos()) << event->scenePos();
-//            d->
-//            event->setAccepted(true);
-//            return;
-//        }
-        // If not selected, then save item for further selection
-        //else
+        d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
+        this->calcSelectionBoundingRect();
+        if (!(event->modifiers() & Qt::ControlModifier) &&
+             (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item)))
+            d->deselectSelected();
+        if (d->m_pressed_item)
         {
-            d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
-            if (!(event->modifiers() & Qt::ControlModifier) && !d->m_selected_items_path.contains(event->scenePos()))
-                d->deselectSelected();
-            if (d->m_pressed_item)
+            // If not selectable -> deselect item
+            if (!(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
+                d->m_pressed_item = 0;
+            else
             {
-                // If not selectable -> deselect item
-                if (!(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
-                    d->m_pressed_item = 0;
-                else
-                {
-                    // If is selectable and focusable try to set focus and post mousepressevent to it
+                // If is selectable and focusable try to set focus and post mousepressevent to it
+                if (d->m_pressed_item->flags() & QGraphicsItem::ItemIsFocusable)
                     d->m_pressed_item->setFocus(Qt::MouseFocusReason);
-                    if (d->m_pressed_item->hasFocus())
-                    {
-                        event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
-                        event->setButtonDownPos(event->button(),
-                                                d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
-                        event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
-                        d->m_pressed_item->mousePressEvent(event);
-                    }
-                }
+
+                // Send mousepressevent to the pressed item
+                event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
+                event->setButtonDownPos(event->button(),
+                                        d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
+                event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
+                d->m_pressed_item->mousePressEvent(event);
             }
-            event->setAccepted(d->m_pressed_item);
         }
+        event->setAccepted(d->m_pressed_item);
     }
     else
         QGraphicsScene::mousePressEvent(event);
@@ -363,7 +353,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
         QGraphicsScene::mouseReleaseEvent(event);
 }
 
-// #####################################################################################################
+//#####################################################################################################
 void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
@@ -429,8 +419,10 @@ void Scene::drawForeground(QPainter * painter, const QRectF & rect)
     // Draw selected items shape
     if (isSelectionVisible())
     {
-        painter->setCompositionMode(QPainter::CompositionMode_Exclusion);
+        this->calcSelectionBoundingRect();
         painter->save();
+        painter->setPen(Qt::red);
+        painter->setCompositionMode(QPainter::RasterOp_NotSourceAndNotDestination);
         painter->drawPath(d->m_selected_items_path);
         painter->restore();
     }
@@ -580,7 +572,7 @@ QDomNode Scene::toSvg(QDomDocument & document)
     {
         AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(item);
         if (photo)
-            result.appendChild(photo->toSvg(document, true)); /// TODO : true (should be able to set to false!)
+            result.appendChild(photo->toSvg(document)); /// TODO : true (should be able to set to false!)
     }
     return result;
 }
@@ -628,7 +620,9 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
     if (errorsCount)
     {
         KMessageBox::error(0,
-                           i18n("I was unable to read %d elements!\nInvalid or corrupted image file!", errorsCount));
+                           i18n("Unable to read %1 element%2!",
+                                QString::number(errorsCount).toAscii().constData(),
+                                (errorsCount > 1 ? "s" : "")));
     }
 
     return result;

@@ -28,6 +28,7 @@ Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
 Canvas::Canvas(Scene * scene, QWidget *parent) :
     QGraphicsView(parent)
 {
+    Q_ASSERT(scene != 0);
     m_scene = scene;
     m_scene->setParent(this);
     this->setScene(m_scene);
@@ -79,13 +80,13 @@ void Canvas::setupGUI()
     QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
     img.setText("File","routing.jpg");
     this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
+//    this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
     this->addText(QString::fromAscii("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
     this->addText(QString::fromAscii("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
@@ -514,21 +515,13 @@ void Canvas::newUndoCommand(QUndoCommand * command)
  #############################################################################################################################*/
 void Canvas::wheelEvent(QWheelEvent * event)
 {
-    // Scaling limitation
-    if ( !scene() || (m_scale_factor > MAX_SCALE_LIMIT && event->delta() > 0) || (m_scale_factor < MIN_SCALE_LIMIT && event->delta() < 0) )
-        return;
-
     double scaleFactor;
     if(event->delta() > 0)
         scaleFactor = (m_scale_factor + 0.1) / m_scale_factor;
     else
         scaleFactor = (m_scale_factor - 0.1) / m_scale_factor;
 
-    scale(scaleFactor, scaleFactor);
-
-    centerOn( mapToScene(event->pos()) );
-
-    m_scale_factor *= scaleFactor;
+    scale(scaleFactor, event->pos());
 }
 
 /** ###########################################################################################################################
@@ -580,6 +573,44 @@ Canvas * Canvas::fromSvg(QDomDocument & document)
         }
     }
     return result;
+}
+
+/** ###########################################################################################################################
+ * Scales canvas view by the selected factor
+ #############################################################################################################################*/
+void Canvas::scale(qreal factor, const QPoint & center)
+{
+    // Scaling limitation
+    if (factor <= 0 || !scene() || (m_scale_factor > MAX_SCALE_LIMIT && factor > 1) || (m_scale_factor < MIN_SCALE_LIMIT && factor < 1) )
+        return;
+
+    QGraphicsView::scale(factor, factor);
+
+    if (center.isNull())
+        centerOn( m_scene->sceneRect().center() );
+    else
+        centerOn( mapToScene(center) );
+
+    m_scale_factor *= factor;
+}
+
+/** ###########################################################################################################################
+ * Scales canvas view to fit in rect
+ #############################################################################################################################*/
+void Canvas::scale(const QRect & rect)
+{
+    QSize viewSize = rect.size();
+    QSizeF sceneSize = m_scene->sceneRect().size();
+    qreal xFactor = viewSize.width() / sceneSize.width();
+    qreal yFactor = viewSize.height() / sceneSize.height();
+    qreal newFactor;
+    if (xFactor > 1 && yFactor > 1)
+        newFactor = xFactor > yFactor ? xFactor : yFactor;
+    else
+        newFactor = xFactor < yFactor ? xFactor : yFactor;
+
+    this->scale(newFactor);
+    qDebug() << "scaled" << newFactor;
 }
 
 /** ###########################################################################################################################

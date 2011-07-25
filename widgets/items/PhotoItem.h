@@ -5,14 +5,17 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class PhotoItemPrivate;
+
     class PhotoItem : public AbstractPhoto
     {
         public:
 
             PhotoItem(const QImage & photo = QImage(), QGraphicsScene * scene = 0);
+            virtual ~PhotoItem();
 
             /// Convert photo item to SVG format
-            virtual QDomElement toSvg(QDomDocument & document, bool embedAll) const;
+            virtual QDomElement toSvg(QDomDocument & document) const;
 
             /// Create Photo item from SVG format code
             static PhotoItem * fromSvg(QDomElement & element);
@@ -77,8 +80,11 @@ namespace KIPIPhotoFramesEditor
             // Recalculates item shape
             void recalcShape();
 
+            PhotoItemPrivate * d;
+
             Q_PROPERTY(QPixmap m_pixmap_original READ pixmap WRITE setPixmap)
             QPixmap m_pixmap_original;
+            QString m_file_path;
 
             QPixmap m_pixmap;
 

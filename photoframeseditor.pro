@@ -47,7 +47,9 @@ SOURCES += main.cpp\
     events/UndoCommandEventFilter.cpp \
     effects/PhotoEffectsLoader.cpp \
     utils/global.cpp \
-    widgets/items/TextItem.cpp
+    widgets/items/TextItem.cpp \
+    widgets/dialogs/ImageFileDialog.cpp \
+    utils/PFESettings.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -88,7 +90,9 @@ HEADERS  += plugin/photoframeseditor.h \
     effects/AbstractPhotoEffectFactory.h \
     effects/AbstractPhotoEffectInterface.h \
     effects/PhotoEffectsLoader.h \
-    widgets/items/TextItem.h
+    widgets/items/TextItem.h \
+    widgets/dialogs/ImageFileDialog.h \
+    utils/PFESettings.h
 
 LIBS += \
     -L/usr \
@@ -99,6 +103,7 @@ INCLUDEPATH += \
     plugin \
     widgets \
     widgets/canvas \
+    widgets/dialogs \
     widgets/items \
     widgets/layers \
     widgets/menus \

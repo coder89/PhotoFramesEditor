@@ -69,7 +69,7 @@ void AbstractPhoto::setupItem()
     this->setBorderCornersStyle(Qt::RoundJoin);
 }
 
-QDomElement AbstractPhoto::toSvg(QDomDocument & document, bool /*embedAll*/) const
+QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
 {
     QString translate = "translate("+
                         QString::number(this->pos().x())+
@@ -80,13 +80,13 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document, bool /*embedAll*/) con
     QString matrix = "matrix("+
                      QString::number(transform.m11())+
                      ","+
-                     QString::number(transform.m12())+
-                     ","+
-                     QString::number(transform.m13())+
-                     ","+
                      QString::number(transform.m21())+
                      ","+
+                     QString::number(transform.m12())+
+                     ","+
                      QString::number(transform.m22())+
+                     ","+
+                     QString::number(transform.m13())+
                      ","+
                      QString::number(transform.m23())+
                      ")";
@@ -120,7 +120,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document, bool /*embedAll*/) con
     // 'defs'->'use'
     QDomElement use = document.createElement("use");
     use.setAttribute("xlink:href","#"+visibleData.attribute("id"));
-    use.setAttribute("style","clip-path: url(#clipPath_" + this->id() + ");");
+    use.setAttribute("style","clip-path: url(#" + clipPath.attribute("id") + ");");
     result.appendChild(use);
 
     // 'g'
@@ -129,7 +129,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document, bool /*embedAll*/) con
 
     // 'g'->'use'
     QDomElement use3 = document.createElement("use");
-    use3.setAttribute("xlink:href","#clipPath_" + this->id());
+    use3.setAttribute("xlink:href","#" + clipPath.attribute("id"));
     g2.appendChild(use3);
 
      /*
@@ -176,6 +176,7 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
         {
             QStringList list = rot.capturedTexts();
             QString matrix = list.at(0);
+            matrix.remove(matrix.length()-1,1).remove(0,7);
             list = matrix.split(',');
             QString a = list.at(0);
             QString b = list.at(1);

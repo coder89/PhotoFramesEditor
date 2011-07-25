@@ -46,7 +46,7 @@ namespace KIPIPhotoFramesEditor
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
             virtual void refresh();
 
-            virtual QDomElement toSvg(QDomDocument & document, bool embedAll) const;
+            virtual QDomElement toSvg(QDomDocument & document) const;
             virtual QDomElement svgVisibleArea(QDomDocument &document) const;
             static TextItem * fromSvg(QDomElement & element);
 

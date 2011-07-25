@@ -14,6 +14,7 @@
 #include <QDockWidget>
 
 // Local
+#include "PFESettings.h"
 #include "LayersTree.h"
 #include "LayersTreeTitleWidget.h"
 #include "ToolsDockWidget.h"
@@ -29,6 +30,7 @@ namespace KIPIPhotoFramesEditor
     {
         public:
             PhotoFramesEditorPriv() :
+                settings(0),
                 centralWidget(0),
                 openNewFileAction(0),
                 openFileAction(0),
@@ -92,6 +94,10 @@ namespace KIPIPhotoFramesEditor
                 //Q_DELETE(toolColorize)    // DELETED BY main window
             }
 
+            // Settings object
+            PFESettings * settings;
+
+            // Central widget of the window
             QWidget *   centralWidget;
 
             // File menu

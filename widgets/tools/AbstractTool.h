@@ -31,12 +31,12 @@ namespace KIPIPhotoFramesEditor
           /** This slot is called before current item change
             * It gives a chanse to save changes of currently edited item.
             */
-            virtual void currentItemAboutToBeChanged();
+            virtual void currentItemAboutToBeChanged() = 0;
 
           /** This slot is called after current item changed.
             * This is a notification to open editors/tools and configure it for new item.
             */
-            virtual void currentItemChanged();
+            virtual void currentItemChanged() = 0;
     };
 }
 

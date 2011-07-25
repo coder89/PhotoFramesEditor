@@ -248,36 +248,32 @@ void AbstractPhoto::dropEvent(QGraphicsSceneDragDropEvent * event)
 
 void AbstractPhoto::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsItem::mouseMoveEvent(event);
-    if (QGraphicsItem::flags() & ItemIsMovable)
-    {
-        if (event->modifiers() & Qt::ShiftModifier)
-        {
-            QPointF p;
-            event->accept();
-            p = event->scenePos() - event->buttonDownPos(Qt::LeftButton);
-            p.setX(x_grid*round(p.rx()/x_grid));
-            p.setY(y_grid*round(p.ry()/y_grid));
-            this->setPos(p.rx(),p.ry());
-        }
-        else
-            QGraphicsItem::mouseMoveEvent(event);
-//            p = this->pos() + event->pos() - event->lastPos();
-    }
+//    QGraphicsItem::mouseMoveEvent(event);
+//    if (QGraphicsItem::flags() & ItemIsMovable)
+//    {
+//        if (event->modifiers() & Qt::ShiftModifier)
+//        {
+//            QPointF p;
+//            event->accept();
+//            p = event->scenePos() - event->buttonDownPos(Qt::LeftButton);
+//            p.setX(x_grid*round(p.rx()/x_grid));
+//            p.setY(y_grid*round(p.ry()/y_grid));
+//            this->setPos(p.rx(),p.ry());
+//        }
+//        else
+//            QGraphicsItem::mouseMoveEvent(event);
+////            p = this->pos() + event->pos() - event->lastPos();
+//    }
 }
 
 void AbstractPhoto::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsItem::mousePressEvent(event);
-    if (this->isSelected())
-        this->setCursor(QCursor(Qt::ClosedHandCursor));
+   // this->setCursor(QCursor(Qt::ClosedHandCursor));
 }
 
 void AbstractPhoto::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    QGraphicsItem::mouseReleaseEvent(event);
-    if (this->isSelected())
-        this->setCursor(QCursor(Qt::OpenHandCursor));
+   // this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 void AbstractPhoto::hoverEnterEvent(QGraphicsSceneHoverEvent * event)

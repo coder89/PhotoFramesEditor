@@ -88,8 +88,8 @@ void Canvas::setupGUI()
 //    this->addImage(img);                                /// TODO : Remove after finish
 //    this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
-    this->addText(QString::fromAscii("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
-    this->addText(QString::fromAscii("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
+    this->addText(QString::fromUtf8("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
+    this->addText(QString::fromUtf8("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
 }
 
 /** ###########################################################################################################################
@@ -138,23 +138,6 @@ void Canvas::setSelectionMode(SelectionMode mode)
 }
 
 /** ###########################################################################################################################
- * Change interaction mode
- #############################################################################################################################*/
-void Canvas::setInteractionMode(InteractionMode mode)
-{
-    if (!mode)
-        m_interaction_mode = mode;
-    else if (mode & BorderToolMode)
-        m_interaction_mode = mode;
-    else if (mode & ColorizeToolMode)
-        m_interaction_mode = mode;
-    else
-        return;
-    if (mode & SingleElementEditingMode)
-        setSelectionMode(SingleSelcting);
-}
-
-/** ###########################################################################################################################
  * Add new image from QImage object
  #############################################################################################################################*/
 void Canvas::addImage(const QImage & image)
@@ -178,8 +161,8 @@ void Canvas::addImage(const QImage & image)
 void Canvas::addText(const QString & text)
 {
     // Create & setup item
-    TextItem * it = new TextItem(QString::fromUtf8(text.toAscii()), m_scene);
-    it->setName(it->text().append(QString::number(m_model->rowCount())));
+    TextItem * it = new TextItem(text, m_scene);
+    it->setName(QString(it->text().toUtf8()).append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount()+1);
 
     // Add item to scene & model
@@ -432,9 +415,6 @@ void Canvas::selectionChanged()
             AbstractPhoto * item = selectedItems.at(0);
             emit hasSelectionChanged(true);
             emit selectedItem(item);
-            // Specific signals emitting
-            if (m_interaction_mode & BorderToolMode)
-                emit setInitialValues(item->borderWidth(), item->borderCornersStyle(), item->borderColor());
         }
         else
         {
@@ -480,12 +460,48 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
 void Canvas::borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color)
 {
     QList<AbstractPhoto*> selectedItem = m_scene->selectedItems();
-    if (m_selection_mode & SingleSelcting && m_interaction_mode & BorderToolMode && selectedItem.count() == 1)
+    if (m_selection_mode & SingleSelcting && selectedItem.count() == 1)
     {
         AbstractPhoto * item = selectedItem.at(0);
         UndoBorderChangeCommand * undo = new UndoBorderChangeCommand(item, width, cornerStyle, color);
         m_undo_stack->push(undo);
     }
+}
+
+/** ###########################################################################################################################
+ * Sets selecting mode
+ #############################################################################################################################*/
+void Canvas::enableDefaultSelectionMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting | Scene::Moving);
+    setSelectionMode(MultiSelecting);
+}
+
+/** ###########################################################################################################################
+ * Sets viewing mode
+ #############################################################################################################################*/
+void Canvas::enableViewingMode()
+{
+    m_scene->setInteractionMode(Scene::View);
+    setSelectionMode(Viewing);
+}
+
+/** ###########################################################################################################################
+ * Sets effects editing mode
+ #############################################################################################################################*/
+void Canvas::enableEffectsEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting);
+    setSelectionMode(SingleSelcting);
+}
+
+/** ###########################################################################################################################
+ * Sets text editing mode
+ #############################################################################################################################*/
+void Canvas::enableTextEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting | Scene::MouseTracking | Scene::OneclickFocusItems);
+    setSelectionMode(SingleSelcting);
 }
 
 /** ###########################################################################################################################

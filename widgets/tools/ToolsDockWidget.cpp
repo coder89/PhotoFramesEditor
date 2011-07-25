@@ -1,6 +1,7 @@
 #include "ToolsDockWidget.h"
 #include "ColorizeTool.h"
 #include "EffectsEditorTool.h"
+#include "TextEditorTool.h"
 
 #include <QDebug>
 #include <QButtonGroup>
@@ -103,8 +104,8 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_text_button->setCheckable(true);
     group->addButton(m_text_button);
     formLayout->addWidget(m_text_button, 0,4, Qt::AlignCenter);
-    //m_text_widget = new EffectsEditorTool(this);
-    //m_tool_widget_layout->addWidget(m_text_widget);
+    m_text_widget = new TextEditorTool(this);
+    m_tool_widget_layout->addWidget(m_text_widget);
     connect(m_text_button,SIGNAL(toggled(bool)),this,SLOT(setTextWidgetVisible(bool)));
 
     // Border edit tool
@@ -164,15 +165,15 @@ void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
     }
 }
 
-void ToolsDockWidget::setTextWidgetVisible(bool /*isVisible*/)
+void ToolsDockWidget::setTextWidgetVisible(bool isVisible)
 {
-//    emit effectsToolSelectionChanged(isVisible);
-//    if (isVisible)
-//    {
-//        m_tool_widget_layout->setCurrentWidget(m_effects_widget);
-//        m_effects_widget->setCurrentItem(m_currentPhoto);
-//        emit requireSingleSelection();
-//        emit effectsToolSelected();
-//        this->adjustSize();
-//    }
+    emit textToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        m_tool_widget_layout->setCurrentWidget(m_text_widget);
+        m_text_widget->setCurrentItem(m_currentPhoto);
+        emit requireSingleSelection();
+        emit textToolSelected();
+        this->adjustSize();
+    }
 }

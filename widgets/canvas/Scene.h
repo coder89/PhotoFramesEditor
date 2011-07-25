@@ -30,11 +30,12 @@ namespace KIPIPhotoFramesEditor
 
             enum EditMode
             {
-                View = 1,
+                View = 0,
+                Selecting = 1,
                 Moving = 2,
-                Rotating = 4,
-                Drawing = 8,
-                BorderEdit = 16,
+                MouseTracking = 4,
+                OneclickFocusItems = 8,
+                Rotating = 16,
             };
 
             enum SelectionMode
@@ -53,7 +54,7 @@ namespace KIPIPhotoFramesEditor
             void removeItems(const QList<AbstractPhoto*> & items);
             void addItem(AbstractPhoto * item);
             QList<AbstractPhoto*> selectedItems() const;
-            void setMode(EditMode mode);
+            void setInteractionMode(int mode);
             void setSelectionMode(SelectionMode selectionMode);
             bool isSelectionVisible();
             QDomNode toSvg(QDomDocument & document);
@@ -66,6 +67,7 @@ namespace KIPIPhotoFramesEditor
             void newItemAdded(AbstractPhoto * item);
             void itemAboutToBeRemoved(AbstractPhoto * item);
             void itemsAboutToBeRemoved(const QList<AbstractPhoto*> & items);
+            void mousePressedPoint(const QPointF & point);
 
         public Q_SLOTS:
 
@@ -107,8 +109,8 @@ namespace KIPIPhotoFramesEditor
 
             void setRotationWidgetVisible(bool visible);
 
-            EditMode editingMode;
-            static const EditMode DEFAULT_EDITING_MODE = Moving;
+            int m_interaction_mode;
+            static const int DEFAULT_EDITING_MODE = Moving & Selecting;
 
             SelectionMode selectionMode;
             static const SelectionMode DEFAULT_SELECTING_MODE = MultiSelection;

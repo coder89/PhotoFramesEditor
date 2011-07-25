@@ -50,7 +50,7 @@ namespace KIPIPhotoFramesEditor
             {
                 if (name.isEmpty())
                     return;
-                m_name = QString::fromUtf8(name.toAscii()).simplified();
+                m_name = name.simplified();
                 if (m_name.length() > 20)
                 {
                     m_name = m_name.left(20);

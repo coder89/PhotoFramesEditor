@@ -183,18 +183,6 @@ void PhotoFramesEditor::createWidgets()
     d->toolsWidget = new ToolsDockWidget(this);
     this->addDockWidget(Qt::RightDockWidgetArea, d->toolsWidget);
 
-//    // Borders tool
-//    d->toolBorders = new BorderEditTool(this);
-//    this->addDockWidget(Qt::RightDockWidgetArea, d->toolBorders);
-//    d->toolBorders->setVisible(false);
-//    connect(d->toolsWidget,SIGNAL(borderToolSelectionChanged(bool)),d->toolBorders,SLOT(setShown(bool)));
-
-//    // Colorize tool
-//    d->toolColorize = new ColorizeTool(this);
-//    this->addDockWidget(Qt::RightDockWidgetArea, d->toolColorize);
-//    d->toolColorize->setVisible(false);
-//    connect(d->toolsWidget,SIGNAL(colorizeToolSelectionChanged(bool)),d->toolColorize,SLOT(setShown(bool)));
-
     // Layers dockwidget
     d->treeWidget = new QDockWidget("Layers", this);
     d->treeWidget->setFeatures(QDockWidget::DockWidgetMovable);
@@ -275,14 +263,10 @@ void PhotoFramesEditor::prepareSignalsConnections()
     connect(m_canvas,SIGNAL(selectedItem(AbstractPhoto*)),d->toolsWidget,SLOT(itemSelected(AbstractPhoto*)));
     connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(enableDefaultSelectionMode()));
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
-    connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableSingleSelectionMode()));
-    connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBordersToolMode()));
+    connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableEffectsEditingMode()));
+    connect(d->toolsWidget,SIGNAL(textToolSelected()),m_canvas,SLOT(enableTextEditingMode()));
+
     d->toolsWidget->setDefaultTool();
-    // tools specific signals
-//    connect(m_canvas,SIGNAL(setInitialValues(qreal,Qt::PenJoinStyle,QColor)),d->toolBorders,SLOT(setInitialValues(qreal,Qt::PenJoinStyle,QColor)));
-//    connect(d->toolBorders,SIGNAL(borderStyleChanged(qreal,Qt::PenJoinStyle,QColor)),m_canvas,SLOT(borderChangeCommand(qreal,Qt::PenJoinStyle,QColor)));
-//    connect(d->toolBorders,SIGNAL(visibilityChanged(bool)),m_canvas,SLOT(refreshWidgetConnections(bool)));
-//    connect(d->toolColorize,SIGNAL(visibilityChanged(bool)),m_canvas,SLOT(refreshWidgetConnections(bool)));
 }
 
 void PhotoFramesEditor::open()

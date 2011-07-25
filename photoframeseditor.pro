@@ -49,7 +49,8 @@ SOURCES += main.cpp\
     utils/global.cpp \
     widgets/items/TextItem.cpp \
     widgets/dialogs/ImageFileDialog.cpp \
-    utils/PFESettings.cpp
+    utils/PFESettings.cpp \
+    widgets/tools/TextEditorTool.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -92,7 +93,8 @@ HEADERS  += plugin/photoframeseditor.h \
     effects/PhotoEffectsLoader.h \
     widgets/items/TextItem.h \
     widgets/dialogs/ImageFileDialog.h \
-    utils/PFESettings.h
+    utils/PFESettings.h \
+    widgets/tools/TextEditorTool.h
 
 LIBS += \
     -L/usr \

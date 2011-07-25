@@ -87,6 +87,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     {
         if (m_pressed_item)
         {
+            // Select if not selested
             if (!m_pressed_item->isSelected())
             {
                 m_selected_items.append(m_pressed_item);
@@ -98,6 +99,14 @@ class KIPIPhotoFramesEditor::ScenePrivate
             return true;
         }
         return false;
+    }
+    void focusPressed()
+    {
+        if (!m_pressed_item)
+            return;
+        // If is selectable and focusable try to set focus and post mousepressevent to it
+        if (m_pressed_item->flags() & QGraphicsItem::ItemIsFocusable)
+            m_pressed_item->setFocus(Qt::MouseFocusReason);
     }
     void setSelectionInitialPosition()
     {
@@ -171,7 +180,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     }
 
     // Mouse interaction mode
-    setMode(DEFAULT_EDITING_MODE);
+    setInteractionMode(DEFAULT_EDITING_MODE);
 
     // Create default grid
     setGrid(25,25);
@@ -202,7 +211,7 @@ void Scene::removeItems(const QList<AbstractPhoto *> & items)
 //#####################################################################################################
 void Scene::enableItemsDrawing()
 {
-    this->editingMode = Drawing;
+    //this->m_interaction_mode = Drawing;
     temp_path = QPainterPath();
     this->temp_widget = new QGraphicsPathItem(temp_path);
     //temp_widget->setZValue(zIndex++);
@@ -215,7 +224,7 @@ void Scene::disableitemsDrawing()
     this->QGraphicsScene::removeItem(temp_widget);
     delete temp_widget;
     temp_widget = 0;
-    editingMode = DEFAULT_EDITING_MODE;
+    m_interaction_mode = DEFAULT_EDITING_MODE;
 }
 
 //#####################################################################################################
@@ -267,34 +276,38 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        // Get initial selection position
-        d->setSelectionInitialPosition();
+        // If listeners should know scene press position
+        if (m_interaction_mode & MouseTracking)
+            emit mousePressedPoint(event->buttonDownScenePos(event->button()));
 
-        // If single selection mode, clear CTRL modifier
-        if (selectionMode & SingleSelection)
-            event->setModifiers(event->modifiers() & !Qt::ControlModifier);
-        d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
-        this->calcSelectionBoundingRect();
-        if (!(event->modifiers() & Qt::ControlModifier) &&
-             (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item)))
-            d->deselectSelected();
-        if (d->m_pressed_item)
+        // If moving enabled
+        if (m_interaction_mode & Selecting)
         {
-            // If not selectable -> deselect item
-            if (!(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
-                d->m_pressed_item = 0;
-            else
-            {
-                // If is selectable and focusable try to set focus and post mousepressevent to it
-                if (d->m_pressed_item->flags() & QGraphicsItem::ItemIsFocusable)
-                    d->m_pressed_item->setFocus(Qt::MouseFocusReason);
+            // Get initial selection position
+            d->setSelectionInitialPosition();
 
-                // Send mousepressevent to the pressed item
-                event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
-                event->setButtonDownPos(event->button(),
-                                        d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
-                event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
-                d->m_pressed_item->mousePressEvent(event);
+            // If single selection mode, clear CTRL modifier
+            if (selectionMode & SingleSelection)
+                event->setModifiers(event->modifiers() & !Qt::ControlModifier);
+            d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
+            this->calcSelectionBoundingRect();
+            if (!(event->modifiers() & Qt::ControlModifier) &&
+                 (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item)))
+                d->deselectSelected();
+            if (d->m_pressed_item)
+            {
+                // If not selectable -> deselect item
+                if (!(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
+                    d->m_pressed_item = 0;
+                else
+                {
+                    // Send mousepressevent to the pressed item
+                    event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
+                    event->setButtonDownPos(event->button(),
+                                            d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
+                    event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
+                    d->m_pressed_item->mousePressEvent(event);
+                }
             }
         }
         event->setAccepted(d->m_pressed_item);
@@ -308,25 +321,28 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
-        // Selecting pressed item
-        event->setAccepted(d->selectPressed());
-
-        // Moving items
-        if (d->m_selected_items_all_movable)
+        if (m_interaction_mode & Moving)
         {
-            // Calculate movement
-            QPointF distance = event->scenePos() - event->buttonDownScenePos(Qt::LeftButton) + d->m_selected_items_path_initial_pos;
-            if (event->modifiers() & Qt::ShiftModifier && this->isGridVisible())
+            // Selecting pressed item
+            event->setAccepted(d->selectPressed());
+
+            // Moving items
+            if (d->m_selected_items_all_movable)
             {
-                distance.setX(x_grid*round(distance.rx()/x_grid));
-                distance.setY(y_grid*round(distance.ry()/y_grid));
+                // Calculate movement
+                QPointF distance = event->scenePos() - event->buttonDownScenePos(Qt::LeftButton) + d->m_selected_items_path_initial_pos;
+                if (event->modifiers() & Qt::ShiftModifier && this->isGridVisible())
+                {
+                    distance.setX(x_grid*round(distance.rx()/x_grid));
+                    distance.setY(y_grid*round(distance.ry()/y_grid));
+                }
+                QPointF difference = d->m_selected_items_path.boundingRect().topLeft();
+                d->m_selected_items_path.translate(-difference);
+                difference = distance - difference;
+                d->m_selected_items_path.translate(distance);
+                foreach (AbstractPhoto * item, d->m_selected_items)
+                    item->setPos(item->pos() + difference);
             }
-            QPointF difference = d->m_selected_items_path.boundingRect().topLeft();
-            d->m_selected_items_path.translate(-difference);
-            difference = distance - difference;
-            d->m_selected_items_path.translate(distance);
-            foreach (AbstractPhoto * item, d->m_selected_items)
-                item->setPos(item->pos() + difference);
         }
     }
     else
@@ -338,15 +354,31 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        // Selecting pressed item
-        event->setAccepted(d->selectPressed());
-
-        // Post move command to QUndoStack
-        if (d->m_selected_items_path.boundingRect().topLeft() != d->m_selected_items_path_initial_pos)
+        if (m_interaction_mode & Selecting)
         {
-            QPointF movement = d->m_selected_items_path.boundingRect().topLeft()-d->m_selected_items_path_initial_pos;
-            QUndoCommand * command = new MoveItemsUndoCommand(d->m_selected_items, movement, this);
-            PFE_PostUndoCommand(command);
+            // Selecting pressed item
+            event->setAccepted(d->selectPressed());
+
+            if (m_interaction_mode & OneclickFocusItems)
+                d->focusPressed();
+
+            // Send mousereleaseevent to the released item
+            if (d->m_pressed_item)
+            {
+                event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
+                event->setButtonDownPos(event->button(),
+                                        d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
+                event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
+                d->m_pressed_item->mouseReleaseEvent(event);
+            }
+
+            // Post move command to QUndoStack
+            if (d->m_selected_items_path.boundingRect().topLeft() != d->m_selected_items_path_initial_pos)
+            {
+                QPointF movement = d->m_selected_items_path.boundingRect().topLeft()-d->m_selected_items_path_initial_pos;
+                QUndoCommand * command = new MoveItemsUndoCommand(d->m_selected_items, movement, this);
+                PFE_PostUndoCommand(command);
+            }
         }
     }
     else
@@ -358,31 +390,10 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
-        switch(this->editingMode)
-        {
-            case Moving:
-                QGraphicsScene::mouseDoubleClickEvent(event);
-                break;
-            case Drawing:
-//                {
-//                    temp_path.closeSubpath();
-//                    PolygonWidget * tempItem = new PolygonWidget(temp_path, this);
-//                    this->addItem(tempItem);
-//                    QPointF p = temp_path.boundingRect().topLeft();
-//                    tempItem->moveBy(p.rx(),p.ry());
-//                    disableitemsDrawing();
-//                }
-                break;
-            default:
-                goto    others;
-        }
-        event->accept();
+        d->focusPressed();
     }
     else
-    {
-        others:
-            QGraphicsScene::mouseDoubleClickEvent(event);
-    }
+        QGraphicsScene::mouseDoubleClickEvent(event);
 }
 
 //#####################################################################################################
@@ -521,24 +532,9 @@ bool Scene::isGridVisible()
 }
 
 //#####################################################################################################
-void Scene::setMode(EditMode mode)
+void Scene::setInteractionMode(int mode)
 {
-    switch(mode)
-    {
-        case Rotating:
-            editingMode = mode;
-            setSelectionMode(SingleSelection);
-            d->setMode(ScenePrivate::Rotation);
-            break;
-        case BorderEdit:
-            editingMode = mode;
-            setSelectionMode(SingleSelection);
-            break;
-        case Moving:
-        default:
-            setSelectionMode(MultiSelection);
-            editingMode = DEFAULT_EDITING_MODE;
-    }
+    m_interaction_mode = mode;
 }
 
 //#####################################################################################################

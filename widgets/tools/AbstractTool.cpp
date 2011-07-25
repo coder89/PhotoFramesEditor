@@ -20,9 +20,3 @@ void AbstractTool::setCurrentItem(AbstractPhoto * photo)
     setEnabled((bool)m_photo);
     currentItemChanged();
 }
-
-void AbstractTool::currentItemAboutToBeChanged()
-{}
-
-void AbstractTool::currentItemChanged()
-{}

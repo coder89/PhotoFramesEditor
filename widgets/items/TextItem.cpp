@@ -1,7 +1,13 @@
 #include "TextItem.h"
 #include "global.h"
+#include "KEditFactory.h"
 
+#include <QTimeLine>
 #include <QInputMethodEvent>
+#include <QtTreePropertyBrowser>
+#include <QtColorPropertyManager>
+
+#include <klocalizedstring.h>
 
 #define IS_NULL(node) if (node.isNull()) goto _delete;
 
@@ -9,12 +15,15 @@ using namespace KIPIPhotoFramesEditor;
 
 class KIPIPhotoFramesEditor::TextItemPrivate
 {
+    class TextEditUndoCommand;
+
     TextItemPrivate(TextItem * item) :
         m_item(item),
         m_cursorIsVisible(false),
         m_cursor_line(0),
         m_cursor_character(0)
-    {}
+    {
+    }
 
     void moveCursorLeft()
     {
@@ -116,16 +125,21 @@ class KIPIPhotoFramesEditor::TextItemPrivate
 
     void addText(const QString & text)
     {
-        qDebug() << text;
         if (!text.length())
             return;
         m_string_list[m_cursor_line].insert(m_cursor_character, text);
         m_cursor_character += text.length();
     }
 
+    void closeEditor()
+    {
+        m_item->clearFocus();
+    }
+
     TextItem * m_item;
 
     QStringList m_string_list;
+    QStringList m_temp_string;
 
     QPointF m_cursor_point;
     bool m_cursorIsVisible;
@@ -133,7 +147,46 @@ class KIPIPhotoFramesEditor::TextItemPrivate
     int m_cursor_character;
 
     friend class TextItem;
+    friend class TextEditUndoCommand;
 };
+
+class KIPIPhotoFramesEditor::TextItemPrivate::TextEditUndoCommand : public QUndoCommand
+{
+        TextItemPrivate * m_item_p;
+        QStringList m_prevText;
+        bool done;
+    public:
+        TextEditUndoCommand(const QStringList & prevText, TextItemPrivate * itemPrivate, QUndoCommand * parent = 0) :
+            QUndoCommand(parent),
+            m_item_p(itemPrivate),
+            m_prevText(prevText),
+            done(true)
+        {}
+        virtual void redo();
+        virtual void undo();
+};
+void TextItemPrivate::TextEditUndoCommand::redo()
+{
+    if (!done)
+    {
+        QStringList temp = m_item_p->m_string_list;
+        m_item_p->m_string_list = m_prevText;
+        m_prevText = temp;
+        m_item_p->m_item->refresh();
+        done = !done;
+    }
+}
+void TextItemPrivate::TextEditUndoCommand::undo()
+{
+    if (done)
+    {
+        QStringList temp = m_item_p->m_string_list;
+        m_item_p->m_string_list = m_prevText;
+        m_prevText = temp;
+        m_item_p->m_item->refresh();
+        done = !done;
+    }
+}
 
 TextItem::TextItem(const QString & text, QGraphicsScene * scene) :
     AbstractPhoto(scene),
@@ -144,18 +197,35 @@ TextItem::TextItem(const QString & text, QGraphicsScene * scene) :
     this->setFont(QFont());
     this->setColor(Qt::black);
     this->setFlag(QGraphicsItem::ItemIsFocusable);
+    qDebug() << m_font.key();
 }
 
 void TextItem::focusInEvent(QFocusEvent * event)
 {
+    if (!this->isSelected())
+    {
+        this->clearFocus();
+        return;
+    }
+    d->m_temp_string = d->m_string_list;
     this->setCursorPositionVisible(true);
     AbstractPhoto::focusInEvent(event);
+    this->setCursor(QCursor(Qt::IBeamCursor));
+    this->setFlag(QGraphicsItem::ItemIsMovable, false);
 }
 
 void TextItem::focusOutEvent(QFocusEvent * event)
 {
+    if (d->m_temp_string != d->m_string_list)
+    {
+        QUndoCommand * undo = new TextItemPrivate::TextEditUndoCommand(d->m_temp_string, d);
+        PFE_PostUndoCommand(undo);
+    }
+    d->m_temp_string.clear();
     this->setCursorPositionVisible(false);
     AbstractPhoto::focusOutEvent(event);
+    this->unsetCursor();
+    this->setFlag(QGraphicsItem::ItemIsMovable, true);
 }
 
 void TextItem::keyPressEvent(QKeyEvent * event)
@@ -188,6 +258,9 @@ void TextItem::keyPressEvent(QKeyEvent * event)
             break;
         case Qt::Key_Return:
             d->addNewLine();
+            break;
+        case Qt::Key_Escape:
+            d->closeEditor();
             break;
         default:
             d->addText(event->text());
@@ -296,8 +369,8 @@ void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option
     if (d->m_cursorIsVisible)
     {
         painter->save();
-        painter->setCompositionMode(QPainter::CompositionMode_ColorBurn);
-        painter->setPen(Qt::black);
+        painter->setCompositionMode(QPainter::RasterOp_SourceXorDestination);
+        painter->setPen(Qt::gray);
         int y = m_metrics.lineSpacing() * d->m_cursor_line;
         int x = 0;
         if ( !d->m_string_list.at(d->m_cursor_line).isEmpty() )
@@ -372,6 +445,12 @@ QDomElement TextItem::toSvg(QDomDocument & document) const
     color.setAttribute("blue", QString::number(m_color.blue()));
     appNS.appendChild(color);
 
+    // 'defs'-> pfe:'data' -> 'font'
+    QDomElement font = document.createElement("font");
+    font.setPrefix(KIPIPhotoFramesEditor::name());
+    font.setAttribute("data", m_font.toString());
+    appNS.appendChild(font);
+
     return result;
 }
 
@@ -411,6 +490,11 @@ TextItem * TextItem::fromSvg(QDomElement & element)
                                  color.attribute("green").toInt(),
                                  color.attribute("blue").toInt());
 
+        // Font
+        QDomElement font = data.firstChildElement("font");
+        IS_NULL(font);
+        result->m_font.fromString(font.attribute("data"));
+
         result->refresh();
         return result;
     }
@@ -421,6 +505,25 @@ _delete:
 
 QtAbstractPropertyBrowser * TextItem::propertyBrowser()
 {
+    QtTreePropertyBrowser * browser = new QtTreePropertyBrowser();
+
+    // Color
+    QtColorPropertyManager * colorManager = new QtColorPropertyManager(browser);
+    KColorEditorFactory * colorFactory = new KColorEditorFactory(browser);
+    browser->setFactoryForManager(colorManager, colorFactory);
+    QtProperty * colorProperty = colorManager->addProperty(i18n("Text color"));
+    colorManager->setValue(colorProperty, m_color);
+    browser->addProperty(colorProperty);
+
+    // Font
+    QtFontPropertyManager * fontManager = new QtFontPropertyManager(browser);
+    KFontEditorFactory * fontFactory = new KFontEditorFactory(browser);
+    browser->setFactoryForManager(fontManager, fontFactory);
+    QtProperty * fontProperty = fontManager->addProperty(i18n("Font"));
+    fontManager->setValue(fontProperty, m_font);
+    browser->addProperty(fontProperty);
+
+    return browser;
 }
 
 QPainterPath TextItem::getLinePath(const QString & string)

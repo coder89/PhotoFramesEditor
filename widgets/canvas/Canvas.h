@@ -38,14 +38,6 @@ namespace KIPIPhotoFramesEditor
                 SingleSelcting = 4,
             };
 
-            enum InteractionMode
-            {
-                NoInteraction = 0,
-                SingleElementEditingMode = 1,
-                BorderToolMode = 3,
-                ColorizeToolMode = 5,
-            };
-
             explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
             explicit Canvas(Scene * scene, QWidget * parent = 0);
 
@@ -70,7 +62,6 @@ namespace KIPIPhotoFramesEditor
 
             /// Set selection mode
             void setSelectionMode(SelectionMode mode);
-            void setInteractionMode(InteractionMode mode);
 
             Scene * scene() const
             {
@@ -173,35 +164,16 @@ namespace KIPIPhotoFramesEditor
             }
 
             /// Sets selecting mode
-            void enableDefaultSelectionMode()
-            {
-                setInteractionMode(NoInteraction);
-                setSelectionMode(MultiSelecting);
-            }
+            void enableDefaultSelectionMode();
 
             /// Sets viewing mode
-            void enableViewingMode()
-            {
-                setInteractionMode(NoInteraction);
-                setSelectionMode(Viewing);
-            }
+            void enableViewingMode();
 
-            /// Sets border editing mode
-            void enableBordersToolMode()
-            {
-                setInteractionMode(BorderToolMode);
-            }
+            /// Sets effects editing mode
+            void enableEffectsEditingMode();
 
-            /// Sets border editing mode
-            void enableColorizeToolMode()
-            {
-                setInteractionMode(ColorizeToolMode);
-            }
-
-            void enableSingleSelectionMode()
-            {
-                setSelectionMode(SingleSelcting);
-            }
+            /// Sets text editing mode
+            void enableTextEditingMode();
 
             /// Refresh widgets connections to canvas signals
             void refreshWidgetConnections(bool isVisible);
@@ -238,7 +210,6 @@ namespace KIPIPhotoFramesEditor
             double m_scale_factor;
 
             SelectionMode m_selection_mode;
-            InteractionMode m_interaction_mode;
     };
 }
 

@@ -104,6 +104,12 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     clipPath.setAttribute("id", "clipPath_"+this->id());
     defs.appendChild(clipPath);
 
+    // 'defs'->'pfe:data'
+    QDomElement appNS = document.createElementNS(KIPIPhotoFramesEditor::uri(), "data");
+    appNS.setPrefix(KIPIPhotoFramesEditor::name());
+    defs.appendChild(appNS);
+    appNS.appendChild(m_effects_group->toSvg(document));
+
     // Convert visible area to SVG path's 'd' attribute
     QPainterPath visibleArea = this->opaqueArea();
     if (!visibleArea.isEmpty())
@@ -138,7 +144,12 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
       *         <clipPath>      // clippingPath == m_image_path
       *             <path />
       *         </clipPath>
-      *         .........       // Children data
+      *           .........     // Children data
+      *         <pfe:data>
+      *           .........     // Effects applied to the item
+      *           .........     // Borders applied to the item
+      *           .........     // Other data from the AbstractPhoto class.
+      *         </pfe:data>
       *     </defs>
       *     <use />             // Cuts image
       *     <g>
@@ -202,25 +213,20 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     if (clipPath.isNull() || clipPath.attribute("id") != "clipPath_"+this->id())
         return false;
 
+    // Other application specific data
+    QDomElement appNS = defs.firstChildElement("data");
+    if (appNS.isNull() || appNS.prefix() != KIPIPhotoFramesEditor::name())
+        return false;
+    if (m_effects_group)
+        delete m_effects_group;
+    m_effects_group = PhotoEffectsGroup::fromSvg(appNS);
+    if (!m_effects_group)
+        return false;
+    else
+        m_effects_group->setPhoto(this);
+
     return true;
 }
-
-//void AbstractPhoto::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
-//{
-//    QStyleOptionGraphicsItem unselectedOption = (*option);
-//    unselectedOption.state &= !QStyle::State_Selected;
-
-////    // Selecting item
-////    if ((option->state) & QStyle::State_Selected)
-////    {
-////        QPainterPath exposedPath = QPainterPath();
-////        exposedPath.addRect(option->exposedRect);
-////        painter->fillPath(m_complete_path.intersected(exposedPath), SELECTED_ITEM_COLOR);
-////    }
-
-//    if (this->borderWidth())
-//        painter->fillPath(m_border_path, this->borderColor());
-//}
 
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
 {

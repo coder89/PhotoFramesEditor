@@ -1,11 +1,12 @@
 #include "ColorizePhotoEffect_p.h"
+#include "ColorizePhotoEffect.h"
 
 #include <klocalizedstring.h>
-#include <QDebug>
+
 QColor ColorizePhotoEffect::m_last_color = QColor(255,255,255,0);
 
-ColorizePhotoEffect::ColorizePhotoEffect(QObject * parent) :
-    AbstractPhotoEffectInterface(parent)
+ColorizePhotoEffect::ColorizePhotoEffect(ColorizePhotoEffectFactory * factory, QObject * parent) :
+    AbstractPhotoEffectInterface(factory, parent)
 {
     AbstractPhotoEffectProperty  * color = new AbstractPhotoEffectProperty("Color");
     color->value = m_last_color;
@@ -24,14 +25,9 @@ QImage ColorizePhotoEffect::apply(const QImage & image) const
     return result;
 }
 
-QString ColorizePhotoEffect::effectName() const
-{
-    return i18n("Colorize effect");
-}
-
 QString ColorizePhotoEffect::toString() const
 {
-    return effectName();
+    return factory()->effectName() + " [" + color().name() + "]";
 }
 
 ColorizePhotoEffect::operator QString() const

@@ -28,7 +28,7 @@ namespace KIPIPhotoFramesEditor
             QDomElement toSvg(QDomDocument & document) const;
             static PhotoEffectsGroup * fromSvg(QDomElement & element);
             AbstractPhoto * photo() const;
-            void setPhoto(AbstractPhoto * photo) const;
+            void setPhoto(AbstractPhoto * photo);
             AbstractPhotoEffectInterface * getItem(const QModelIndex & index = QModelIndex()) const;
             bool moveRows(int sourcePosition, int sourceCount, int destPosition);
             bool insertRow(int row, AbstractPhotoEffectInterface * effect);

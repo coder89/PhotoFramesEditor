@@ -4,6 +4,7 @@
 #include "PixelizePhotoEffect.h"
 #include "AbstractPhoto.h"
 #include "AbstractPhotoEffectFactory.h"
+#include "AbstractPhotoEffectInterface.h"
 #include "UndoCommandEvent.h"
 #include "global.h"
 
@@ -137,9 +138,14 @@ QDomElement PhotoEffectsGroup::toSvg(QDomDocument & document) const
     QDomElement effectsGroup = document.createElement("effects");
     foreach (AbstractPhotoEffectInterface * effect, m_effects_list)
     {
-        QDomElement effectSvg = effect->toSvg();
-        if (!effectSvg.isNull())
-            effectsGroup.appendChild(effectSvg);
+        AbstractPhotoEffectFactory * factory = PhotoEffectsLoader::getFactoryByName(effect->factory()->effectName());
+        if (factory)
+        {
+            QDomElement effectSvg = factory->toSvg(effect, document);
+            if (!effectSvg.isNull())
+                effectsGroup.appendChild(effectSvg);
+        }
+        /// TODO: what if there is no given effect plugin?
     }
     return effectsGroup;
 }
@@ -150,7 +156,21 @@ PhotoEffectsGroup * PhotoEffectsGroup::fromSvg(QDomElement & element)
         element = element.firstChildElement("effects");
     if (element.isNull())
         return 0;
-    PhotoEffectsGroup * group = new PhotoEffectsGroup();
+    PhotoEffectsGroup * group = new PhotoEffectsGroup(0);
+    QDomNodeList effectsList = element.childNodes();
+    for (int i = 0; i < effectsList.count(); ++i)
+    {
+        QDomElement effect = effectsList.at(i).toElement();
+        if (effect.isNull())
+            continue;
+        AbstractPhotoEffectFactory * factory = PhotoEffectsLoader::getFactoryByName( effect.attribute("name") );
+        if (!factory)
+            continue;
+        AbstractPhotoEffectInterface * interface = factory->fromSvg(effect);
+        if (interface)
+            group->push_back(interface);
+    }
+    return group;
 }
 
 void PhotoEffectsGroup::push_back(AbstractPhotoEffectInterface * effect)
@@ -183,7 +203,7 @@ AbstractPhoto * PhotoEffectsGroup::photo() const
     return m_photo;
 }
 
-void PhotoEffectsGroup::setPhoto(AbstractPhoto * photo) const
+void PhotoEffectsGroup::setPhoto(AbstractPhoto * photo)
 {
     m_photo = photo;
 }

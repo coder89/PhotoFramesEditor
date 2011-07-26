@@ -5,6 +5,7 @@
 #include "KEditFactory.h"
 #include "global.h"
 #include "AbstractPhotoEffectFactory.h"
+#include "AbstractPhotoEffectInterface.h"
 
 #include <QtAbstractPropertyBrowser>
 #include <QtTreePropertyBrowser>
@@ -25,7 +26,6 @@ PhotoEffectsLoader::PhotoEffectsLoader(QObject * parent) :
     m_effect(0)
 {
 }
-
 
 PhotoEffectsLoader * PhotoEffectsLoader::instance(QObject * parent)
 {
@@ -61,6 +61,11 @@ bool PhotoEffectsLoader::registerEffect(AbstractPhotoEffectFactory * effectFacto
 QStringList PhotoEffectsLoader::registeredEffectsNames()
 {
     return registeredEffects.keys();
+}
+
+AbstractPhotoEffectFactory * PhotoEffectsLoader::getFactoryByName(const QString & name)
+{
+    return registeredEffects.value(name, 0);
 }
 
 AbstractPhotoEffectInterface * PhotoEffectsLoader::getEffectByName(const QString & effectName)

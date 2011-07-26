@@ -16,6 +16,8 @@ class COLORIZEPHOTOEFFECTSHARED_EXPORT ColorizePhotoEffectFactory : public Abstr
         ColorizePhotoEffectFactory(QObject * parent = 0);
         virtual AbstractPhotoEffectInterface * getEffectInstance();
         virtual QString effectName() const;
+        virtual QDomElement toSvg(AbstractPhotoEffectInterface * effect, QDomDocument & document);
+        virtual AbstractPhotoEffectInterface * fromSvg(QDomElement & element);
 };
 
 #endif // COLORIZEPHOTOEFFECT_H

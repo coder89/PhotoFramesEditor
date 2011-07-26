@@ -9,6 +9,7 @@
 #include <QUndoCommand>
 
 #include "PhotoEffectsGroup.h"
+#include "AbstractPhotoEffectFactory.h"
 
 #include <klocalizedstring.h>
 
@@ -35,11 +36,16 @@ namespace KIPIPhotoFramesEditor
     {
             class AbstractPhotoEffectInterfaceCommand;
 
+            AbstractPhotoEffectFactory * m_factory;
+
         public:
 
-            explicit AbstractPhotoEffectInterface(QObject * parent = 0) :
-                QObject(parent)
+            explicit AbstractPhotoEffectInterface(AbstractPhotoEffectFactory * factory, QObject * parent = 0) :
+                QObject(parent),
+                m_factory(factory)
             {
+                if (!m_factory)
+                    throw "No factory object!";
                 AbstractPhotoEffectProperty * strength = new AbstractPhotoEffectProperty("Strength");
                 strength->value = QVariant(100);
                 strength->data.insert(AbstractPhotoEffectProperty::Minimum,0);
@@ -67,7 +73,6 @@ namespace KIPIPhotoFramesEditor
                 return image;
             }
 
-            virtual QString effectName() const = 0;
             virtual QString toString() const = 0;
             virtual operator QString() const = 0;
 
@@ -97,6 +102,11 @@ namespace KIPIPhotoFramesEditor
             PhotoEffectsGroup * group() const
             {
                 return qobject_cast<PhotoEffectsGroup*>(this->parent());
+            }
+
+            AbstractPhotoEffectFactory * factory() const
+            {
+                return m_factory;
             }
 
             int strength() const
@@ -156,7 +166,7 @@ namespace KIPIPhotoFramesEditor
                         m_effect(effect),
                         m_properties(properties)
                     {
-                        this->setText(m_effect->effectName() + i18n(" change"));
+                        this->setText(m_effect->factory()->effectName() + i18n(" change"));
                     }
                     ~AbstractPhotoEffectInterfaceCommand()
                     {

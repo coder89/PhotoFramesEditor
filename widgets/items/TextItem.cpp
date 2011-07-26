@@ -496,9 +496,7 @@ QDomElement TextItem::toSvg(QDomDocument & document) const
     // 'defs'-> pfe:'data' -> 'color'
     QDomElement color = document.createElement("color");
     color.setPrefix(KIPIPhotoFramesEditor::name());
-    color.setAttribute("red", QString::number(m_color.red()));
-    color.setAttribute("green", QString::number(m_color.green()));
-    color.setAttribute("blue", QString::number(m_color.blue()));
+    color.setAttribute("name", m_color.name());
     appNS.appendChild(color);
 
     // 'defs'-> pfe:'data' -> 'font'
@@ -513,7 +511,7 @@ QDomElement TextItem::toSvg(QDomDocument & document) const
 QDomElement TextItem::svgVisibleArea(QDomDocument & document) const
 {
     QDomElement element = KIPIPhotoFramesEditor::pathToSvg(m_text_path, document);
-    element.setAttribute("fill",QString("#")+QString::number(m_color.red(),16)+QString::number(m_color.green(),16)+QString::number(m_color.blue(),16));
+    element.setAttribute("fill", m_color.name());
     return element;
 }
 
@@ -542,9 +540,7 @@ TextItem * TextItem::fromSvg(QDomElement & element)
         // Color
         QDomElement color = data.firstChildElement("color");
         IS_NULL(color);
-        result->m_color = QColor(color.attribute("red").toInt(),
-                                 color.attribute("green").toInt(),
-                                 color.attribute("blue").toInt());
+        result->m_color = QColor(color.attribute("name"));
 
         // Font
         QDomElement font = data.firstChildElement("font");

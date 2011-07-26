@@ -2,10 +2,11 @@
 #define ABSTRACTPHOTOEFFECTFACTORY_H
 
 #include <QObject>
-#include "AbstractPhotoEffectInterface.h"
+#include <QDomDocument>
 
 namespace KIPIPhotoFramesEditor
 {
+    class AbstractPhotoEffectInterface;
     class AbstractPhotoEffectFactory : public QObject
     {
         public:
@@ -36,7 +37,7 @@ namespace KIPIPhotoFramesEditor
 
           /** Returns DOM node which contains effects attributes
             */
-            virtual QDomElement toSvg(QDomDocument & document) = 0;
+            virtual QDomElement toSvg(AbstractPhotoEffectInterface * effect, QDomDocument & document) = 0;
 
           /** Reads node attributes from DOM node and returns ready effect object.
             */

@@ -68,6 +68,10 @@ namespace KIPIPhotoFramesEditor
             */
             static QStringList registeredEffectsNames();
 
+          /** Returns factory object for the given name
+            */
+            static AbstractPhotoEffectFactory * getFactoryByName(const QString & name);
+
           /** Return an instance of effect using its name.
             */
             static AbstractPhotoEffectInterface * getEffectByName(const QString & name);

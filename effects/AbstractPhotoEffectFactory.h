@@ -33,6 +33,14 @@ namespace KIPIPhotoFramesEditor
             * Moreover, this name is used in UI to name effects.
             */
             virtual QString effectName() const = 0;
+
+          /** Returns DOM node which contains effects attributes
+            */
+            virtual QDomElement toSvg(QDomDocument & document) = 0;
+
+          /** Reads node attributes from DOM node and returns ready effect object.
+            */
+            virtual AbstractPhotoEffectInterface * fromSvg(QDomElement & element) = 0;
     };
 }
 

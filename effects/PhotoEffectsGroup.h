@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QPixmap>
+#include <QDomDocument>
 
 namespace KIPIPhotoFramesEditor
 {
@@ -24,7 +25,10 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
+            QDomElement toSvg(QDomDocument & document) const;
+            static PhotoEffectsGroup * fromSvg(QDomElement & element);
             AbstractPhoto * photo() const;
+            void setPhoto(AbstractPhoto * photo) const;
             AbstractPhotoEffectInterface * getItem(const QModelIndex & index = QModelIndex()) const;
             bool moveRows(int sourcePosition, int sourceCount, int destPosition);
             bool insertRow(int row, AbstractPhotoEffectInterface * effect);

@@ -5,7 +5,7 @@
 #include "AbstractPhoto.h"
 #include "AbstractPhotoEffectFactory.h"
 #include "UndoCommandEvent.h"
-#include "photoframeseditor.h"
+#include "global.h"
 
 #include <QPainter>
 
@@ -196,9 +196,7 @@ bool PhotoEffectsGroup::moveRows(int sourcePosition, int sourceCount, int destPo
             destPosition >= 0)
     {
         QUndoCommand * command = new MoveItemsUndoCommand(sourcePosition, sourceCount, destPosition, this);
-        UndoCommandEvent * event = new UndoCommandEvent();
-        event->setUndoCommand(command);
-        KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(),event);
+        PFE_PostUndoCommand(command);
         return true;
     }
     return false;
@@ -209,9 +207,7 @@ bool PhotoEffectsGroup::insertRow(int row, AbstractPhotoEffectInterface * effect
     if (row < 0 || row > rowCount() || !effect)
         return false;
     QUndoCommand * command = new InsertItemUndoCommand(row,effect,this);
-    UndoCommandEvent * event = new UndoCommandEvent();
-    event->setUndoCommand(command);
-    KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(), event);
+    PFE_PostUndoCommand(command);
     return true;
 }
 
@@ -300,9 +296,7 @@ bool PhotoEffectsGroup::removeRows(int row, int count, const QModelIndex & paren
     return true;
 create_command:
     QUndoCommand * command = new RemoveItemsUndoCommand(row, count, this);
-    UndoCommandEvent * event = new UndoCommandEvent();
-    event->setUndoCommand(command);
-    KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(),event);
+    PFE_PostUndoCommand(command);
     return true;
 }
 

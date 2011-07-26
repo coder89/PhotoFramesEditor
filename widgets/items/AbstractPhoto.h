@@ -152,6 +152,7 @@ namespace KIPIPhotoFramesEditor
             virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragMoveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
+            virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
             virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
             virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);

@@ -3,20 +3,28 @@
 
 #include "AbstractPhoto.h"
 
+#include <QObject>
+#include <QtColorPropertyManager>
+
 namespace KIPIPhotoFramesEditor
 {
     class TextItemPrivate;
 
     class TextItem : public AbstractPhoto
     {
+            class TextEditUndoCommand;
+            class TextColorUndoCommand;
+            class TextFontUndoCommand;
+
+            TextItemPrivate * d;
+
             QColor m_color;
             QFont m_font;
+            QStringList m_string_list;
 
             QPainterPath m_complete_path;
             QPainterPath m_text_path;
             QFontMetrics m_metrics;
-
-            TextItemPrivate * d;
 
         public:
 
@@ -34,8 +42,11 @@ namespace KIPIPhotoFramesEditor
             QFont font() const;
             void setFont(const QFont & font);
 
-            Q_PROPERTY(QString m_text READ text WRITE setText)
-            QString text() const;
+            Q_PROPERTY(QStringList m_string_list READ text WRITE setText)
+            QStringList text() const;
+            void setText(const QStringList & textList);
+
+            QString textMultiline() const;
             void setText(const QString & text);
 
             virtual QRectF boundingRect() const;
@@ -57,6 +68,13 @@ namespace KIPIPhotoFramesEditor
 
             QPainterPath getLinePath(const QString & string);
             void setCursorPositionVisible(bool isVisible);
+
+
+        friend class TextItemPrivate;
+
+        friend class TextEditUndoCommand;
+        friend class TextColorUndoCommand;
+        friend class TextFontUndoCommand;
     };
 }
 

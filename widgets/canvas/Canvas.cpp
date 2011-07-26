@@ -162,7 +162,7 @@ void Canvas::addText(const QString & text)
 {
     // Create & setup item
     TextItem * it = new TextItem(text, m_scene);
-    it->setName(QString(it->text().toUtf8()).append(QString::number(m_model->rowCount())));
+    it->setName(QString(it->textMultiline().toUtf8()).append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount()+1);
 
     // Add item to scene & model

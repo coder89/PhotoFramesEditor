@@ -246,6 +246,10 @@ void AbstractPhoto::dropEvent(QGraphicsSceneDragDropEvent * event)
     event->accept();
 }
 
+void AbstractPhoto::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * /*event*/)
+{
+}
+
 void AbstractPhoto::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
 //    QGraphicsItem::mouseMoveEvent(event);

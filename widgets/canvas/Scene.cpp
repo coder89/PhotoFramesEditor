@@ -73,7 +73,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     void deselectSelected()
     {
         m_selected_items_all_movable = true;
-        foreach (AbstractPhoto * photo, m_selected_items)
+        foreach (AbstractPhoto * photo, m_selected_items.keys())
         {
             photo->setSelected(false);
             if (photo->hasFocus())
@@ -81,7 +81,6 @@ class KIPIPhotoFramesEditor::ScenePrivate
         }
         m_selected_items.clear();
         m_selected_items_path = QPainterPath();
-        setSelectionInitialPosition();
     }
     bool selectPressed()
     {
@@ -90,7 +89,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
             // Select if not selested
             if (!m_pressed_item->isSelected())
             {
-                m_selected_items.append(m_pressed_item);
+                m_selected_items.insert(m_pressed_item, m_pressed_item->pos());
                 m_selected_items_path = m_selected_items_path.united(m_pressed_item->mapToScene(m_pressed_item->shape()));
                 m_selected_items_all_movable &= m_pressed_item->flags() & QGraphicsItem::ItemIsMovable;
                 m_pressed_item->setSelected(true);
@@ -110,11 +109,26 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void setSelectionInitialPosition()
     {
-        if (m_selected_items_path.isEmpty())
-            m_selected_items_path_initial_pos = QPointF();
+        QMap<AbstractPhoto*,QPointF>::iterator it = m_selected_items.begin();
+        while (it != m_selected_items.end())
+        {
+            it.value() = it.key()->pos();
+            ++it;
+        }
         m_selected_items_path_initial_pos = m_selected_items_path.boundingRect().topLeft();
     }
-    QList<AbstractPhoto*> m_selected_items;
+    bool wasMoved()
+    {
+        QMap<AbstractPhoto*,QPointF>::iterator it = m_selected_items.begin();
+        while (it != m_selected_items.end())
+        {
+            if (it.value() != it.key()->pos())
+                return true;
+            ++it;
+        }
+        return false;
+    }
+    QMap<AbstractPhoto*,QPointF> m_selected_items;
     AbstractPhoto * m_pressed_item;
     QPainterPath m_selected_items_path;
     QPointF m_selected_items_path_initial_pos;
@@ -127,27 +141,33 @@ class KIPIPhotoFramesEditor::ScenePrivate
 
 class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
 {
-        QList<AbstractPhoto*> m_items;
-        QPointF m_movement;
+        QMap<AbstractPhoto*,QPointF> m_items;
         Scene * m_scene;
         bool done;
+        static int num;
     public:
-        MoveItemsUndoCommand(QList<AbstractPhoto*> items, QPointF movement, Scene * scene, QUndoCommand * parent = 0) :
-            QUndoCommand(parent),
+        MoveItemsUndoCommand(QMap<AbstractPhoto*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
+            QUndoCommand(i18n("Move items"), parent),
             m_items(items),
-            m_movement(movement),
             m_scene(scene),
             done(true)
         {}
         virtual void redo();
         virtual void undo();
 };
+int KIPIPhotoFramesEditor::MoveItemsUndoCommand::num = 0;
 void MoveItemsUndoCommand::redo()
 {
     if (!done)
     {
-        foreach (AbstractPhoto * item, m_items)
-            item->setPos(item->pos() + m_movement);
+        QMap<AbstractPhoto*,QPointF>::iterator it = m_items.begin();
+        while(it != m_items.end())
+        {
+            QPointF temp = it.key()->pos();
+            it.key()->setPos( it.value() );
+            it.value() = temp;
+            ++it;
+        }
         done = !done;
         m_scene->calcSelectionBoundingRect();
     }
@@ -156,8 +176,14 @@ void MoveItemsUndoCommand::undo()
 {
     if (done)
     {
-        foreach (AbstractPhoto * item, m_items)
-            item->setPos(item->pos() - m_movement);
+        QMap<AbstractPhoto*,QPointF>::iterator it = m_items.begin();
+        while(it != m_items.end())
+        {
+            QPointF temp = it.key()->pos();
+            it.key()->setPos( it.value() );
+            it.value() = temp;
+            ++it;
+        }
         done = !done;
         m_scene->calcSelectionBoundingRect();
     }
@@ -249,9 +275,9 @@ void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 //#####################################################################################################
 void Scene::keyPressEvent(QKeyEvent * event)
 {
-    if (d->m_selected_items.count() == 1 && (d->m_selected_items.at(0)->hasFocus()))
+    if (d->m_selected_items.count() == 1 && (d->m_selected_items.begin().key()->hasFocus()))
     {
-        this->setFocusItem(d->m_selected_items.at(0));
+        this->setFocusItem(d->m_selected_items.begin().key());
         QGraphicsScene::keyPressEvent(event);
         event->setAccepted(true);
         return;
@@ -283,6 +309,8 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
         // If moving enabled
         if (m_interaction_mode & Selecting)
         {
+            this->calcSelectionBoundingRect();
+
             // Get initial selection position
             d->setSelectionInitialPosition();
 
@@ -290,7 +318,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             if (selectionMode & SingleSelection)
                 event->setModifiers(event->modifiers() & !Qt::ControlModifier);
             d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
-            this->calcSelectionBoundingRect();
+
             if (!(event->modifiers() & Qt::ControlModifier) &&
                  (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item)))
                 d->deselectSelected();
@@ -337,10 +365,11 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
                     distance.setY(y_grid*round(distance.ry()/y_grid));
                 }
                 QPointF difference = d->m_selected_items_path.boundingRect().topLeft();
+                          d->m_selected_items_path.translate(distance);
                 d->m_selected_items_path.translate(-difference);
                 difference = distance - difference;
-                d->m_selected_items_path.translate(distance);
-                foreach (AbstractPhoto * item, d->m_selected_items)
+                d->m_selected_items_path.translate(difference);
+                foreach (AbstractPhoto * item, d->m_selected_items.keys())
                     item->setPos(item->pos() + difference);
             }
         }
@@ -373,10 +402,9 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
             }
 
             // Post move command to QUndoStack
-            if (d->m_selected_items_path.boundingRect().topLeft() != d->m_selected_items_path_initial_pos)
+            if ((m_interaction_mode & Moving) && d->wasMoved())
             {
-                QPointF movement = d->m_selected_items_path.boundingRect().topLeft()-d->m_selected_items_path_initial_pos;
-                QUndoCommand * command = new MoveItemsUndoCommand(d->m_selected_items, movement, this);
+                QUndoCommand * command = new MoveItemsUndoCommand(d->m_selected_items, this);
                 PFE_PostUndoCommand(command);
             }
         }
@@ -390,7 +418,14 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
-        d->focusPressed();
+        // In this app there is no difference between doubleClick and press events.
+        // in Qt mouse events are alled in this order:        pressEvent -> releaseEvent -> doubleClickEvent -> releaseEvent
+        // So for correct working second call of releaseEvent it is needed to call mousePressEvent here.
+        this->mousePressEvent(event);
+
+        // If selecting enabled -> focus item
+        if (m_interaction_mode & Selecting)
+            d->focusPressed();
     }
     else
         QGraphicsScene::mouseDoubleClickEvent(event);
@@ -652,14 +687,12 @@ QList<AbstractPhoto*> Scene::selectedItems() const
 //#####################################################################################################
 void Scene::calcSelectionBoundingRect()
 {
-    d->m_selected_items.clear();
     d->m_selected_items_path = QPainterPath();
     QList<AbstractPhoto*> itemsList = this->selectedItems();
     foreach (AbstractPhoto * item, itemsList)
     {
-        if (d->m_selected_items.contains(item))
-            continue;
-        d->m_selected_items.append(item);
+        if (!d->m_selected_items.contains(item))
+            d->m_selected_items.insert(item, item->pos());
         d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
     }
 }

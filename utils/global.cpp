@@ -19,9 +19,7 @@ QString KIPIPhotoFramesEditor::uri()
 
 void KIPIPhotoFramesEditor::PFE_PostUndoCommand(QUndoCommand * command)
 {
-    UndoCommandEvent * event = new UndoCommandEvent();
-    event->setUndoCommand(command);
-    KApplication::postEvent(PhotoFramesEditor::instancePhotoFramesEditor(), event);
+    PhotoFramesEditor::instancePhotoFramesEditor()->addUndoCommand(command);
 }
 
 QDomElement KIPIPhotoFramesEditor::pathToSvg(const QPainterPath & path, QDomDocument & document)

@@ -25,7 +25,7 @@ namespace KIPIPhotoFramesEditor
 
             ~PhotoFramesEditor();
             static PhotoFramesEditor * instancePhotoFramesEditor(QWidget * parent = 0);
-            virtual void undoCommandEvent(UndoCommandEvent * event);
+            void addUndoCommand(QUndoCommand * command);
 
         public Q_SLOTS:
 

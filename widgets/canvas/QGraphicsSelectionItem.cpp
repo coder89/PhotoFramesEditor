@@ -32,14 +32,15 @@ class KIPIPhotoFramesEditor::QGraphicsSelectionItemPrivate
 
     friend class QGraphicsSelectionItem;
 };
-
+#include <QTime>
+#include <klocalizedstring.h>
 class KIPIPhotoFramesEditor::QGraphicsSelectionItem::MoveItemsUndoCommand : public QUndoCommand
 {
         QMap<QGraphicsItem*,QPointF> m_itemsList;
         bool done;
     public:
         MoveItemsUndoCommand(QSet<QGraphicsItem*> selectedItems, QUndoCommand * parent = 0) :
-            QUndoCommand(parent),
+            QUndoCommand(i18n("move selection item")+QTime::currentTime().toString(), parent),
             done(true)
         {
             foreach (QGraphicsItem * item, selectedItems)

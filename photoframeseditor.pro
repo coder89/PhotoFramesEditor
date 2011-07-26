@@ -50,7 +50,9 @@ SOURCES += main.cpp\
     widgets/items/TextItem.cpp \
     widgets/dialogs/ImageFileDialog.cpp \
     utils/PFESettings.cpp \
-    widgets/tools/TextEditorTool.cpp
+    widgets/tools/TextEditorTool.cpp \
+    listeners/TextColorChangeListener.cpp \
+    listeners/TextFontChangeListener.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -94,7 +96,9 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/items/TextItem.h \
     widgets/dialogs/ImageFileDialog.h \
     utils/PFESettings.h \
-    widgets/tools/TextEditorTool.h
+    widgets/tools/TextEditorTool.h \
+    listeners/TextColorChangeListener.h \
+    listeners/TextFontChangeListener.h
 
 LIBS += \
     -L/usr \
@@ -112,6 +116,7 @@ INCLUDEPATH += \
     widgets/tools \
     effects \
     events \
+    listeners \
     utils \
     models \
     undo

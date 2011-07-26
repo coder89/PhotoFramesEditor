@@ -82,11 +82,11 @@ PhotoFramesEditor * PhotoFramesEditor::instancePhotoFramesEditor(QWidget * paren
     }
 }
 
-void PhotoFramesEditor::undoCommandEvent(UndoCommandEvent * event)
+void PhotoFramesEditor::addUndoCommand(QUndoCommand * command)
 {
-    QUndoCommand * command = event->undoCommand();
     if (command && m_canvas)
         m_canvas->undoStack()->push(command);
+    qDebug() << command->text() << command;
 }
 
 void PhotoFramesEditor::setupActions()

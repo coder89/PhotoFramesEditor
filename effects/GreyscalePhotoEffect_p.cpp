@@ -1,10 +1,10 @@
 #include "GreyscalePhotoEffect_p.h"
+#include "GreyscalePhotoEffect.h"
 
 #include <klocalizedstring.h>
-#include <QDebug>
 
-GreyscalePhotoEffect::GreyscalePhotoEffect(QObject * parent) :
-    AbstractPhotoEffectInterface(parent)
+GreyscalePhotoEffect::GreyscalePhotoEffect(GreyscalePhotoEffectFactory * factory, QObject * parent) :
+    AbstractPhotoEffectInterface(factory, parent)
 {
 }
 
@@ -21,7 +21,7 @@ QImage GreyscalePhotoEffect::apply(const QImage & image) const
 
 QString GreyscalePhotoEffect::effectName() const
 {
-    return i18n("Greyscale effect");
+    return factory()->effectName();
 }
 
 QString GreyscalePhotoEffect::toString() const

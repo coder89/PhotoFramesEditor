@@ -3,6 +3,7 @@
 #include "PhotoEffectsLoader.h"
 #include "PhotoEffectsGroup.h"
 #include "AbstractPhotoEffectInterface.h"
+#include "ToolsDockWidget.h"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -59,7 +60,7 @@ class KIPIPhotoFramesEditor::EffectsEditorToolPrivate
     friend class EffectsEditorTool;
 };
 
-EffectsEditorTool::EffectsEditorTool(QWidget * parent) :
+EffectsEditorTool::EffectsEditorTool(ToolsDockWidget * parent) :
     AbstractTool(parent),
     d(new EffectsEditorToolPrivate)
 {
@@ -121,7 +122,6 @@ EffectsEditorTool::EffectsEditorTool(QWidget * parent) :
     layout->setRowStretch(2,1);
     d->setButtonsEnabled(false);
 }
-
 
 EffectsEditorTool::~EffectsEditorTool()
 {

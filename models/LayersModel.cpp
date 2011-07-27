@@ -19,9 +19,7 @@ using namespace KIPIPhotoFramesEditor;
 LayersModel::LayersModel(QObject *parent) :
     QAbstractItemModel(parent)
 {
-    root = new LayersModelItem(
-                               // (QList<QVariant>() << "sfa" << QIcon(":eye.png") << QIcon(":padlock.png") << "Name")
-                              );
+    root = new LayersModelItem(0, 0, this);
     this->setSupportedDragActions(Qt::MoveAction);
 }
 
@@ -178,7 +176,7 @@ bool LayersModel::insertRows(int position, int count, const QModelIndex  & paren
     beginInsertRows(parent,position,position+count-1);
     bool result = true;
     for (;count;--count)
-        result &= parentItem->insertChildren(position, new LayersModelItem());
+        result &= parentItem->insertChildren(position, new LayersModelItem(0, 0, this));
     endInsertRows();
     emit layoutChanged();
     return result;

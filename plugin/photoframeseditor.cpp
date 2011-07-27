@@ -230,6 +230,7 @@ void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
     QDomDocument document;
     document.setContent(&file, true);
     m_canvas = Canvas::fromSvg(document);
+    m_canvas->setFile(fileUrl);
     if (m_canvas)
     {
         m_canvas->setParent(d->centralWidget);
@@ -247,6 +248,7 @@ void PhotoFramesEditor::prepareSignalsConnections()
     d->centralWidget->layout()->addWidget(m_canvas);
     d->tree->setModel(m_canvas->model());
     d->tree->setSelectionModel(m_canvas->selectionModel());
+
     // model/tree/canvas synchronization signals
     connect(m_canvas,SIGNAL(savedStateChanged()),this,SLOT(refreshActions()));
     connect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),d->redoAction,SLOT(setEnabled(bool)));
@@ -265,6 +267,8 @@ void PhotoFramesEditor::prepareSignalsConnections()
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
     connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableEffectsEditingMode()));
     connect(d->toolsWidget,SIGNAL(textToolSelected()),m_canvas,SLOT(enableTextEditingMode()));
+    connect(d->toolsWidget,SIGNAL(newItemCreated(AbstractPhoto*)),m_canvas,SLOT(addNewItem(AbstractPhoto*)));
+    connect(m_canvas->scene()->toGraphicsScene(), SIGNAL(mousePressedPoint(QPointF)), d->toolsWidget, SLOT(mousePositionChoosen(QPointF)));
 
     d->toolsWidget->setDefaultTool();
 }

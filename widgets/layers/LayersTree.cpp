@@ -36,10 +36,7 @@ LayersTree::LayersTree(QWidget * parent) :
 
 void LayersTree::setModel(QAbstractItemModel * model)
 {
-    qDebug() << this->model() << this->model()->disconnect(this);
     QTreeView::setModel(model);
-
-    qDebug() << model << this->model();
 
     if (!model)
         return;

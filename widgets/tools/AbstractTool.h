@@ -7,6 +7,7 @@ namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
     class EffectsListView;
+    class ToolsDockWidget;
 
     class AbstractTool : public QWidget
     {
@@ -14,17 +15,26 @@ namespace KIPIPhotoFramesEditor
             Q_PROPERTY(AbstractPhoto * m_photo READ currentItem WRITE setCurrentItem)
 
             AbstractPhoto * m_photo;
+            QPointF m_point;
 
         public:
 
-            AbstractTool(QWidget * parent = 0);
+            AbstractTool(ToolsDockWidget * parent = 0);
 
           /** Current photo property
             * This property holds an information which item is currently editing.
             */
             Q_PROPERTY(AbstractPhoto * m_photo READ currentItem WRITE setCurrentItem)
+
             AbstractPhoto * currentItem();
             void setCurrentItem(AbstractPhoto * photo);
+
+            QPointF mousePosition();
+            void setMousePosition(const QPointF & position);
+
+        signals:
+
+            void itemCreated(AbstractPhoto * item);
 
         public slots:
 
@@ -37,6 +47,18 @@ namespace KIPIPhotoFramesEditor
             * This is a notification to open editors/tools and configure it for new item.
             */
             virtual void currentItemChanged() = 0;
+
+          /** This slot is called before current mouse position change.
+            * This is a notification for the editor/tool to clear it's drawing on the current
+            * position.
+            */
+            virtual void positionAboutToBeChanged() = 0;
+
+          /** This slot is called after current mouse position changed.
+            * This is a notification for the editor/tool to draw it's data on the new position.
+            */
+            virtual void positionChanged() = 0;
+
     };
 }
 

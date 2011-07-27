@@ -23,8 +23,10 @@ namespace KIPIPhotoFramesEditor
     class PhotoEffectsGroup;
     class AbstractPhotoEffectInterface;
 
-    class AbstractPhoto : public QGraphicsItem
+    class AbstractPhoto : public QObject, public QGraphicsItem
     {
+            Q_OBJECT
+
             QString m_name;
             mutable QString m_id;
 
@@ -119,14 +121,25 @@ namespace KIPIPhotoFramesEditor
                 return m_effects_group;
             }
 
-            Q_PROPERTY(QString m_id READ id WRITE setId)
+            Q_PROPERTY(QString m_id READ id)
             QString id() const;
 
             /// Refreshes item
-            virtual void refresh() = 0;
+            void refresh()
+            {
+                this->refreshItem();
+                emit updated();
+            }
 
             /// Returns item's property browser
             virtual QtAbstractPropertyBrowser * propertyBrowser() = 0;
+
+        signals:
+
+          /** This signal is emited when item was changed and has been updated.
+            * It is used by listeners to update their views and be up to date.
+            */
+            void updated();
 
         protected:
 
@@ -175,6 +188,9 @@ namespace KIPIPhotoFramesEditor
             friend class AbstractPhotoResizer;
 
         private:
+
+            // Refreshes item's view and internal data
+            virtual void refreshItem() = 0;
 
             void setupItem();
 

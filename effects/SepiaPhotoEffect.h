@@ -16,6 +16,11 @@ class SEPIAPHOTOEFFECTSHARED_EXPORT SepiaPhotoEffectFactory : public AbstractPho
         SepiaPhotoEffectFactory(QObject * parent = 0);
         virtual AbstractPhotoEffectInterface * getEffectInstance();
         virtual QString effectName() const;
+
+    protected:
+
+        virtual void writeToSvg(AbstractPhotoEffectInterface * effect, QDomElement & effectElement);
+        virtual AbstractPhotoEffectInterface * readFromSvg(QDomElement & element);
 };
 
 #endif // SEPIAPHOTOEFFECT_H

@@ -6,8 +6,9 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class ColorizePhotoEffectFactory;
+#define COLOR_PROPERTY "Color"
 
+class ColorizePhotoEffectFactory;
 class ColorizePhotoEffect : public AbstractPhotoEffectInterface
 {
         Q_INTERFACES(AbstractPhotoEffectInterface)
@@ -18,17 +19,25 @@ class ColorizePhotoEffect : public AbstractPhotoEffectInterface
 
         explicit ColorizePhotoEffect(ColorizePhotoEffectFactory * factory, QObject * parent = 0);
         virtual QImage apply(const QImage & image) const;
+        virtual QString effectName() const;
         virtual QString toString() const;
         virtual operator QString() const;
         QColor color() const
         {
             foreach (AbstractPhotoEffectProperty * property, m_properties)
-                if (property->id == "Color")
+                if (property->id == COLOR_PROPERTY)
                     return (m_last_color = property->value.value<QColor>());
             return Qt::transparent;
         }
 
     private:
+
+        void setColor(const QColor & color)
+        {
+            foreach (AbstractPhotoEffectProperty * property, m_properties)
+                if (property->id == COLOR_PROPERTY)
+                    property->value = color;
+        }
 
         static inline QImage colorized(const QImage & image, const QColor & color)
         {
@@ -46,6 +55,8 @@ class ColorizePhotoEffect : public AbstractPhotoEffectInterface
             p.end();
             return result;
         }
+
+    friend class ColorizePhotoEffectFactory;
 };
 
 #endif // COLORIZEPHOTOEFFECT_P_H

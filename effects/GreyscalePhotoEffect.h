@@ -16,6 +16,11 @@ class GREYSCALEPHOTOEFFECTSHARED_EXPORT GreyscalePhotoEffectFactory : public Abs
         GreyscalePhotoEffectFactory(QObject * parent = 0);
         virtual AbstractPhotoEffectInterface * getEffectInstance();
         virtual QString effectName() const;
+
+    protected:
+
+        virtual void writeToSvg(AbstractPhotoEffectInterface * effect, QDomElement & effectElement);
+        virtual AbstractPhotoEffectInterface * readFromSvg(QDomElement & element);
 };
 
 #endif // GREYSCALEPHOTOEFFECT_H

@@ -9,9 +9,10 @@
 #include <QUndoCommand>
 
 #include "PhotoEffectsGroup.h"
-#include "AbstractPhotoEffectFactory.h"
 
 #include <klocalizedstring.h>
+
+#define STRENGTH_PROPERTY "Strength"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -32,6 +33,7 @@ namespace KIPIPhotoFramesEditor
         QMap<AttributeTypes,QVariant> data;
     };
 
+    class AbstractPhotoEffectFactory;
     class AbstractPhotoEffectInterface : public QObject
     {
             class AbstractPhotoEffectInterfaceCommand;
@@ -46,7 +48,7 @@ namespace KIPIPhotoFramesEditor
             {
                 if (!m_factory)
                     throw "No factory object!";
-                AbstractPhotoEffectProperty * strength = new AbstractPhotoEffectProperty("Strength");
+                AbstractPhotoEffectProperty * strength = new AbstractPhotoEffectProperty(STRENGTH_PROPERTY);
                 strength->value = QVariant(100);
                 strength->data.insert(AbstractPhotoEffectProperty::Minimum,0);
                 strength->data.insert(AbstractPhotoEffectProperty::Maximum,100);
@@ -73,6 +75,7 @@ namespace KIPIPhotoFramesEditor
                 return image;
             }
 
+            virtual QString effectName() const = 0;
             virtual QString toString() const = 0;
             virtual operator QString() const = 0;
 
@@ -112,7 +115,7 @@ namespace KIPIPhotoFramesEditor
             int strength() const
             {
                 foreach (AbstractPhotoEffectProperty * property, m_properties)
-                    if (property->id == "Strength")
+                    if (property->id == STRENGTH_PROPERTY)
                         return property->value.toInt();
                 return 100;
             }
@@ -156,6 +159,13 @@ namespace KIPIPhotoFramesEditor
                 return oldProperties;
             }
 
+            void setStrength(int strength)
+            {
+                foreach (AbstractPhotoEffectProperty * property, m_properties)
+                    if (property->id == STRENGTH_PROPERTY)
+                        property->value = strength;
+            }
+
             class AbstractPhotoEffectInterfaceCommand : public QUndoCommand
             {
                     AbstractPhotoEffectInterface * m_effect;
@@ -166,7 +176,7 @@ namespace KIPIPhotoFramesEditor
                         m_effect(effect),
                         m_properties(properties)
                     {
-                        this->setText(m_effect->factory()->effectName() + i18n(" change"));
+                        this->setText(m_effect->effectName() + i18n(" change"));
                     }
                     ~AbstractPhotoEffectInterfaceCommand()
                     {
@@ -208,6 +218,7 @@ namespace KIPIPhotoFramesEditor
             };
 
         friend class AbstractPhotoEffectInterfaceCommand;
+        friend class AbstractPhotoEffectFactory;
         friend class PhotoEffectsLoader;
     };
 }

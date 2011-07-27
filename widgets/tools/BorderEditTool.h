@@ -10,6 +10,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class ToolsDockWidget;
     class BorderEditTool : public QDockWidget
     {
             Q_OBJECT
@@ -26,7 +27,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit BorderEditTool(QWidget * parent = 0);
+            explicit BorderEditTool(ToolsDockWidget * parent = 0);
 
         signals:
 

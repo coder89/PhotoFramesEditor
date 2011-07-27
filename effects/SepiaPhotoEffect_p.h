@@ -6,19 +6,21 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+class SepiaPhotoEffectFactory;
 class SepiaPhotoEffect : public AbstractPhotoEffectInterface
 {
         Q_INTERFACES(AbstractPhotoEffectInterface)
 
     public:
 
-        explicit SepiaPhotoEffect(QObject * parent = 0);
+        explicit SepiaPhotoEffect(SepiaPhotoEffectFactory * factory, QObject * parent = 0);
         virtual QImage apply(const QImage & image) const;
         virtual QString effectName() const;
         virtual QString toString() const;
         virtual operator QString() const;
 
     private:
+
         static inline QImage sepia_converted(const QImage & image)
         {
             QImage result = image;

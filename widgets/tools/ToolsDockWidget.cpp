@@ -107,6 +107,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_text_widget = new TextEditorTool(this);
     m_tool_widget_layout->addWidget(m_text_widget);
     connect(m_text_button,SIGNAL(toggled(bool)),this,SLOT(setTextWidgetVisible(bool)));
+    connect(m_text_widget, SIGNAL(itemCreated(AbstractPhoto*)), this, SLOT(emitNewItemCreated(AbstractPhoto*)));
 
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
@@ -150,6 +151,20 @@ void ToolsDockWidget::itemSelected(AbstractPhoto * photo)
     AbstractTool * tool =qobject_cast<AbstractTool*>(m_tool_widget_layout->currentWidget());
     if (tool)
         tool->setCurrentItem(photo);
+}
+
+void ToolsDockWidget::mousePositionChoosen(const QPointF & position)
+{
+    AbstractTool * tool =qobject_cast<AbstractTool*>(m_tool_widget_layout->currentWidget());
+    if (tool)
+        tool->setMousePosition(position);
+}
+
+void ToolsDockWidget::emitNewItemCreated(AbstractPhoto * item)
+{
+    if (!item)
+        return;
+    emit newItemCreated(item);
 }
 
 void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)

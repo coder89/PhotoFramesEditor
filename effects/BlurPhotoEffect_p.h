@@ -8,13 +8,16 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+#define RADIUS_PROPERTY "Radius"
+
+class BlurPhotoEffectFactory;
 class BlurPhotoEffect : public AbstractPhotoEffectInterface
 {
         Q_INTERFACES(AbstractPhotoEffectInterface)
 
     public:
 
-        explicit BlurPhotoEffect(QObject * parent = 0);
+        explicit BlurPhotoEffect(BlurPhotoEffectFactory * factory, QObject * parent = 0);
         virtual QImage apply(const QImage & image) const;
         virtual QString effectName() const;
         virtual QString toString() const;
@@ -23,12 +26,19 @@ class BlurPhotoEffect : public AbstractPhotoEffectInterface
         int radius() const
         {
             foreach (AbstractPhotoEffectProperty * property, m_properties)
-                if (property->id == "Radius")
+                if (property->id == RADIUS_PROPERTY)
                     return property->value.toInt();
             return 0;
         }
 
     private:
+
+        void setRadius(int radius)
+        {
+            foreach (AbstractPhotoEffectProperty * property, m_properties)
+                if (property->id == RADIUS_PROPERTY)
+                    property->value = radius;
+        }
 
         static QImage blurred(const QImage & image, const QRect& rect, unsigned int radius)
         {
@@ -95,6 +105,8 @@ class BlurPhotoEffect : public AbstractPhotoEffectInterface
 
             return result;
         }
+
+    friend class BlurPhotoEffectFactory;
 };
 
 #endif // BLURPHOTOEFFECT_P_H

@@ -168,6 +168,7 @@ class KIPIPhotoFramesEditor::TextItem::TextEditUndoCommand : public QUndoCommand
             QStringList temp = m_item->m_string_list;
             m_item->m_string_list = m_prevText;
             m_prevText = temp;
+            m_item->setName(m_item->m_string_list.join(" "));
             m_item->refresh();
         }
         virtual void undo()
@@ -178,6 +179,7 @@ class KIPIPhotoFramesEditor::TextItem::TextEditUndoCommand : public QUndoCommand
             QStringList temp = m_item->m_string_list;
             m_item->m_string_list = m_prevText;
             m_prevText = temp;
+            m_item->setName(m_item->m_string_list.join(" "));
             m_item->refresh();
         }
 };
@@ -243,6 +245,10 @@ TextItem::TextItem(const QString & text, QGraphicsScene * scene) :
     m_metrics(m_font)
 {
     this->setFlag(QGraphicsItem::ItemIsFocusable);
+    if (text.isEmpty())
+        this->setName(i18n("New text item"));
+    else
+        this->setName(text);
     this->refresh();
 }
 
@@ -326,23 +332,29 @@ void TextItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     QString currentLine = m_string_list.at( d->m_cursor_line );
 
     // Get clicked char position
-    p.setX(p.x()-m_metrics.leftBearing(currentLine.at(0)));
-    d->m_cursor_character = p.x() / m_metrics.averageCharWidth();
-    if (d->m_cursor_character > currentLine.length())
-        d->m_cursor_character = currentLine.length();
-    int width = m_metrics.width(currentLine, d->m_cursor_character);
-    int leftSpace = 0;
-    while (width > p.x() && d->m_cursor_character > 0)
+    if (currentLine.length())
     {
-        leftSpace = width - p.x();
-        width = m_metrics.width(currentLine, --(d->m_cursor_character));
+        p.setX(p.x()-m_metrics.leftBearing(currentLine.at(0)));
+        d->m_cursor_character = p.x() / m_metrics.averageCharWidth();
+        if (d->m_cursor_character > currentLine.length())
+            d->m_cursor_character = currentLine.length();
+        int width = m_metrics.width(currentLine, d->m_cursor_character);
+        int leftSpace = 0;
+        while (width > p.x() && d->m_cursor_character > 0)
+        {
+            leftSpace = width - p.x();
+            width = m_metrics.width(currentLine, --(d->m_cursor_character));
+        }
+        int rightSpace = 0;
+        while (width < p.x() && d->m_cursor_character < currentLine.length())
+        {
+            rightSpace = p.x() - width;
+            width = m_metrics.width(currentLine, ++(d->m_cursor_character));
+        }
     }
-    int rightSpace = 0;
-    while (width < p.x() && d->m_cursor_character < currentLine.length())
-    {
-        rightSpace = p.x() - width;
-        width = m_metrics.width(currentLine, ++(d->m_cursor_character));
-    }
+    else
+        p.setX(0);
+
     this->update();
 }
 
@@ -439,39 +451,6 @@ void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option
     }
 }
 
-void TextItem::refresh()
-{
-    m_metrics = QFontMetrics(m_font);
-    m_text_path = QPainterPath();
-    int i = 1;
-    int maxBearing = 0;
-    int maxWidth = 0;
-    const int lineSpacing = m_metrics.lineSpacing();
-    foreach (QString string, m_string_list)
-    {
-        if (string.length())
-        {
-            int width = m_metrics.width(string);
-            int leftBearing = -m_metrics.leftBearing(string.at(0));
-            m_text_path.addText(leftBearing,
-                                lineSpacing*(i)-m_metrics.descent(),
-                                m_font,
-                                string);
-            if (maxWidth < width)
-                maxWidth = width;
-            if (maxBearing < leftBearing)
-                maxBearing = leftBearing;
-        }
-        ++i;
-    }
-    m_complete_path = QPainterPath();
-    m_complete_path.addRect(0,
-                            0,
-                            maxWidth + maxBearing,
-                            m_string_list.count() * m_metrics.lineSpacing());
-    this->prepareGeometryChange();
-}
-
 QDomElement TextItem::toSvg(QDomDocument & document) const
 {
     QDomElement result = AbstractPhoto::toSvg(document);
@@ -553,6 +532,41 @@ TextItem * TextItem::fromSvg(QDomElement & element)
 _delete:
     delete result;
     return 0;
+}
+
+void TextItem::refreshItem()
+{
+    m_metrics = QFontMetrics(m_font);
+    m_text_path = QPainterPath();
+    int i = 1;
+    int maxBearing = 0;
+    int maxWidth = 0;
+    const int lineSpacing = m_metrics.lineSpacing();
+    foreach (QString string, m_string_list)
+    {
+        if (string.length())
+        {
+            int width = m_metrics.width(string);
+            int leftBearing = -m_metrics.leftBearing(string.at(0));
+            m_text_path.addText(leftBearing,
+                                lineSpacing*(i)-m_metrics.descent(),
+                                m_font,
+                                string);
+            if (maxWidth < width)
+                maxWidth = width;
+            if (maxBearing < leftBearing)
+                maxBearing = leftBearing;
+        }
+        ++i;
+    }
+    if (maxWidth == 0)
+        maxWidth = 1;
+    m_complete_path = QPainterPath();
+    m_complete_path.addRect(0,
+                            0,
+                            maxWidth + maxBearing,
+                            m_string_list.count() * m_metrics.lineSpacing());
+    this->prepareGeometryChange();
 }
 
 QtAbstractPropertyBrowser * TextItem::propertyBrowser()

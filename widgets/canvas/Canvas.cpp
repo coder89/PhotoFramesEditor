@@ -162,12 +162,35 @@ void Canvas::addText(const QString & text)
 {
     // Create & setup item
     TextItem * it = new TextItem(text, m_scene);
-    it->setName(QString(it->textMultiline().toUtf8()).append(QString::number(m_model->rowCount())));
     it->setZValue(m_model->rowCount()+1);
 
     // Add item to scene & model
     m_scene->addItem(it);
     m_model->prependItem(it);
+
+    if (m_selmodel->hasSelection())
+    {} /// TODO: add above selected
+}
+
+/** ###########################################################################################################################
+ * Used when new item has been created and needs to be added to the scene and to the model
+ #############################################################################################################################*/
+void Canvas::addNewItem(AbstractPhoto * item)
+{
+    if (!item)
+        return;
+
+    item->setZValue(m_model->rowCount()+1);
+
+    // Add item to scene & model
+    m_scene->addItem(item);
+    m_model->prependItem(item);
+
+    m_scene->clearSelection();
+    m_scene->clearFocus();
+
+    item->setSelected(true);
+    item->setFocus( Qt::OtherFocusReason );
 
     if (m_selmodel->hasSelection())
     {} /// TODO: add above selected

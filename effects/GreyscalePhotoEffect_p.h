@@ -6,13 +6,14 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+class GreyscalePhotoEffectFactory;
 class GreyscalePhotoEffect : public AbstractPhotoEffectInterface
 {
         Q_INTERFACES(AbstractPhotoEffectInterface)
 
     public:
 
-        explicit GreyscalePhotoEffect(QObject * parent = 0);
+        explicit GreyscalePhotoEffect(GreyscalePhotoEffectFactory * factory, QObject * parent = 0);
         virtual QImage apply(const QImage & image) const;
         virtual QString effectName() const;
         virtual QString toString() const;

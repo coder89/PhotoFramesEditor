@@ -302,9 +302,6 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        // If listeners should know scene press position
-        if (m_interaction_mode & MouseTracking)
-            emit mousePressedPoint(event->buttonDownScenePos(event->button()));
 
         // If moving enabled
         if (m_interaction_mode & Selecting)
@@ -337,6 +334,9 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
                     d->m_pressed_item->mousePressEvent(event);
                 }
             }
+            // If listeners should know scene press position
+            else if (m_interaction_mode & MouseTracking)
+                emit mousePressedPoint(event->buttonDownScenePos(event->button()));
         }
         event->setAccepted(d->m_pressed_item);
     }

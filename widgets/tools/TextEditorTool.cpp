@@ -1,11 +1,12 @@
 #include "TextEditorTool.h"
 #include "TextItem.h"
+#include "ToolsDockWidget.h"
 
 #include <QVBoxLayout>
 
 using namespace KIPIPhotoFramesEditor;
 
-TextEditorTool::TextEditorTool(QWidget *parent) :
+TextEditorTool::TextEditorTool(ToolsDockWidget * parent) :
     AbstractTool(parent),
     m_text_item(0),
     m_browser(0)
@@ -35,4 +36,17 @@ void TextEditorTool::currentItemChanged()
             this->layout()->addWidget(m_browser);
         }
     }
+}
+
+void TextEditorTool::positionAboutToBeChanged()
+{
+    if (m_text_item)
+        m_text_item->clearFocus();
+}
+
+void TextEditorTool::positionChanged()
+{
+    setCurrentItem( new TextItem() );
+    currentItem()->setPos( this->mousePosition() );
+    emit itemCreated( currentItem() );
 }

@@ -1,4 +1,5 @@
 #include "BorderEditTool.h"
+#include "ToolsDockWidget.h"
 
 #include <QDebug>
 #include <QGridLayout>
@@ -12,7 +13,7 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-BorderEditTool::BorderEditTool(QWidget * parent) :
+BorderEditTool::BorderEditTool(ToolsDockWidget * parent) :
     QDockWidget(parent)
 {
     this->setFeatures(QDockWidget::NoDockWidgetFeatures);

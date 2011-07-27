@@ -190,6 +190,9 @@ namespace KIPIPhotoFramesEditor
 
         protected slots:
 
+            /// Used when new item has been created and needs to be added to the scene and to the model
+            void addNewItem(AbstractPhoto * item);
+
             /// Used for synchronization scene with model (adds to model item added directly from scene)
             void addNewItemToModel(AbstractPhoto * item);
 

@@ -8,6 +8,7 @@
 namespace KIPIPhotoFramesEditor
 {
     class AbstractPhoto;
+    class LayersModel;
 
     class LayersModelItem : public QObject
     {
@@ -22,7 +23,7 @@ namespace KIPIPhotoFramesEditor
                 EyeIcon = 1, PadLockIcon, NameString = COLUMN_COUNT-1, Thumbnail
             };
 
-            LayersModelItem(AbstractPhoto * item = 0, LayersModelItem * parent = 0);
+            LayersModelItem(AbstractPhoto * item, LayersModelItem * parent, LayersModel * model);
             virtual ~LayersModelItem();
             void removeChild(LayersModelItem * child);
             LayersModelItem * parent() const;
@@ -40,21 +41,13 @@ namespace KIPIPhotoFramesEditor
             void setPhoto(AbstractPhoto * photo);
             AbstractPhoto * photo() const;
 
-        public Q_SLOTS:
-
-            virtual void selectStateChanged(bool){};
-            virtual void showStateChanged(bool){};
-            virtual void lockStateChanged(bool){};
-
-        Q_SIGNALS:
-
-            void selectionChanged(bool);
-            void visibilityChanged(bool);
-            void blockadeChanged(bool);
-
         protected:
 
             void setData(const QList<QVariant> & data);
+
+        protected slots:
+
+            void updateData();
 
         private:
 
@@ -63,6 +56,7 @@ namespace KIPIPhotoFramesEditor
             LayersModelItem * parentItem;
             QList<LayersModelItem*> childItems;
             AbstractPhoto * itemPhoto;
+            LayersModel * itemModel;
     };
 }
 

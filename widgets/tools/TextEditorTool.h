@@ -18,7 +18,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit TextEditorTool(QWidget *parent = 0);
+            explicit TextEditorTool(ToolsDockWidget * parent = 0);
 
         signals:
 
@@ -26,10 +26,8 @@ namespace KIPIPhotoFramesEditor
 
             virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();
-
-        protected slots:
-
-           // void propertyChanged(QtProperty * property);
+            virtual void positionAboutToBeChanged();
+            virtual void positionChanged();
     };
 }
 

@@ -217,7 +217,7 @@ void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * optio
     }
 }
 
-void PhotoItem::refresh()
+void PhotoItem::refreshItem()
 {
     if (m_pixmap_original.isNull())
         return;

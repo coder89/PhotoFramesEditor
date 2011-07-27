@@ -1,4 +1,5 @@
 #include "LayersModelItem.h"
+#include "LayersModel.h"
 #include "AbstractPhoto.h"
 
 // Qt
@@ -9,9 +10,10 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-LayersModelItem::LayersModelItem(AbstractPhoto * photo, LayersModelItem * parent) :
+LayersModelItem::LayersModelItem(AbstractPhoto * photo, LayersModelItem * parent, LayersModel * model) :
     parentItem(0),
-    itemPhoto(photo)
+    itemPhoto(photo),
+    itemModel(model)
 {
     if (parent != this)
     {
@@ -111,8 +113,15 @@ bool LayersModelItem::setData(const QVariant & data, int type)
     return false;
 }
 
+void LayersModelItem::updateData()
+{
+    qDebug() << this << "changed";
+}
+
 void LayersModelItem::setPhoto(AbstractPhoto * photo)
 {
+    if (itemPhoto)
+        disconnect(itemPhoto, SIGNAL(updated()), this, 0);
     this->itemPhoto = photo;
     if (photo)
     {
@@ -122,6 +131,7 @@ void LayersModelItem::setPhoto(AbstractPhoto * photo)
                     qDebug() << "ZValue changed!" << (QGraphicsItem*)photo << "Current:" << photo->zValue() << "New:" << newZValue;
         #endif
         photo->setZValue(newZValue);
+        connect(photo, SIGNAL(updated()), this, SLOT(updateData()));
     }
 }
 
@@ -158,7 +168,7 @@ bool LayersModelItem::insertChildren(int position, LayersModelItem * item)
     childItems.insert(position, item);
     if (item != 0)
         item->setParent(this);
-    qDebug() << item->photo();
+    qDebug() << (QGraphicsItem*)item->photo();
     this->refreshZValues();
     return true;
 }

@@ -45,10 +45,12 @@ namespace KIPIPhotoFramesEditor
             Q_OBJECT
 
         public:
-            explicit EffectsEditorTool(QWidget * parent = 0);
+            explicit EffectsEditorTool(ToolsDockWidget * parent = 0);
             ~EffectsEditorTool();
             virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();
+            virtual void positionAboutToBeChanged(){} // Unused
+            virtual void positionChanged(){} // Unused
         protected slots:
             void viewCurrentEffectEditor(const QModelIndex & index);
             void viewEffectEditor(AbstractPhotoEffectInterface * effect);

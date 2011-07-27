@@ -4,9 +4,10 @@
 #include <QObject>
 #include <QDomDocument>
 
+#include "AbstractPhotoEffectInterface.h"
+
 namespace KIPIPhotoFramesEditor
 {
-    class AbstractPhotoEffectInterface;
     class AbstractPhotoEffectFactory : public QObject
     {
         public:
@@ -17,13 +18,7 @@ namespace KIPIPhotoFramesEditor
             virtual ~AbstractPhotoEffectFactory()
             {}
 
-          /** Returns effects property browser.
-            * \arg effect - pass effect object for configuration or pass NULL to get default \class QtAbstractPropertyBrowser
-            * which can be passed to \fn getEffectInstance() method.
-            */
-          //  virtual QtAbstractPropertyBrowser * propertyBrowser(AbstractPhotoEffect * effect = 0) const = 0;
-
-          /** Returns effects instance.
+            /** Returns effects instance.
             * \arg browser - as this argument you can set \class QtAbstractPropertyBrowser recieved from virtual
             * \fn propertyBrowser() method of this object.
             */
@@ -37,11 +32,40 @@ namespace KIPIPhotoFramesEditor
 
           /** Returns DOM node which contains effects attributes
             */
-            virtual QDomElement toSvg(AbstractPhotoEffectInterface * effect, QDomDocument & document) = 0;
+            QDomElement toSvg(AbstractPhotoEffectInterface * effect, QDomDocument & document)
+            {
+                QDomElement element = document.createElement("effect");
+                element.setAttribute("name", effectName());
+                element.setAttribute(STRENGTH_PROPERTY, effect->strength());
+                this->writeToSvg(effect, element);
+                return element;
+            }
 
           /** Reads node attributes from DOM node and returns ready effect object.
             */
-            virtual AbstractPhotoEffectInterface * fromSvg(QDomElement & element) = 0;
+            AbstractPhotoEffectInterface * fromSvg(QDomElement & element)
+            {
+                if (element.tagName() != "effect" || element.attribute("name") != effectName())
+                    return 0;
+                AbstractPhotoEffectInterface * result = this->readFromSvg(element);
+                if (result)
+                    result->setStrength( element.attribute(STRENGTH_PROPERTY).toInt() );
+                return result;
+            }
+
+        protected:
+
+          /** Writes effect specific attributes to DOM effect element.
+            * This is a pure virtual method which need to be implemented to write any effect specific attributes.
+            * You should save all data which are needed by your \fn readFromSvg() method to create valid copy of this effect.
+            */
+            virtual void writeToSvg(AbstractPhotoEffectInterface * effect, QDomElement & effectElement) = 0;
+
+          /** Reads effect attributes from DOM node and returns ready effect object.
+            * This method should create a valid effect object connected with apropriate factory object.
+            * It should also set any specific effect's attributes saved by \fn writeToSvg() method.
+            */
+            virtual AbstractPhotoEffectInterface * readFromSvg(QDomElement & element) = 0;
     };
 }
 

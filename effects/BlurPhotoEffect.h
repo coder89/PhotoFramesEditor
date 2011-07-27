@@ -16,6 +16,11 @@ class BLURPHOTOEFFECTSHARED_EXPORT BlurPhotoEffectFactory : public AbstractPhoto
         BlurPhotoEffectFactory(QObject * parent = 0);
         virtual AbstractPhotoEffectInterface * getEffectInstance();
         virtual QString effectName() const;
+
+    protected:
+
+        virtual void writeToSvg(AbstractPhotoEffectInterface * effect, QDomElement & effectElement);
+        virtual AbstractPhotoEffectInterface * readFromSvg(QDomElement & element);
 };
 
 #endif // BLURPHOTOEFFECT_H

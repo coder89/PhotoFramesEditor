@@ -55,7 +55,6 @@ namespace KIPIPhotoFramesEditor
             virtual bool contains(const QPointF & point) const;
 
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-            virtual void refresh();
 
             virtual QDomElement toSvg(QDomDocument & document) const;
             virtual QDomElement svgVisibleArea(QDomDocument &document) const;
@@ -66,6 +65,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
+            virtual void refreshItem();
             QPainterPath getLinePath(const QString & string);
             void setCursorPositionVisible(bool isVisible);
 

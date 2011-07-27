@@ -1,9 +1,10 @@
 #include "BlurPhotoEffect_p.h"
+#include "BlurPhotoEffect.h"
 
 #include <klocalizedstring.h>
 
-BlurPhotoEffect::BlurPhotoEffect(QObject * parent) :
-    AbstractPhotoEffectInterface(parent)
+BlurPhotoEffect::BlurPhotoEffect(BlurPhotoEffectFactory * factory, QObject * parent) :
+    AbstractPhotoEffectInterface(factory, parent)
 {
     AbstractPhotoEffectProperty * radius = new AbstractPhotoEffectProperty("Radius");
     radius->value = 10;
@@ -26,12 +27,12 @@ QImage BlurPhotoEffect::apply(const QImage & image) const
 
 QString BlurPhotoEffect::effectName() const
 {
-    return i18n("Blur effect");
+    return factory()->effectName();
 }
 
 QString BlurPhotoEffect::toString() const
 {
-    return effectName();
+    return effectName() + " [" + QString::number(this->radius()) + "]";
 }
 
 BlurPhotoEffect::operator QString() const

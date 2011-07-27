@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += gui
+QT       += gui xml
 
 TARGET = GreyscalePhotoEffectFactory
 TEMPLATE = lib

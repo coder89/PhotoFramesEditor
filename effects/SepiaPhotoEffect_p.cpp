@@ -1,9 +1,10 @@
 #include "SepiaPhotoEffect_p.h"
+#include "SepiaPhotoEffect.h"
 
 #include <klocalizedstring.h>
 
-SepiaPhotoEffect::SepiaPhotoEffect(QObject * parent) :
-    AbstractPhotoEffectInterface(parent)
+SepiaPhotoEffect::SepiaPhotoEffect(SepiaPhotoEffectFactory * factory, QObject * parent) :
+    AbstractPhotoEffectInterface(factory, parent)
 {
 }
 
@@ -20,7 +21,7 @@ QImage SepiaPhotoEffect::apply(const QImage & image) const
 
 QString SepiaPhotoEffect::effectName() const
 {
-    return i18n("Sepia effect");
+    return factory()->effectName();
 }
 
 QString SepiaPhotoEffect::toString() const

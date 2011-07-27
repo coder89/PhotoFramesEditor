@@ -41,6 +41,7 @@ namespace KIPIPhotoFramesEditor
         signals:
 
             void undoCommandCreated(QUndoCommand * command);
+            void newItemCreated(AbstractPhoto * item);
             void requireSingleSelection();
             void requireMultiSelection();
             void pointerToolSelected();
@@ -58,6 +59,8 @@ namespace KIPIPhotoFramesEditor
         public slots:
 
             void itemSelected(AbstractPhoto * photo);
+            void mousePositionChoosen(const QPointF & position);
+            void emitNewItemCreated(AbstractPhoto * item);
 
         protected slots:
 

@@ -31,9 +31,6 @@ namespace KIPIPhotoFramesEditor
             }
             void setPixmap(const QPixmap & pixmap);
 
-            /// Refreshes items data
-            virtual void refresh();
-
             /// Reimplemented from QGraphicsItem
             virtual bool contains(const QPointF & point) const
             {
@@ -73,6 +70,9 @@ namespace KIPIPhotoFramesEditor
             void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
 
         private:
+
+            // Refreshes items data
+            virtual void refreshItem();
 
             // Setups items
             void setupItem(const QPixmap & photo);

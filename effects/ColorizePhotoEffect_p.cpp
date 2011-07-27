@@ -8,7 +8,7 @@ QColor ColorizePhotoEffect::m_last_color = QColor(255,255,255,0);
 ColorizePhotoEffect::ColorizePhotoEffect(ColorizePhotoEffectFactory * factory, QObject * parent) :
     AbstractPhotoEffectInterface(factory, parent)
 {
-    AbstractPhotoEffectProperty  * color = new AbstractPhotoEffectProperty("Color");
+    AbstractPhotoEffectProperty  * color = new AbstractPhotoEffectProperty(COLOR_PROPERTY);
     color->value = m_last_color;
     m_properties.push_back(color);
 }
@@ -23,6 +23,11 @@ QImage ColorizePhotoEffect::apply(const QImage & image) const
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
     p.drawImage(0,0,AbstractPhotoEffectInterface::apply(colorized(image, tempColor)));
     return result;
+}
+
+QString ColorizePhotoEffect::effectName() const
+{
+    return factory()->effectName();
 }
 
 QString ColorizePhotoEffect::toString() const

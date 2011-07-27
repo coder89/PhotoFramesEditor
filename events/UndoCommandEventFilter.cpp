@@ -14,7 +14,7 @@ bool UndoCommandEventFilter::eventFilter(QObject * watched, QEvent * event)
         PhotoFramesEditor * editor = qobject_cast<PhotoFramesEditor*>(watched);
         if (editor)
         {
-            editor->undoCommandEvent(dynamic_cast<UndoCommandEvent*>(event));
+            //editor->undoCommandEvent(dynamic_cast<UndoCommandEvent*>(event));
             return true;
         }
         else

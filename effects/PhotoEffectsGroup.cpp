@@ -374,11 +374,20 @@ QList<AbstractPhotoEffectInterface*> PhotoEffectsGroup::removeRowsInModel(int st
     startingPosition = rowCount()-startingPosition-1;
 
     QList<AbstractPhotoEffectInterface*> removedItems;
+    int removedCount = 0;
     while (count--)
-        removedItems.push_back( m_effects_list.takeAt(startingPosition) );
+    {
+        AbstractPhotoEffectInterface * temp = m_effects_list.takeAt(startingPosition);
+        if (temp)
+        {
+            ++removedCount;
+            removedItems.push_back(temp);
+        }
+    }
 
     endRemoveRows();
-    emitEffectsChanged();
+    if (removedCount)
+        emitEffectsChanged();
     emit layoutChanged();
 
     return removedItems;

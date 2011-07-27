@@ -278,6 +278,7 @@ void TextItem::focusOutEvent(QFocusEvent * event)
     AbstractPhoto::focusOutEvent(event);
     this->unsetCursor();
     this->setFlag(QGraphicsItem::ItemIsMovable, true);
+    this->refresh();
 }
 
 void TextItem::keyPressEvent(QKeyEvent * event)
@@ -317,7 +318,7 @@ void TextItem::keyPressEvent(QKeyEvent * event)
         default:
             d->addText(event->text());
     }
-    refresh();
+    refreshItem();
     event->setAccepted(true);
 }
 

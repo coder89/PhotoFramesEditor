@@ -386,8 +386,11 @@ QList<AbstractPhotoEffectInterface*> PhotoEffectsGroup::removeRowsInModel(int st
     }
 
     endRemoveRows();
+
+    // Prevent emmiting changes then empty row is removed
     if (removedCount)
         emitEffectsChanged();
+
     emit layoutChanged();
 
     return removedItems;

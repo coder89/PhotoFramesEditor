@@ -66,7 +66,7 @@ QDomElement KIPIPhotoFramesEditor::pathToSvg(const QPainterPath & path, QDomDocu
     element.setAttribute("d", str_path_d);
     return element;
 }
-#include <QDebug>
+
 QPainterPath KIPIPhotoFramesEditor::pathFromSvg(const QDomElement & element)
 {
     QPainterPath result;

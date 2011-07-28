@@ -12,6 +12,8 @@ namespace KIPIPhotoFramesEditor
 
     class TextItem : public AbstractPhoto
     {
+            Q_OBJECT
+
             class TextEditUndoCommand;
             class TextColorUndoCommand;
             class TextFontUndoCommand;

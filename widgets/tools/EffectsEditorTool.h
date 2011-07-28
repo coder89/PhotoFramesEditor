@@ -51,6 +51,7 @@ namespace KIPIPhotoFramesEditor
             virtual void currentItemChanged();
             virtual void positionAboutToBeChanged(){} // Unused
             virtual void positionChanged(){} // Unused
+
         protected slots:
             void viewCurrentEffectEditor(const QModelIndex & index);
             void viewEffectEditor(AbstractPhotoEffectInterface * effect);

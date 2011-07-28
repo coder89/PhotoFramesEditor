@@ -9,6 +9,8 @@ namespace KIPIPhotoFramesEditor
 
     class PhotoItem : public AbstractPhoto
     {
+            Q_OBJECT
+
         public:
 
             PhotoItem(const QImage & photo = QImage(), QGraphicsScene * scene = 0);

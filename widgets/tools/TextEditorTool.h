@@ -15,6 +15,7 @@ namespace KIPIPhotoFramesEditor
 
             TextItem * m_text_item;
             QtAbstractPropertyBrowser * m_browser;
+            bool m_create_new_item;
 
         public:
 

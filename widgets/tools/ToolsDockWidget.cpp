@@ -172,8 +172,8 @@ void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
     emit effectsToolSelectionChanged(isVisible);
     if (isVisible)
     {
-        m_tool_widget_layout->setCurrentWidget(m_effects_widget);
         m_effects_widget->setCurrentItem(m_currentPhoto);
+        m_tool_widget_layout->setCurrentWidget(m_effects_widget);
         emit requireSingleSelection();
         emit effectsToolSelected();
         this->adjustSize();
@@ -185,8 +185,8 @@ void ToolsDockWidget::setTextWidgetVisible(bool isVisible)
     emit textToolSelectionChanged(isVisible);
     if (isVisible)
     {
-        m_tool_widget_layout->setCurrentWidget(m_text_widget);
         m_text_widget->setCurrentItem(m_currentPhoto);
+        m_tool_widget_layout->setCurrentWidget(m_text_widget);
         emit requireSingleSelection();
         emit textToolSelected();
         this->adjustSize();

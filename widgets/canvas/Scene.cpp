@@ -134,6 +134,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     QPointF m_selected_items_path_initial_pos;
     bool m_selected_items_all_movable;
     bool m_selection_visible;
+    QList<const char *> m_selection_filters;
 
     int m_mode;
     friend class Scene;
@@ -314,11 +315,31 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             // If single selection mode, clear CTRL modifier
             if (selectionMode & SingleSelection)
                 event->setModifiers(event->modifiers() & !Qt::ControlModifier);
+
+            // Get pressed item
             d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
 
-            if (!(event->modifiers() & Qt::ControlModifier) &&
-                 (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item)))
-                d->deselectSelected();
+            // If event pos is not in current selection shape...
+            if (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item))
+            {
+                // Clear focus from focused items
+                if (this->focusItem())
+                {
+                    this->focusItem()->clearFocus();
+                    d->m_pressed_item = 0;
+                }
+                // Or clear this selection
+                else if (!(event->modifiers() & Qt::ControlModifier))
+                    d->deselectSelected();
+            }
+
+            // Filtering selection
+            if (d->m_pressed_item &&
+                    d->m_selection_filters.count() &&
+                    !d->m_selection_filters.contains( d->m_pressed_item->metaObject()->className() ))
+                d->m_pressed_item = 0;
+
+            // If there is VALID item to select...
             if (d->m_pressed_item)
             {
                 // If not selectable -> deselect item
@@ -592,6 +613,18 @@ void Scene::setSelectionMode(SelectionMode selectionMode)
 }
 
 //#####################################################################################################
+void Scene::addSelectingFilter(const QMetaObject & classMeta)
+{
+    d->m_selection_filters.push_back(classMeta.className());
+}
+
+//#####################################################################################################
+void Scene::clearSelectingFilters()
+{
+    d->m_selection_filters.clear();
+}
+
+//#####################################################################################################
 QDomNode Scene::toSvg(QDomDocument & document)
 {
     QDomElement result = document.createElement("svg");
@@ -687,6 +720,10 @@ QList<AbstractPhoto*> Scene::selectedItems() const
 //#####################################################################################################
 void Scene::calcSelectionBoundingRect()
 {
+    foreach (AbstractPhoto * item, d->m_selected_items.keys())
+        if (!item->isSelected())
+            d->m_selected_items.remove(item);
+
     d->m_selected_items_path = QPainterPath();
     QList<AbstractPhoto*> itemsList = this->selectedItems();
     foreach (AbstractPhoto * item, itemsList)

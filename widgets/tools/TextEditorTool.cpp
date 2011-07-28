@@ -9,7 +9,8 @@ using namespace KIPIPhotoFramesEditor;
 TextEditorTool::TextEditorTool(ToolsDockWidget * parent) :
     AbstractTool(parent),
     m_text_item(0),
-    m_browser(0)
+    m_browser(0),
+    m_create_new_item(true)
 {
     QVBoxLayout * layout = new QVBoxLayout();
     this->setLayout(layout);
@@ -41,11 +42,15 @@ void TextEditorTool::currentItemChanged()
 void TextEditorTool::positionAboutToBeChanged()
 {
     if (m_text_item)
-        m_text_item->clearFocus();
+        m_create_new_item = false;
+    else
+        m_create_new_item = true;
 }
 
 void TextEditorTool::positionChanged()
 {
+    if (!m_create_new_item)
+        return;
     setCurrentItem( new TextItem() );
     currentItem()->setPos( this->mousePosition() );
     emit itemCreated( currentItem() );

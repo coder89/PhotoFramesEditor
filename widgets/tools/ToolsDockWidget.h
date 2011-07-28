@@ -42,8 +42,10 @@ namespace KIPIPhotoFramesEditor
 
             void undoCommandCreated(QUndoCommand * command);
             void newItemCreated(AbstractPhoto * item);
+
             void requireSingleSelection();
             void requireMultiSelection();
+
             void pointerToolSelected();
             void handToolSelected();
             // Effects tool selection signals

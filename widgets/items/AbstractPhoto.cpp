@@ -278,19 +278,15 @@ void AbstractPhoto::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
 void AbstractPhoto::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-   // this->setCursor(QCursor(Qt::ClosedHandCursor));
 }
 
 void AbstractPhoto::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-   // this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 void AbstractPhoto::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
 {
     QGraphicsItem::hoverEnterEvent(event);
-    if (this->isSelected())
-        this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 void AbstractPhoto::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)

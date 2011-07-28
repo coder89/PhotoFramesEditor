@@ -128,7 +128,7 @@ void Canvas::setSelectionMode(SelectionMode mode)
     else if (mode & SingleSelcting)
     {
         this->setInteractive(true);
-        this->setDragMode(QGraphicsView::ScrollHandDrag);
+        this->setDragMode(QGraphicsView::NoDrag);
         m_scene->setSelectionMode(Scene::SingleSelection);
         goto save;
     }
@@ -498,6 +498,8 @@ void Canvas::enableDefaultSelectionMode()
 {
     m_scene->setInteractionMode(Scene::Selecting | Scene::Moving);
     setSelectionMode(MultiSelecting);
+    this->unsetCursor();
+    m_scene->clearSelectingFilters();
 }
 
 /** ###########################################################################################################################
@@ -507,6 +509,8 @@ void Canvas::enableViewingMode()
 {
     m_scene->setInteractionMode(Scene::View);
     setSelectionMode(Viewing);
+    this->unsetCursor();
+    m_scene->clearSelectingFilters();
 }
 
 /** ###########################################################################################################################
@@ -516,6 +520,9 @@ void Canvas::enableEffectsEditingMode()
 {
     m_scene->setInteractionMode(Scene::Selecting);
     setSelectionMode(SingleSelcting);
+    this->setCursor(QCursor(Qt::ArrowCursor));
+    m_scene->clearSelectingFilters();
+    m_scene->addSelectingFilter(PhotoItem::staticMetaObject);
 }
 
 /** ###########################################################################################################################
@@ -525,6 +532,9 @@ void Canvas::enableTextEditingMode()
 {
     m_scene->setInteractionMode(Scene::Selecting | Scene::MouseTracking | Scene::OneclickFocusItems);
     setSelectionMode(SingleSelcting);
+    this->setCursor(Qt::CrossCursor);
+    m_scene->clearSelectingFilters();
+    m_scene->addSelectingFilter(TextItem::staticMetaObject);
 }
 
 /** ###########################################################################################################################

@@ -239,8 +239,8 @@ class KIPIPhotoFramesEditor::TextItem::TextFontUndoCommand : public QUndoCommand
 TextItem::TextItem(const QString & text, QGraphicsScene * scene) :
     AbstractPhoto(scene),
     d(new TextItemPrivate(this)),
-    m_font(QFont()),
     m_color(Qt::black),
+    m_font(QFont()),
     m_string_list(QString(text).remove('\t').split('\n')),
     m_metrics(m_font)
 {

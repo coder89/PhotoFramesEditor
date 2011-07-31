@@ -30,8 +30,10 @@ namespace KIPIPhotoFramesEditor
             Qt::ItemFlags flags(const QModelIndex & index = QModelIndex()) const;
             QVariant headerData(int section, Qt::Orientation orientation, int role) const;
             bool appendItem(AbstractPhoto * item, const QModelIndex & parent = QModelIndex());
+            bool insertItem(AbstractPhoto * item, int position, const QModelIndex & parent = QModelIndex());
             bool prependItem(AbstractPhoto * item, const QModelIndex & parent = QModelIndex());
             bool appendItems(const QList<AbstractPhoto*> & items, const QModelIndex & parent);
+            bool insertItems(const QList<AbstractPhoto*> & items, int position, const QModelIndex & parent = QModelIndex());
             bool prependItems(const QList<AbstractPhoto*> & items, const QModelIndex & parent);
             QModelIndexList itemsToIndexes(const QList<AbstractPhoto*> & items) const;
             QList<AbstractPhoto*> indexesToItems(const QModelIndexList & indexes) const;

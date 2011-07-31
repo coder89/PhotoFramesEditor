@@ -6,6 +6,7 @@
 #include "UndoRemoveItem.h"
 #include "UndoMoveRowsCommand.h"
 #include "UndoBorderChangeCommand.h"
+#include "global.h"
 
 #include <QPrinter>
 
@@ -17,6 +18,30 @@
 #define MIN_SCALE_LIMIT 0.5
 
 using namespace KIPIPhotoFramesEditor;
+
+class KIPIPhotoFramesEditor::NewItemUndoCommand : public QUndoCommand
+{
+        AbstractPhoto * m_item;
+        Canvas * m_canvas;
+        int m_position;
+    public:
+        NewItemUndoCommand(AbstractPhoto * item, int position, Canvas * canvas, QUndoCommand * parent = 0) :
+            QUndoCommand(parent),
+            m_item(item),
+            m_canvas(canvas),
+            m_position(position)
+        {}
+        virtual void redo()
+        {
+            ((QGraphicsScene*)m_canvas->m_scene)->addItem(m_item);
+            m_canvas->m_model->insertItem(m_item, m_position);
+        }
+        virtual void undo()
+        {
+            ((QGraphicsScene*)m_canvas->m_scene)->removeItem(m_item);
+            m_canvas->m_model->removeRow(m_position);
+        }
+};
 
 Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
     QGraphicsView(parent)
@@ -183,8 +208,8 @@ void Canvas::addNewItem(AbstractPhoto * item)
     item->setZValue(m_model->rowCount()+1);
 
     // Add item to scene & model
-    m_scene->addItem(item);
-    m_model->prependItem(item);
+    QUndoCommand * command = new NewItemUndoCommand(item, 0, this);
+    KIPIPhotoFramesEditor::PFE_PostUndoCommand(command);
 
     m_scene->clearSelection();
     m_scene->clearFocus();
@@ -535,6 +560,17 @@ void Canvas::enableTextEditingMode()
     this->setCursor(Qt::CrossCursor);
     m_scene->clearSelectingFilters();
     m_scene->addSelectingFilter(TextItem::staticMetaObject);
+}
+
+/** ###########################################################################################################################
+ * Sets rotating mode
+ #############################################################################################################################*/
+void Canvas::enableRotateEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting | Scene::Rotating);
+    setSelectionMode(SingleSelcting);
+    this->setCursor(Qt::ArrowCursor);
+    m_scene->clearSelectingFilters();
 }
 
 /** ###########################################################################################################################

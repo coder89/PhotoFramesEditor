@@ -21,6 +21,7 @@ namespace KIPIPhotoFramesEditor
             KPushButton * m_tool_hand;
             KPushButton * m_effects_button;
             KPushButton * m_text_button;
+            KPushButton * m_rotate_button;
             KPushButton * m_tool_border;
             KPushButton * m_tool_colorize_button;
 
@@ -54,6 +55,9 @@ namespace KIPIPhotoFramesEditor
             // Text tool selection signals
             void textToolSelectionChanged(bool);
             void textToolSelected();
+            // Rotate tool selection signals
+            void rotateToolSelectionChanged(bool);
+            void rotateToolSelected();
             // Border tool selection signals
             void borderToolSelectionChanged(bool);
             void borderToolSelected();
@@ -74,12 +78,14 @@ namespace KIPIPhotoFramesEditor
 
             void setEffectsWidgetVisible(bool isVisible);
             void setTextWidgetVisible(bool isVisible);
+            void setRotateWidgetVisible(bool isVisible);
 
             void emitPointerToolSelected(bool isSelected)
             {
                 if (isSelected)
                 {
                     m_tool_widget_layout->setCurrentIndex(0);
+                    this->unsetCursor();
                     emit requireMultiSelection();
                     emit pointerToolSelected();
                 }
@@ -90,6 +96,7 @@ namespace KIPIPhotoFramesEditor
                 if (isSelected)
                 {
                     m_tool_widget_layout->setCurrentIndex(0);
+                    this->unsetCursor();
                     emit requireMultiSelection();
                     emit handToolSelected();
                 }
@@ -100,6 +107,7 @@ namespace KIPIPhotoFramesEditor
                 emit borderToolSelectionChanged(isSelected);
                 if (isSelected)
                 {
+                    this->unsetCursor();
                     emit requireSingleSelection();
                     emit borderToolSelected();
                 }

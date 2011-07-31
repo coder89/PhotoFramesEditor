@@ -33,9 +33,7 @@ void TextEditorTool::currentItemChanged()
     {
         m_browser = m_text_item->propertyBrowser();
         if (m_browser)
-        {
             this->layout()->addWidget(m_browser);
-        }
     }
 }
 

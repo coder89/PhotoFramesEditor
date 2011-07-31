@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "QGraphicsEditionWidget.h"
 #include "global.h"
+#include "QGraphicsRotationItem.h"
 
 // Qt
 #include <QGraphicsTextItem>
@@ -42,7 +43,8 @@ class KIPIPhotoFramesEditor::ScenePrivate
         m_parent(parent),
         m_pressed_item(0),
         m_selected_items_all_movable(true),
-        m_selection_visible(true)
+        m_selection_visible(true),
+        m_rot_item(0)
     {
         // Editing widget
         setMode(0);
@@ -64,6 +66,46 @@ class KIPIPhotoFramesEditor::ScenePrivate
         //m_edit_widget->reset();
     }
 
+    void sendPressEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
+    {
+        // Send mousepressevent to the pressed item
+        event->setPos(item->mapFromScene(event->scenePos()));
+        event->setButtonDownPos(event->button(),
+                                item->mapFromScene(event->buttonDownScenePos(event->button())));
+        event->setLastPos(item->mapFromScene(event->lastScenePos()));
+        item->mousePressEvent(event);
+    }
+
+    void sendMoveEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
+    {
+        // Send mousepressevent to the pressed item
+        event->setPos(item->mapFromScene(event->scenePos()));
+        event->setButtonDownPos(event->button(),
+                                item->mapFromScene(event->buttonDownScenePos(event->button())));
+        event->setLastPos(item->mapFromScene(event->lastScenePos()));
+        item->mouseMoveEvent(event);
+    }
+
+    void sendReleaseEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
+    {
+        // Send mousepressevent to the pressed item
+        event->setPos(item->mapFromScene(event->scenePos()));
+        event->setButtonDownPos(event->button(),
+                                item->mapFromScene(event->buttonDownScenePos(event->button())));
+        event->setLastPos(item->mapFromScene(event->lastScenePos()));
+        item->mouseReleaseEvent(event);
+    }
+
+    void sendDoubleClickEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
+    {
+        // Send mousepressevent to the pressed item
+        event->setPos(item->mapFromScene(event->scenePos()));
+        event->setButtonDownPos(event->button(),
+                                item->mapFromScene(event->buttonDownScenePos(event->button())));
+        event->setLastPos(item->mapFromScene(event->lastScenePos()));
+        item->mouseDoubleClickEvent(event);
+    }
+
     // Parent scene
     QGraphicsScene * m_parent;
     // Background item
@@ -73,7 +115,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     void deselectSelected()
     {
         m_selected_items_all_movable = true;
-        foreach (AbstractPhoto * photo, m_selected_items.keys())
+        foreach (AbstractItemInterface * photo, m_selected_items.keys())
         {
             photo->setSelected(false);
             if (photo->hasFocus())
@@ -84,7 +126,8 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     bool selectPressed()
     {
-        if (m_pressed_item)
+        if (m_pressed_item &&
+            m_pressed_item != m_rot_item)
         {
             // Select if not selested
             if (!m_pressed_item->isSelected())
@@ -109,7 +152,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void setSelectionInitialPosition()
     {
-        QMap<AbstractPhoto*,QPointF>::iterator it = m_selected_items.begin();
+        QMap<AbstractItemInterface*,QPointF>::iterator it = m_selected_items.begin();
         while (it != m_selected_items.end())
         {
             it.value() = it.key()->pos();
@@ -119,7 +162,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     bool wasMoved()
     {
-        QMap<AbstractPhoto*,QPointF>::iterator it = m_selected_items.begin();
+        QMap<AbstractItemInterface*,QPointF>::iterator it = m_selected_items.begin();
         while (it != m_selected_items.end())
         {
             if (it.value() != it.key()->pos())
@@ -128,13 +171,16 @@ class KIPIPhotoFramesEditor::ScenePrivate
         }
         return false;
     }
-    QMap<AbstractPhoto*,QPointF> m_selected_items;
-    AbstractPhoto * m_pressed_item;
+    QMap<AbstractItemInterface*,QPointF> m_selected_items;
+    AbstractItemInterface * m_pressed_item;
     QPainterPath m_selected_items_path;
     QPointF m_selected_items_path_initial_pos;
     bool m_selected_items_all_movable;
     bool m_selection_visible;
     QList<const char *> m_selection_filters;
+
+    // Used for rotating items
+    QGraphicsRotationItem * m_rot_item;
 
     int m_mode;
     friend class Scene;
@@ -142,12 +188,12 @@ class KIPIPhotoFramesEditor::ScenePrivate
 
 class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
 {
-        QMap<AbstractPhoto*,QPointF> m_items;
+        QMap<AbstractItemInterface*,QPointF> m_items;
         Scene * m_scene;
         bool done;
         static int num;
     public:
-        MoveItemsUndoCommand(QMap<AbstractPhoto*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
+        MoveItemsUndoCommand(QMap<AbstractItemInterface*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
             QUndoCommand(i18n("Move items"), parent),
             m_items(items),
             m_scene(scene),
@@ -161,7 +207,7 @@ void MoveItemsUndoCommand::redo()
 {
     if (!done)
     {
-        QMap<AbstractPhoto*,QPointF>::iterator it = m_items.begin();
+        QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
         while(it != m_items.end())
         {
             QPointF temp = it.key()->pos();
@@ -177,7 +223,7 @@ void MoveItemsUndoCommand::undo()
 {
     if (done)
     {
-        QMap<AbstractPhoto*,QPointF>::iterator it = m_items.begin();
+        QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
         while(it != m_items.end())
         {
             QPointF temp = it.key()->pos();
@@ -214,7 +260,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     setGridVisible(false);
 
     // Signal connections
-    connect(this, SIGNAL(selectionChanged()), this, SLOT(calcSelectionBoundingRect()));
+    connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
 }
 
 //#####################################################################################################
@@ -303,7 +349,6 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
-
         // If moving enabled
         if (m_interaction_mode & Selecting)
         {
@@ -315,9 +360,20 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             // If single selection mode, clear CTRL modifier
             if (selectionMode & SingleSelection)
                 event->setModifiers(event->modifiers() & !Qt::ControlModifier);
-
+qDebug() << "----------------------" << event->scenePos();
             // Get pressed item
-            d->m_pressed_item = dynamic_cast<AbstractPhoto*>(this->itemAt(event->scenePos()));
+            d->m_pressed_item = dynamic_cast<AbstractItemInterface*>(this->itemAt(event->scenePos()));
+qDebug() << (QGraphicsItem*)d->m_pressed_item;
+            // If it is rotation widget
+            if (m_interaction_mode & Rotating && d->m_pressed_item == d->m_rot_item)
+            {
+                qDebug() << "press";
+                d->sendPressEventToItem(d->m_pressed_item, event);
+                return;
+            }
+
+            // Test if this is a photo/text item
+            d->m_pressed_item = dynamic_cast<AbstractPhoto*>(d->m_pressed_item);
 
             // If event pos is not in current selection shape...
             if (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item))
@@ -346,14 +402,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
                 if (!(d->m_pressed_item->flags() & QGraphicsItem::ItemIsSelectable))
                     d->m_pressed_item = 0;
                 else
-                {
-                    // Send mousepressevent to the pressed item
-                    event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
-                    event->setButtonDownPos(event->button(),
-                                            d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
-                    event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
-                    d->m_pressed_item->mousePressEvent(event);
-                }
+                    d->sendPressEventToItem(d->m_pressed_item, event);
             }
             // If listeners should know scene press position
             else if (m_interaction_mode & MouseTracking)
@@ -370,6 +419,9 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
+        if (d->m_pressed_item)
+            d->sendMoveEventToItem(d->m_pressed_item, event);
+
         if (m_interaction_mode & Moving)
         {
             // Selecting pressed item
@@ -390,7 +442,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
                 d->m_selected_items_path.translate(-difference);
                 difference = distance - difference;
                 d->m_selected_items_path.translate(difference);
-                foreach (AbstractPhoto * item, d->m_selected_items.keys())
+                foreach (AbstractItemInterface * item, d->m_selected_items.keys())
                     item->setPos(item->pos() + difference);
             }
         }
@@ -414,13 +466,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 
             // Send mousereleaseevent to the released item
             if (d->m_pressed_item)
-            {
-                event->setPos(d->m_pressed_item->mapFromScene(event->scenePos()));
-                event->setButtonDownPos(event->button(),
-                                        d->m_pressed_item->mapFromScene(event->buttonDownScenePos(event->button())));
-                event->setLastPos(d->m_pressed_item->mapFromScene(event->lastScenePos()));
-                d->m_pressed_item->mouseReleaseEvent(event);
-            }
+                d->sendReleaseEventToItem(d->m_pressed_item, event);
 
             // Post move command to QUndoStack
             if ((m_interaction_mode & Moving) && d->wasMoved())
@@ -591,6 +637,7 @@ bool Scene::isGridVisible()
 void Scene::setInteractionMode(int mode)
 {
     m_interaction_mode = mode;
+    setRotationWidgetVisible(mode & Rotating);
 }
 
 //#####################################################################################################
@@ -622,6 +669,28 @@ void Scene::addSelectingFilter(const QMetaObject & classMeta)
 void Scene::clearSelectingFilters()
 {
     d->m_selection_filters.clear();
+}
+
+//#####################################################################################################
+void Scene::setRotationWidgetVisible(bool isVisible)
+{
+    if (d->m_rot_item)
+    {
+        this->QGraphicsScene::removeItem(d->m_rot_item);
+        d->m_rot_item->deleteLater();
+        d->m_rot_item = 0;
+    }
+
+    if (isVisible)
+    {
+        d->m_rot_item = new QGraphicsRotationItem();
+        d->m_rot_item->setZValue(1.0/0.0);
+        this->QGraphicsScene::addItem(d->m_rot_item);
+        if (d->m_selected_items.count())
+            d->m_rot_item->setPos(d->m_selected_items_path.boundingRect().center());
+        else
+            d->m_rot_item->hide();
+    }
 }
 
 //#####################################################################################################
@@ -693,12 +762,6 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
 }
 
 //#####################################################################################################
-void Scene::updateSelection()
-{
-    //d->m_edit_widget->refresh();
-}
-
-//#####################################################################################################
 void Scene::addItem(AbstractPhoto * item)
 {
     if (item->scene() != this)
@@ -718,9 +781,9 @@ QList<AbstractPhoto*> Scene::selectedItems() const
 }
 
 //#####################################################################################################
-void Scene::calcSelectionBoundingRect()
+void Scene::updateSelection()
 {
-    foreach (AbstractPhoto * item, d->m_selected_items.keys())
+    foreach (AbstractItemInterface * item, d->m_selected_items.keys())
         if (!item->isSelected())
             d->m_selected_items.remove(item);
 
@@ -732,6 +795,26 @@ void Scene::calcSelectionBoundingRect()
             d->m_selected_items.insert(item, item->pos());
         d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
     }
+
+    if (m_interaction_mode & Rotating)
+    {
+        qDebug() << "RESET POS!";
+        if (d->m_selected_items.count())
+        {
+            d->m_rot_item->center(d->m_selected_items_path.boundingRect());
+            d->m_rot_item->show();
+        }
+        else
+            d->m_rot_item->hide();
+    }
+}
+
+//#####################################################################################################
+void Scene::calcSelectionBoundingRect()
+{
+    d->m_selected_items_path = QPainterPath();
+    foreach (AbstractItemInterface * item, d->m_selected_items.keys())
+        d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
 }
 
 //#####################################################################################################

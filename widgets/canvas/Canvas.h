@@ -24,6 +24,7 @@ namespace KIPIPhotoFramesEditor
     class LayersModel;
     class LayersSelectionModel;
     class AbstractPhoto;
+    class NewItemUndoCommand;
 
     class Canvas : public QGraphicsView
     {
@@ -175,6 +176,9 @@ namespace KIPIPhotoFramesEditor
             /// Sets text editing mode
             void enableTextEditingMode();
 
+            /// Sets rotating mode
+            void enableRotateEditingMode();
+
             /// Refresh widgets connections to canvas signals
             void refreshWidgetConnections(bool isVisible);
 
@@ -213,6 +217,8 @@ namespace KIPIPhotoFramesEditor
             double m_scale_factor;
 
             SelectionMode m_selection_mode;
+
+        friend class NewItemUndoCommand;
     };
 }
 

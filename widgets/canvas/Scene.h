@@ -23,7 +23,6 @@ namespace KIPIPhotoFramesEditor
 
     class Scene : protected QGraphicsScene
     {
-
             Q_OBJECT
 
             ScenePrivate * d;
@@ -61,6 +60,7 @@ namespace KIPIPhotoFramesEditor
             static Scene * fromSvg(QDomElement & svgImage);
             void addSelectingFilter(const QMetaObject & classMeta);
             void clearSelectingFilters();
+            void setRotationWidgetVisible(bool isVisible);
             const QGraphicsScene * toGraphicsScene() const
             {
                 return this;
@@ -108,8 +108,6 @@ namespace KIPIPhotoFramesEditor
             void calcSelectionBoundingRect();
 
         private:
-
-            void setRotationWidgetVisible(bool visible);
 
             int m_interaction_mode;
             static const int DEFAULT_EDITING_MODE = Moving & Selecting;

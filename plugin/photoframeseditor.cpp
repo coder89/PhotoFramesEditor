@@ -267,6 +267,7 @@ void PhotoFramesEditor::prepareSignalsConnections()
     connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
     connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableEffectsEditingMode()));
     connect(d->toolsWidget,SIGNAL(textToolSelected()),m_canvas,SLOT(enableTextEditingMode()));
+    connect(d->toolsWidget,SIGNAL(rotateToolSelected()),m_canvas,SLOT(enableRotateEditingMode()));
     connect(d->toolsWidget,SIGNAL(newItemCreated(AbstractPhoto*)),m_canvas,SLOT(addNewItem(AbstractPhoto*)));
     connect(m_canvas->scene()->toGraphicsScene(), SIGNAL(mousePressedPoint(QPointF)), d->toolsWidget, SLOT(mousePositionChoosen(QPointF)));
 

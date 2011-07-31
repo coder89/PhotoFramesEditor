@@ -15,5 +15,6 @@
         <file>tool_text.png</file>
         <file>pointer.png</file>
         <file>hand.png</file>
+        <file>tool_rotate.png</file>
     </qresource>
 </RCC>

@@ -109,6 +109,17 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     connect(m_text_button,SIGNAL(toggled(bool)),this,SLOT(setTextWidgetVisible(bool)));
     connect(m_text_widget, SIGNAL(itemCreated(AbstractPhoto*)), this, SLOT(emitNewItemCreated(AbstractPhoto*)));
 
+    // Rotate tool
+    m_rotate_button = new KPushButton(KGuiItem("", ":tool_rotate.png",
+                                              i18n("Rotation tool"),
+                                              i18n("This tool allows you to rotate items on your canvas.")), widget);
+    m_rotate_button->setIconSize(QSize(24,24));
+    m_rotate_button->setFixedSize(32,32);
+    m_rotate_button->setCheckable(true);
+    group->addButton(m_rotate_button);
+    formLayout->addWidget(m_rotate_button, 0,5, Qt::AlignCenter);
+    connect(m_rotate_button,SIGNAL(toggled(bool)),this,SLOT(setRotateWidgetVisible(bool)));
+
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
     m_tool_border->setIconSize(QSize(24,24));
@@ -119,10 +130,9 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(emitBorderToolSelected(bool)));
 
     // Spacer
-    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,5);
-    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,5);
-    formLayout->setColumnStretch(5,1);
-    formLayout->setColumnStretch(5,1);
+    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,6);
+    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,6);
+    formLayout->setColumnStretch(6,1);
     formLayout->setSpacing(0);
     formLayout->setMargin(0);
 
@@ -189,6 +199,18 @@ void ToolsDockWidget::setTextWidgetVisible(bool isVisible)
         m_tool_widget_layout->setCurrentWidget(m_text_widget);
         emit requireSingleSelection();
         emit textToolSelected();
+        this->adjustSize();
+    }
+}
+
+void ToolsDockWidget::setRotateWidgetVisible(bool isVisible)
+{
+    emit rotateToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        m_tool_widget_layout->setCurrentIndex(0);
+        emit requireSingleSelection();
+        emit rotateToolSelected();
         this->adjustSize();
     }
 }

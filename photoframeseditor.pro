@@ -52,7 +52,8 @@ SOURCES += main.cpp\
     utils/PFESettings.cpp \
     widgets/tools/TextEditorTool.cpp \
     listeners/TextColorChangeListener.cpp \
-    listeners/TextFontChangeListener.cpp
+    listeners/TextFontChangeListener.cpp \
+    widgets/items/AbstractItemInterface.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -98,7 +99,8 @@ HEADERS  += plugin/photoframeseditor.h \
     utils/PFESettings.h \
     widgets/tools/TextEditorTool.h \
     listeners/TextColorChangeListener.h \
-    listeners/TextFontChangeListener.h
+    listeners/TextFontChangeListener.h \
+    widgets/items/AbstractItemInterface.h
 
 LIBS += \
     -L/usr \

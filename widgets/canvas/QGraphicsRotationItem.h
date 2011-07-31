@@ -9,11 +9,13 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QDebug>
 
+#include "AbstractItemInterface.h"
+
 namespace KIPIPhotoFramesEditor
 {
     class QGraphicsEditingWidget;
 
-    class RotationHandler : public QGraphicsWidget
+    class RotationHandler : public AbstractItemInterface
     {
             Q_OBJECT
 
@@ -49,11 +51,13 @@ namespace KIPIPhotoFramesEditor
 
             qreal m_rotation_angle;
             qreal m_last_rotation_angle;
+
+        friend class QGraphicsRotationItem;
     };
 
 // ####################################################################################################################
 
-    class QGraphicsRotationItem : public QGraphicsWidget
+    class QGraphicsRotationItem : public AbstractItemInterface
     {
             Q_OBJECT
 
@@ -61,9 +65,13 @@ namespace KIPIPhotoFramesEditor
 
             QPainterPath m_path;
             QPainterPath m_elipse_path;
+            QPainterPath m_handler_path;
             QPointF m_initial_position;
+            QPointF m_handler_pos;
 
             RotationHandler * m_handler;
+
+            bool m_elipse_pressed;
 
         public:
 
@@ -72,10 +80,10 @@ namespace KIPIPhotoFramesEditor
             virtual QPainterPath shape() const;
             virtual QPainterPath opaqueArea() const;
             virtual QRectF boundingRect() const;
+            void center(const QRectF & boundingRect);
             void reset()
             {
-                this->setPos(-QPoint(10,10));
-                m_handler->setPos(100,5);
+                m_handler_pos = QPointF(100,5);
                 m_rot_point = QPointF();
                 emit rotationPointChanged(m_rot_point);
             }

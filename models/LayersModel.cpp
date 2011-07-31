@@ -140,32 +140,39 @@ bool LayersModel::appendItem(AbstractPhoto * item, const QModelIndex & parent)
     return result;
 }
 
-bool LayersModel::prependItem(AbstractPhoto * item, const QModelIndex & parent)
+bool LayersModel::insertItem(AbstractPhoto * item, int position, const QModelIndex & parent)
 {
     QList<AbstractPhoto*> items;
     items << item;
     if (this->itemsToIndexes(items).count())
         return false;
-    bool result = this->insertRow(0,parent);
+    bool result = this->insertRow(position, parent);
     if (result)
-        static_cast<LayersModelItem*>(index(0,0,parent).internalPointer())->setPhoto(item);
+        static_cast<LayersModelItem*>(index(position,0,parent).internalPointer())->setPhoto(item);
     return result;
+}
+
+bool LayersModel::prependItem(AbstractPhoto * item, const QModelIndex & parent)
+{
+    return insertItem(item, 0, parent);
 }
 
 bool LayersModel::appendItems(const QList<AbstractPhoto*> & items, const QModelIndex & parent)
 {
+    return insertItems(items, getItem(parent)->childCount(), parent);
+}
+
+bool LayersModel::insertItems(const QList<AbstractPhoto*> & items, int position, const QModelIndex & parent)
+{
     foreach(AbstractPhoto * item, items)
-        if (!appendItem(item, parent))
+        if (!insertItem(item, position++, parent))
             return false;
     return true;
 }
 
 bool LayersModel::prependItems(const QList<AbstractPhoto*> & items, const QModelIndex & parent)
 {
-    foreach(AbstractPhoto * item, items)
-        if (!prependItem(item, parent))
-            return false;
-    return true;
+    return insertItems(items, 0, parent);
 }
 
 bool LayersModel::insertRows(int position, int count, const QModelIndex  & parent)

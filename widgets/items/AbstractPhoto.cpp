@@ -21,7 +21,7 @@ using namespace KIPIPhotoFramesEditor;
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
 AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
-    QGraphicsItem(0,scene),
+    AbstractItemInterface(0,scene),
     m_name("New layer"),
     m_border_width(0)
 {

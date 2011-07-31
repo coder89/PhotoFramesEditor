@@ -2,8 +2,6 @@
 #define ABSTRACT_PHOTO_H
 
 // Qt
-#include <QGraphicsPixmapItem>
-#include <QGraphicsScene>
 #include <QPainter>
 #include <QPixmap>
 #include <QDebug>
@@ -14,7 +12,7 @@
 #include <QtAbstractPropertyBrowser>
 
 // Local
-#include "canvasmouseevent.h"
+#include "AbstractItemInterface.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -23,7 +21,7 @@ namespace KIPIPhotoFramesEditor
     class PhotoEffectsGroup;
     class AbstractPhotoEffectInterface;
 
-    class AbstractPhoto : public QObject, public QGraphicsItem
+    class AbstractPhoto : public AbstractItemInterface
     {
             Q_OBJECT
 

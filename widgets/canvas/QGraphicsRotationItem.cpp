@@ -3,7 +3,7 @@
 using namespace KIPIPhotoFramesEditor;
 
 RotationHandler::RotationHandler(QGraphicsItem * parent) :
-    QGraphicsWidget(parent)
+    AbstractItemInterface(parent)
 {
     this->setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIgnoresTransformations);
@@ -43,19 +43,20 @@ void RotationHandler::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
 
 void RotationHandler::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "handler: press";
     m_initial_position = pos();
     this->setCursor(QCursor(Qt::ClosedHandCursor));
-    QGraphicsWidget::mousePressEvent(event);
 }
 
 void RotationHandler::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "handler: release";
     this->setCursor(QCursor(Qt::OpenHandCursor));
-    QGraphicsWidget::mouseReleaseEvent(event);
 }
 
 void RotationHandler::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "handler: move";
     QGraphicsView *view = 0;
     if (event->widget())
         view = qobject_cast<QGraphicsView *>(event->widget()->parentWidget());
@@ -87,12 +88,13 @@ void RotationHandler::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
 
 QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
-    QGraphicsWidget(parent),
-    m_handler(new RotationHandler(this))
+    AbstractItemInterface(parent)
+    //m_handler(new RotationHandler(this))
 {
-    m_handler->setParent(this);
-    m_handler->setPos(100,5);
-    connect(m_handler,SIGNAL(rotationAngleChanged(qreal,bool)),this,SLOT(emitRotationChanges(qreal,bool)));
+    //m_handler->setParent(this);
+    //m_handler->setPos(100,5);
+    //connect(m_handler,SIGNAL(rotationAngleChanged(qreal,bool)),this,SLOT(emitRotationChanges(qreal,bool)));
+    m_handler_path.addRect(0,0,10,10);
 
     m_elipse_path.addEllipse(0,0,20,20);
     m_path += m_elipse_path;
@@ -100,7 +102,6 @@ QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
     m_path.lineTo(100,10);
 
     this->setAcceptHoverEvents(true);
-    this->setHandlesChildEvents(false);
     this->setFlag(QGraphicsItem::ItemIsMovable);
     this->setFlag(QGraphicsItem::ItemIsSelectable, false);
     setFlag(QGraphicsItem::ItemIgnoresTransformations);
@@ -113,21 +114,29 @@ void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphics
     painter->drawEllipse(0,0,20,20);
     painter->setBrush(Qt::black);
     painter->drawEllipse(7,7,6,6);
-    painter->drawLine(QPoint(10,10),m_handler->pos()+m_handler->boundingRect().center());
+    painter->drawPath(m_handler_path.translated(m_handler_pos));
+   // painter->drawLine(QPoint(10,10),m_handler->pos()+m_handler->boundingRect().center());
 }
 
 QPainterPath QGraphicsRotationItem::shape() const
 {
-    return m_path + m_handler->shape().translated(m_handler->pos());
+    return m_path + m_handler_path.translated(m_handler_pos);
 }
 
 QPainterPath QGraphicsRotationItem::opaqueArea() const
 {
-    return m_path + m_handler->shape().translated(m_handler->pos());
+    return shape();
 }
+
 QRectF QGraphicsRotationItem::boundingRect() const
 {
-    return (m_path + m_handler->shape().translated(m_handler->pos())).boundingRect();
+    return shape().boundingRect();
+}
+
+void QGraphicsRotationItem::center(const QRectF & boundingRect)
+{
+    qDebug() << boundingRect;
+    this->setPos(boundingRect.center() - QPointF(10,10));
 }
 
 void QGraphicsRotationItem::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
@@ -142,44 +151,61 @@ void QGraphicsRotationItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/
 
 void QGraphicsRotationItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    m_initial_position = pos();
+    qDebug() << "rot: press" << event->buttonDownPos(Qt::LeftButton) << m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton));
+    if (m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton)))
+    {
+        m_elipse_pressed = true;
+        m_initial_position = pos();
+    }
+    else
+        m_elipse_pressed = false;
     this->setCursor(QCursor(Qt::ClosedHandCursor));
-    QGraphicsWidget::mousePressEvent(event);
 }
 
 void QGraphicsRotationItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
     this->setCursor(QCursor(Qt::OpenHandCursor));
-    QGraphicsWidget::mouseReleaseEvent(event);
 }
 
 void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    if (m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton)))
+    qDebug() << "rot: move" << event->buttonDownScenePos(Qt::LeftButton) << m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton));
+    if (m_elipse_pressed)
     {
-        QGraphicsView *view = 0;
-        if (event->widget())
-            view = qobject_cast<QGraphicsView *>(event->widget()->parentWidget());
-        QTransform itemTransform;
-        itemTransform = this->transform();
-        QTransform viewToParentTransform = itemTransform * sceneTransform().inverted();
-        QPointF currentParentPos;
-        QPointF lastParentPos;
-        QPointF buttonDownParentPos;
-        currentParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->screenPos())));
-        lastParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->lastScreenPos())));
-        buttonDownParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->buttonDownScreenPos(Qt::LeftButton))));
-        QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
-        m_rot_point += currentPos-pos();
-        setPos(currentPos.rx(),currentPos.ry());
+//        QGraphicsView *view = 0;
+//        if (event->widget())
+//            view = qobject_cast<QGraphicsView *>(event->widget()->parentWidget());
+//        QTransform itemTransform;
+//        itemTransform = this->transform();
+//        QTransform viewToParentTransform = itemTransform * sceneTransform().inverted();
+//        QPointF currentParentPos;
+//        QPointF lastParentPos;
+//        QPointF buttonDownParentPos;
+//        currentParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->screenPos())));
+//        lastParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->lastScreenPos())));
+//        buttonDownParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->buttonDownScreenPos(Qt::LeftButton))));
+//        QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
+//        m_rot_point += currentPos-pos();
+//        setPos(currentPos.rx(),currentPos.ry());
+        QPointF dif = event->scenePos() - event->lastScenePos();
+        moveBy(dif.x(), dif.y());
         emit rotationPointChanged(m_rot_point);
-        return;
     }
-    else if (m_handler->contains(event->buttonDownPos(Qt::LeftButton)))
+    else
     {
-        qDebug() << "moveRotelse if";
-        QGraphicsItem::mouseMoveEvent(event);
-        return;
+//        QPointF currentPos = m_handler_pos;
+//        qreal currentLength = qSqrt(currentPos.rx()*currentPos.rx()+currentPos.ry()*currentPos.ry());
+//        qreal lastLength = qSqrt(lastPos.rx()*lastPos.rx()+lastPos.ry()*lastPos.ry());
+//        qreal scale = lastLength/currentLength;
+//        qreal scalar = currentPos.rx()*lastPos.rx()+currentPos.ry()*lastPos.ry();
+//        qreal cos = scalar/(currentLength*lastLength);
+//        qreal m_rotation_angle;
+//        if (currentPos.rx()*lastPos.ry()-currentPos.ry()*lastPos.rx()>0)
+//            m_rotation_angle = -180*qAcos(cos)/M_PI;
+//        else
+//            m_rotation_angle = 180*qAcos(cos)/M_PI;
+//        m_handler_pos = QPointF(currentPos.rx()*scale,currentPos.ry()*scale);
+//        qDebug() << m_handler_pos;
     }
     event->accept();
 }

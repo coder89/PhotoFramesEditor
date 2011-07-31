@@ -9,6 +9,7 @@
 #include <QStyleOptionGraphicsItem>
 #include <QFile>
 #include <QImageReader>
+#include <QGraphicsScene>
 
 #include <kapplication.h>
 #include <kmessagebox.h>

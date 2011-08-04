@@ -131,7 +131,7 @@ void LayersModelItem::setPhoto(AbstractPhoto * photo)
                     qDebug() << "ZValue changed!" << (QGraphicsItem*)photo << "Current:" << photo->zValue() << "New:" << newZValue;
         #endif
         photo->setZValue(newZValue);
-        connect(photo, SIGNAL(updated()), this, SLOT(updateData()));
+        connect(photo, SIGNAL(changed()), this, SLOT(updateData()));
     }
 }
 

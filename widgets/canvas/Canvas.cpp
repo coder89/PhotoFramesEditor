@@ -3,7 +3,6 @@
 #include "LayersModel.h"
 #include "LayersModelItem.h"
 #include "LayersSelectionModel.h"
-#include "UndoRemoveItem.h"
 #include "UndoMoveRowsCommand.h"
 #include "UndoBorderChangeCommand.h"
 #include "global.h"
@@ -19,38 +18,14 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class KIPIPhotoFramesEditor::NewItemUndoCommand : public QUndoCommand
-{
-        AbstractPhoto * m_item;
-        Canvas * m_canvas;
-        int m_position;
-    public:
-        NewItemUndoCommand(AbstractPhoto * item, int position, Canvas * canvas, QUndoCommand * parent = 0) :
-            QUndoCommand(parent),
-            m_item(item),
-            m_canvas(canvas),
-            m_position(position)
-        {}
-        virtual void redo()
-        {
-            ((QGraphicsScene*)m_canvas->m_scene)->addItem(m_item);
-            m_canvas->m_model->insertItem(m_item, m_position);
-        }
-        virtual void undo()
-        {
-            ((QGraphicsScene*)m_canvas->m_scene)->removeItem(m_item);
-            m_canvas->m_model->removeRow(m_position);
-        }
-};
-
-Canvas::Canvas(const QSizeF & dimension, QWidget *parent) :
+Canvas::Canvas(const QSizeF & dimension, QWidget * parent) :
     QGraphicsView(parent)
 {
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
     this->init();
 }
 
-Canvas::Canvas(Scene * scene, QWidget *parent) :
+Canvas::Canvas(Scene * scene, QWidget * parent) :
     QGraphicsView(parent)
 {
     Q_ASSERT(scene != 0);
@@ -59,14 +34,6 @@ Canvas::Canvas(Scene * scene, QWidget *parent) :
     this->setScene(m_scene);
 
     this->init();
-
-    QList<QGraphicsItem*> items = m_scene->items();
-    foreach (QGraphicsItem * item, items)
-    {
-        AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(item);
-        if (photo)
-            this->addNewItemToModel(photo);
-    }
 }
 
 /** ###########################################################################################################################
@@ -78,9 +45,6 @@ void Canvas::init()
     m_saved_on_index = 0;
     m_undo_stack = new QUndoStack(this);
     m_scale_factor = 1;
-
-    m_model = new LayersModel(this);
-    m_selmodel = new LayersSelectionModel(m_model, this);
 
     this->setupGUI();
     this->enableViewingMode();
@@ -122,11 +86,10 @@ void Canvas::setupGUI()
 #############################################################################################################################*/
 void Canvas::prepareSignalsConnection()
 {
-    connect(m_scene, SIGNAL(newItemAdded(AbstractPhoto*)), this, SLOT(addNewItemToModel(AbstractPhoto*)));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(selectionChanged()));
     connect(m_scene, SIGNAL(itemAboutToBeRemoved(AbstractPhoto*)), this, SLOT(removeItem(AbstractPhoto*)));
     connect(m_scene, SIGNAL(itemsAboutToBeRemoved(QList<AbstractPhoto*>)), this, SLOT(removeItems(QList<AbstractPhoto*>)));
-    connect(m_selmodel, SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
+    connect(m_scene->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
     connect(m_undo_stack, SIGNAL(indexChanged(int)), this, SLOT(isSavedChanged(int)));
     connect(m_undo_stack, SIGNAL(cleanChanged(bool)), this, SLOT(isSavedChanged(bool)));
 }
@@ -163,21 +126,32 @@ void Canvas::setSelectionMode(SelectionMode mode)
 }
 
 /** ###########################################################################################################################
+ * Data model connected with this canvas (in fact this is a Scene's model)
+ #############################################################################################################################*/
+LayersModel * Canvas::model() const
+{
+    return m_scene->model();
+}
+
+/** ###########################################################################################################################
+ * Data selection model connected with this canvas (in fact this is a Scene's selection model)
+ #############################################################################################################################*/
+LayersSelectionModel * Canvas::selectionModel() const
+{
+    return m_scene->selectionModel();
+}
+
+/** ###########################################################################################################################
  * Add new image from QImage object
  #############################################################################################################################*/
 void Canvas::addImage(const QImage & image)
 {
     // Create & setup item
-    PhotoItem * it = new PhotoItem(image, m_scene);
-    it->setName(image.text("File").append(QString::number(m_model->rowCount())));
-    it->setZValue(m_model->rowCount()+1);
+    PhotoItem * it = new PhotoItem(image);
+    it->setName(image.text("File").append(QString::number(model()->rowCount())));
 
     // Add item to scene & model
     m_scene->addItem(it);
-    m_model->prependItem(it);
-
-    if (m_selmodel->hasSelection())
-    {} /// TODO: add above selected
 }
 
 /** ###########################################################################################################################
@@ -186,15 +160,10 @@ void Canvas::addImage(const QImage & image)
 void Canvas::addText(const QString & text)
 {
     // Create & setup item
-    TextItem * it = new TextItem(text, m_scene);
-    it->setZValue(m_model->rowCount()+1);
+    TextItem * it = new TextItem(text);
 
     // Add item to scene & model
     m_scene->addItem(it);
-    m_model->prependItem(it);
-
-    if (m_selmodel->hasSelection())
-    {} /// TODO: add above selected
 }
 
 /** ###########################################################################################################################
@@ -205,28 +174,13 @@ void Canvas::addNewItem(AbstractPhoto * item)
     if (!item)
         return;
 
-    item->setZValue(m_model->rowCount()+1);
-
-    // Add item to scene & model
-    QUndoCommand * command = new NewItemUndoCommand(item, 0, this);
-    KIPIPhotoFramesEditor::PFE_PostUndoCommand(command);
+    m_scene->addItem(item);
 
     m_scene->clearSelection();
     m_scene->clearFocus();
 
     item->setSelected(true);
     item->setFocus( Qt::OtherFocusReason );
-
-    if (m_selmodel->hasSelection())
-    {} /// TODO: add above selected
-}
-
-/** ###########################################################################################################################
- * Add item (existing on the Scene) to the model
- #############################################################################################################################*/
-void Canvas::addNewItemToModel(AbstractPhoto * item)
-{
-    m_model->prependItem(item);
 }
 
 /** ##########################################################################################################################
@@ -241,7 +195,7 @@ void Canvas::moveRowsCommand(const QModelIndex & startIndex, int count, const QM
         destination += move;
     else
         return;
-    UndoMoveRowsCommand * undo = new UndoMoveRowsCommand(startIndex.row(), count, parentIndex, destination, destinationParent, m_model);
+    UndoMoveRowsCommand * undo = new UndoMoveRowsCommand(startIndex.row(), count, parentIndex, destination, destinationParent, model());
     m_undo_stack->push(undo);
 }
 
@@ -250,7 +204,7 @@ void Canvas::moveRowsCommand(const QModelIndex & startIndex, int count, const QM
  #############################################################################################################################*/
 void Canvas::moveSelectedRowsUp()
 {
-    QModelIndexList selectedIndexes = m_selmodel->selectedIndexes();
+    QModelIndexList selectedIndexes = selectionModel()->selectedIndexes();
     if (!selectedIndexes.count())
     {
         #ifdef  QT_DEBUG
@@ -311,7 +265,7 @@ void Canvas::moveSelectedRowsUp()
  #############################################################################################################################*/
 void Canvas::moveSelectedRowsDown()
 {
-    QModelIndexList selectedIndexes = m_selmodel->selectedIndexes();
+    QModelIndexList selectedIndexes = selectionModel()->selectedIndexes();
     if (!selectedIndexes.count())
     {
         #ifdef  QT_DEBUG
@@ -361,19 +315,10 @@ void Canvas::moveSelectedRowsDown()
             #endif
             return;
         }
-        if (maxRow+1 < m_model->rowCount(startIndex.parent())) // It means "is there any space before starting index to move selection"
+        if (maxRow+1 < model()->rowCount(startIndex.parent())) // It means "is there any space before starting index to move selection"
             moveRowsCommand(startIndex, selectedIndexes.count(), startIndex.parent(), 1, startIndex.parent());
     }
     this->selectionChanged();
-}
-
-/** ##########################################################################################################################
- * Creates item remove command and push it to the undo stack
- #############################################################################################################################*/
-void Canvas::removeComand(AbstractPhoto * item)
-{
-    UndoRemoveItem * undo = new UndoRemoveItem(item,m_scene,m_model);
-    m_undo_stack->push(undo);
 }
 
 /** ##########################################################################################################################
@@ -381,8 +326,8 @@ void Canvas::removeComand(AbstractPhoto * item)
  #############################################################################################################################*/
 void Canvas::removeItem(AbstractPhoto * item)
 {
-    if (item && askAboutRemoving(1))
-        this->removeComand(item);
+    if (item)
+        m_scene->removeItem(item);
 }
 
 /** ##########################################################################################################################
@@ -390,15 +335,7 @@ void Canvas::removeItem(AbstractPhoto * item)
  #############################################################################################################################*/
 void Canvas::removeItems(const QList<AbstractPhoto*> & items)
 {
-    if (askAboutRemoving(items.count()))
-    {
-        if (items.count() > 1)
-            beginRowsRemoving();
-        foreach (AbstractPhoto * item, items)
-            this->removeComand(item);
-        if (items.count() > 1)
-            endRowsRemoving();
-    }
+    m_scene->removeItems(items);
 }
 
 /** ##########################################################################################################################
@@ -406,33 +343,11 @@ void Canvas::removeItems(const QList<AbstractPhoto*> & items)
  #############################################################################################################################*/
 void Canvas::removeSelectedRows()
 {
-    QModelIndexList selectedIndexes = m_selmodel->selectedRows();
-    if (askAboutRemoving(selectedIndexes.count()))
-    {
-        if (selectedIndexes.count() > 1)
-            beginRowsRemoving();
-        foreach (QModelIndex index, selectedIndexes)
-        {
-            AbstractPhoto * photo = static_cast<LayersModelItem*>(index.internalPointer())->photo();
-            removeComand(photo);
-        }
-        if (selectedIndexes.count() > 1)
-            endRowsRemoving();
-    }
-}
-
-/** ##########################################################################################################################
- * Ask about removing @arg count of items
- #############################################################################################################################*/
-bool Canvas::askAboutRemoving(int count)
-{
-    if (count)
-    {
-        int result = KMessageBox::questionYesNo(KApplication::activeWindow(), i18n("Are you sure you want to delete ").append(count).append(i18n(" selected items?")), i18n("Items deleting"));
-        if (result == KMessageBox::Yes)
-            return true;
-    }
-    return false;
+    QList<AbstractPhoto*> items;
+    QModelIndexList selectedIndexes = selectionModel()->selectedRows();
+    foreach (QModelIndex index, selectedIndexes)
+        items << static_cast<LayersModelItem*>(index.internalPointer())->photo();
+    m_scene->removeItems(items);
 }
 
 /** ###########################################################################################################################
@@ -441,17 +356,17 @@ bool Canvas::askAboutRemoving(int count)
 void Canvas::selectionChanged()
 {
     QList<AbstractPhoto*> selectedItems = m_scene->selectedItems();
-    QModelIndexList oldSelected = m_selmodel->selectedIndexes();
-    QModelIndexList newSelected = m_model->itemsToIndexes(selectedItems);
+    QModelIndexList oldSelected = selectionModel()->selectedIndexes();
+    QModelIndexList newSelected = model()->itemsToIndexes(selectedItems);
     foreach (QModelIndex index, oldSelected)
     {
         if (!newSelected.contains(index) && index.column() == LayersModelItem::NameString)
-            m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Deselect);
+            selectionModel()->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Deselect);
     }
     foreach(QModelIndex index, newSelected)
     {
-        if (!m_selmodel->isSelected(index) && index.column() == LayersModelItem::NameString)
-            m_selmodel->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Select);
+        if (!selectionModel()->isSelected(index) && index.column() == LayersModelItem::NameString)
+            selectionModel()->select(index, QItemSelectionModel::Rows | QItemSelectionModel::Select);
     }
 
     // Selection change signals
@@ -499,20 +414,6 @@ void Canvas::selectionChanged(const QItemSelection & newSelection, const QItemSe
         temp = static_cast<LayersModelItem*>(index.internalPointer());
         if (temp->photo() && !temp->photo()->isSelected())
             temp->photo()->setSelected(true);
-    }
-}
-
-/** ###########################################################################################################################
- * Border change command
- #############################################################################################################################*/
-void Canvas::borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color)
-{
-    QList<AbstractPhoto*> selectedItem = m_scene->selectedItems();
-    if (m_selection_mode & SingleSelcting && selectedItem.count() == 1)
-    {
-        AbstractPhoto * item = selectedItem.at(0);
-        UndoBorderChangeCommand * undo = new UndoBorderChangeCommand(item, width, cornerStyle, color);
-        m_undo_stack->push(undo);
     }
 }
 
@@ -568,6 +469,17 @@ void Canvas::enableTextEditingMode()
 void Canvas::enableRotateEditingMode()
 {
     m_scene->setInteractionMode(Scene::Selecting | Scene::Rotating);
+    setSelectionMode(SingleSelcting);
+    this->setCursor(Qt::ArrowCursor);
+    m_scene->clearSelectingFilters();
+}
+
+/** ###########################################################################################################################
+ * Sets borders editing mode
+ #############################################################################################################################*/
+void Canvas::enableBordersEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting);
     setSelectionMode(SingleSelcting);
     this->setCursor(Qt::ArrowCursor);
     m_scene->clearSelectingFilters();

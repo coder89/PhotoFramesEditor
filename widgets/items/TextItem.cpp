@@ -17,7 +17,6 @@ using namespace KIPIPhotoFramesEditor;
 
 class KIPIPhotoFramesEditor::TextItemPrivate
 {
-
     TextItemPrivate(TextItem * item) :
         m_item(item),
         m_cursorIsVisible(false),
@@ -236,8 +235,8 @@ class KIPIPhotoFramesEditor::TextItem::TextFontUndoCommand : public QUndoCommand
         }
 };
 
-TextItem::TextItem(const QString & text, QGraphicsScene * scene) :
-    AbstractPhoto(scene),
+TextItem::TextItem(const QString & text) :
+    AbstractPhoto(),
     d(new TextItemPrivate(this)),
     m_color(Qt::black),
     m_font(QFont()),
@@ -404,24 +403,14 @@ void TextItem::setText(const QString & text)
     this->setText(temp.split('\n'));
 }
 
-QRectF TextItem::boundingRect() const
-{
-    return m_complete_path.boundingRect();
-}
-
-QPainterPath TextItem::shape() const
+QPainterPath TextItem::itemShape() const
 {
     return m_complete_path;
 }
 
-QPainterPath TextItem::opaqueArea() const
+QPainterPath TextItem::itemOpaqueArea() const
 {
-    return m_complete_path;
-}
-
-bool TextItem::contains(const QPointF & point) const
-{
-    return m_complete_path.contains(point);
+    return m_text_path;
 }
 
 void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
@@ -450,6 +439,7 @@ void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option
         painter->drawLine(x, y, x, y+m_metrics.lineSpacing());
         painter->restore();
     }
+    AbstractPhoto::paint(painter, option, widget);
 }
 
 QDomElement TextItem::toSvg(QDomDocument & document) const

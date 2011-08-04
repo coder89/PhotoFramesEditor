@@ -2,6 +2,7 @@
 #include "PhotoEffectsGroup.h"
 #include "PhotoEffectsLoader.h"
 #include "ImageFileDialog.h"
+#include "BordersGroup.h"
 #include "global.h"
 #include "PFESettings.h"
 
@@ -60,8 +61,8 @@ QString PhotoItemPrivate::locateFile(const QString & filePath)
     return resultPath;
 }
 
-PhotoItem::PhotoItem(const QImage & photo, QGraphicsScene * scene) :
-    AbstractPhoto(scene),
+PhotoItem::PhotoItem(const QImage & photo) :
+    AbstractPhoto(),
     d(new PhotoItemPrivate(this))
 {
     this->setupItem(QPixmap::fromImage(photo));
@@ -194,6 +195,23 @@ QDomElement PhotoItem::svgVisibleArea(QDomDocument & document) const
     return img;
 }
 
+QVariant PhotoItem::itemChange(GraphicsItemChange change, const QVariant & value)
+{
+    switch (change)
+    {
+        case ItemSceneChange:
+            {
+                QGraphicsScene * scene = value.value<QGraphicsScene*>();
+                if (scene)
+                    fitToRect(scene->sceneRect().toRect());
+            }
+            break;
+        default:
+            break;
+    }
+    return AbstractPhoto::itemChange(change, value);
+}
+
 void PhotoItem::setPixmap(const QPixmap & pixmap)
 {
     if (pixmap.isNull())
@@ -207,27 +225,47 @@ void PhotoItem::updateIcon()
     this->setIcon(QIcon(m_pixmap.scaled(100,100,Qt::KeepAspectRatioByExpanding)));
 }
 
-void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
+void PhotoItem::fitToRect(const QRect & rect)
+{
+    // Scaling if to big
+    QSize s = m_pixmap_original.size();
+    QRect r = m_pixmap_original.rect();
+    if (rect.isValid() && (rect.width()<s.width() || rect.height()<s.height()))
+    {
+        s.scale(rect.size()*0.8, Qt::KeepAspectRatio);
+        r.setSize(s);
+    }
+
+    QPainterPath p;
+    p.addRect(r);
+    m_image_path = p;
+    this->m_image_path = m_image_path.simplified();
+    this->recalcShape();
+
+    // Create effective pixmap
+    this->refresh();
+}
+
+void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
     if (!m_pixmap.isNull())
     {
-        QRect myRect = this->boundingRect().toRect();
         painter->drawPixmap(m_pixmap.rect(),
-                            m_pixmap,
-                            option->rect.intersected(myRect));
+                            m_pixmap);
     }
+    AbstractPhoto::paint(painter, option, widget);
 }
 
 void PhotoItem::refreshItem()
 {
     if (m_pixmap_original.isNull())
         return;
-    this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->boundingRect().size().toSize(),
+    this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->itemShape().boundingRect().size().toSize(),
                                                                      Qt::IgnoreAspectRatio,
                                                                      Qt::SmoothTransformation));
     this->updateIcon();
     this->recalcShape();
-    this->update(this->boundingRect());
+    this->update();
 }
 
 QtAbstractPropertyBrowser * PhotoItem::propertyBrowser()
@@ -241,53 +279,18 @@ void PhotoItem::setupItem(const QPixmap & photo)
     m_pixmap_original = photo;
 
     // Scaling if to big
-    QSize s = photo.size();
-    QRect r = photo.rect();
-    QSize sceneSize = scene()->sceneRect().size().toSize();
-    if (sceneSize.width()<s.width() || sceneSize.height()<s.height())
-    {
-        s.scale(sceneSize*0.8, Qt::KeepAspectRatio);
-        r.setSize(s);
-    }
-
-    QPainterPath p;
-    p.addRect(r);
-    m_image_path = p;
-    this->m_image_path = m_image_path.simplified();
-    this->recalcShape();
+    if (scene())
+        fitToRect(scene()->sceneRect().toRect());
+    else
+        fitToRect(photo.rect());
 
     // Create effective pixmap
     this->refresh();
 
     this->setFlag(QGraphicsItem::ItemIsSelectable);
-
-    // Default border style
-    this->setBorderWidth(0);
-    this->setBorderColor(Qt::black);
-    this->setBorderCornersStyle(Qt::RoundJoin);
 }
 
 void PhotoItem::recalcShape()
 {
-//    if (m_border_width)
-//    {
-//        QPainterPathStroker s;
-//        s.setWidth(m_border_width);
-//        s.setJoinStyle(m_border_corner_style);
-//        m_border_path = s.createStroke(m_image_path);
-//    }
-//    else
-//        m_border_path = QPainterPath();
-//    m_complete_path = m_border_path.united(m_image_path);
-//    prepareGeometryChange();
-
-//    try // I'm not sure how to properly/safely cast from QGraphicsScene* -> Scene*
-//    {
-//        Scene * m_scene = (Scene*)this->scene();
-//        if (m_scene)
-//            m_scene->updateSelection();
-//    }
-//    catch(...)
-//    {}
     m_complete_path = m_image_path;
 }

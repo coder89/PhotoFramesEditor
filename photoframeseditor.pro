@@ -33,10 +33,8 @@ SOURCES += main.cpp\
     widgets/menus/GraphicsEditingWidgetMenu.cpp \
     widgets/menus/LayersTreeMenu.cpp \
     undo/UndoMoveRowsCommand.cpp \
-    undo/UndoRemoveItem.cpp \
     widgets/tools/ToolsDockWidget.cpp \
     widgets/tools/BorderEditTool.cpp \
-    undo/UndoBorderChangeCommand.cpp \
     widgets/items/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
     widgets/tools/EffectsEditorTool.cpp \
@@ -53,7 +51,11 @@ SOURCES += main.cpp\
     widgets/tools/TextEditorTool.cpp \
     listeners/TextColorChangeListener.cpp \
     listeners/TextFontChangeListener.cpp \
-    widgets/items/AbstractItemInterface.cpp
+    widgets/items/AbstractItemInterface.cpp \
+    borders/BordersGroup.cpp \
+    widgets/tools/AbstractListTool.cpp \
+    borders/BorderDrawersLoader.cpp \
+    borders/BorderChangeListener.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -78,11 +80,9 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/menus/GraphicsEditingWidgetMenu.h \
     widgets/menus/LayersTreeMenu.h \
     undo/UndoMoveRowsCommand.h \
-    undo/UndoRemoveItem.h \
     widgets/layers/LayersTreeTitleWidget.h \
     widgets/tools/ToolsDockWidget.h \
     widgets/tools/BorderEditTool.h \
-    undo/UndoBorderChangeCommand.h \
     widgets/items/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
     widgets/tools/EffectsEditorTool.h \
@@ -100,7 +100,15 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/TextEditorTool.h \
     listeners/TextColorChangeListener.h \
     listeners/TextFontChangeListener.h \
-    widgets/items/AbstractItemInterface.h
+    widgets/items/AbstractItemInterface.h \
+    borders/BordersGroup.h \
+    widgets/tools/AbstractListTool.h \
+    widgets/tools/AbstractListTool_p.h \
+    models/AbstractMovableModel.h \
+    borders/BorderDrawerInterface.h \
+    borders/BorderDrawersLoader.h \
+    borders/BorderDrawerFactoryInterface.h \
+    borders/BorderChangeListener.h
 
 LIBS += \
     -L/usr \
@@ -121,7 +129,8 @@ INCLUDEPATH += \
     listeners \
     utils \
     models \
-    undo
+    undo \
+    borders
 
 OTHER_FILES += \
     resources/photoframeseditorui.rc

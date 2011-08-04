@@ -30,7 +30,7 @@ namespace KIPIPhotoFramesEditor
             QStackedLayout * m_tool_widget_layout;
             AbstractTool * m_effects_widget;
             AbstractTool * m_text_widget;
-            AbstractTool * m_colorize_widget;
+            AbstractTool * m_border_widget;
 
             AbstractPhoto * m_currentPhoto;
 
@@ -79,6 +79,7 @@ namespace KIPIPhotoFramesEditor
             void setEffectsWidgetVisible(bool isVisible);
             void setTextWidgetVisible(bool isVisible);
             void setRotateWidgetVisible(bool isVisible);
+            void setBordersWidgetVisible(bool isVisible);
 
             void emitPointerToolSelected(bool isSelected)
             {
@@ -99,17 +100,6 @@ namespace KIPIPhotoFramesEditor
                     this->unsetCursor();
                     emit requireMultiSelection();
                     emit handToolSelected();
-                }
-            }
-
-            void emitBorderToolSelected(bool isSelected)
-            {
-                emit borderToolSelectionChanged(isSelected);
-                if (isSelected)
-                {
-                    this->unsetCursor();
-                    emit requireSingleSelection();
-                    emit borderToolSelected();
                 }
             }
     };

@@ -13,6 +13,7 @@
 
 // Local
 #include "AbstractItemInterface.h"
+#include "BordersGroup.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -31,6 +32,46 @@ namespace KIPIPhotoFramesEditor
         public:
 
             virtual ~AbstractPhoto();
+
+            /** Returns item's bounding rectangle.
+              * \note This methods shouldn't be reimplemented because it's taking into account borders shape.
+              * Reimplement \fn itemShape() and \fn itemOpaqueArea() methods instead.
+              */
+            virtual QRectF boundingRect() const
+            {
+                return shape().boundingRect();
+            }
+            /** Returns item's shape.
+              * \note This methods shouldn't be reimplemented because it's taking into account borders shape.
+              * Reimplement \fn itemShape() and \fn itemOpaqueArea() methods instead.
+              */
+            virtual QPainterPath shape() const
+            {
+                QPainterPath result = this->itemShape();
+                return result.united(bordersGroup()->shape());
+            }
+            /** Returns item's opaque area.
+              * \note This methods shouldn't be reimplemented because it's taking into account borders shape.
+              * Reimplement \fn itemShape() and \fn itemOpaqueArea() methods instead.
+              */
+            virtual QPainterPath opaqueArea() const
+            {
+                QPainterPath result = this->itemOpaqueArea();
+                return result.united(bordersGroup()->shape());
+            }
+
+            /** Returns item shape
+              * Implement this method to return shape of the item.
+              * You should take into account only your item's implementation shape, not whith borders or effects shapes.
+              * This is done automaticaly by AbstractPhoto class.
+              */
+            virtual QPainterPath itemShape() const = 0;
+            /** Returns item opaque area
+              * Implement this method to return opaque area of the item.
+              * You should take into account only your item's implementation opaque area, not whith borders or effects opaque areas.
+              * This is done automaticaly by AbstractPhoto class.
+              */
+            virtual QPainterPath itemOpaqueArea() const = 0;
 
             /** Converts item data into SVG format
               * Each derived class should has its own implementation of this method to save its specific data.
@@ -62,45 +103,6 @@ namespace KIPIPhotoFramesEditor
                 return m_name;
             }
 
-            /// Border width [Getter/Setter]
-            Q_PROPERTY(qreal m_border_width READ borderWidth WRITE setBorderWidth)
-            void setBorderWidth(qreal width)
-            {
-                if (width >= 0)
-                {
-                    m_border_width = width;
-                    recalcShape();
-                    //this->update(this->boundingRect());
-                }
-            }
-            qreal borderWidth() const
-            {
-                return m_border_width;
-            }
-
-            /// Border color [Getter/Setter]
-            void setBorderColor(const QColor & color)
-            {
-                m_border_color = color;
-               // this->update(this->boundingRect());
-            }
-            QColor borderColor() const
-            {
-                return m_border_color;
-            }
-
-            /// Border corners style [Getter/Setter]
-            void setBorderCornersStyle(Qt::PenJoinStyle cornersStyle)
-            {
-                m_border_corner_style = cornersStyle;
-                recalcShape();
-               // this->update(this->boundingRect());
-            }
-            Qt::PenJoinStyle borderCornersStyle() const
-            {
-                return m_border_corner_style;
-            }
-
             /// Icon of the item [50px x 50px]
             Q_PROPERTY(QIcon m_icon READ icon)
             QIcon & icon()
@@ -119,6 +121,13 @@ namespace KIPIPhotoFramesEditor
                 return m_effects_group;
             }
 
+            /// Borders group property
+            Q_PROPERTY(BordersGroup * m_borders_group READ bordersGroup)
+            BordersGroup * bordersGroup() const
+            {
+                return m_borders_group;
+            }
+
             Q_PROPERTY(QString m_id READ id)
             QString id() const;
 
@@ -126,7 +135,7 @@ namespace KIPIPhotoFramesEditor
             void refresh()
             {
                 this->refreshItem();
-                emit updated();
+                emit changed();
             }
 
             /// Returns item's property browser
@@ -137,11 +146,11 @@ namespace KIPIPhotoFramesEditor
           /** This signal is emited when item was changed and has been updated.
             * It is used by listeners to update their views and be up to date.
             */
-            void updated();
+            void changed();
 
         protected:
 
-            explicit AbstractPhoto(QGraphicsScene * scene = 0);
+            explicit AbstractPhoto();
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }
@@ -155,8 +164,8 @@ namespace KIPIPhotoFramesEditor
               */
             virtual QDomElement svgVisibleArea(QDomDocument & document) const = 0;
 
-            // Recalculate item shape
-            void recalcShape();
+            // Draws abstract item presentation
+            virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
             // Mouse events
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
@@ -193,6 +202,7 @@ namespace KIPIPhotoFramesEditor
             void setupItem();
 
             PhotoEffectsGroup * m_effects_group;
+            BordersGroup * m_borders_group;
 
             qreal m_border_width;
             Qt::PenJoinStyle m_border_corner_style;

@@ -128,7 +128,7 @@ class KIPIPhotoFramesEditor::PhotoEffectsGroup::InsertItemUndoCommand : public Q
 };
 
 PhotoEffectsGroup::PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent) :
-    QAbstractItemModel(parent),
+    AbstractMovableModel(parent),
     m_photo(photo)
 {
 }
@@ -208,7 +208,26 @@ void PhotoEffectsGroup::setPhoto(AbstractPhoto * photo)
     m_photo = photo;
 }
 
-AbstractPhotoEffectInterface * PhotoEffectsGroup::getItem(const QModelIndex & index) const
+QObject * PhotoEffectsGroup::item(const QModelIndex & index) const
+{
+    if (index.isValid() && index.row() < rowCount())
+        return m_effects_list.at(index.row());
+    return 0;
+}
+
+void PhotoEffectsGroup::setItem(QObject * item, const QModelIndex & index)
+{
+    AbstractPhotoEffectInterface * effect = dynamic_cast<AbstractPhotoEffectInterface*>(item);
+    if (!effect || !index.isValid())
+        return;
+    int row = index.row();
+    if (row < 0 || row >= rowCount())
+        return;
+    m_effects_list.removeAt(row);
+    m_effects_list.insert(row, effect);
+}
+
+AbstractPhotoEffectInterface * PhotoEffectsGroup::graphicsItem(const QModelIndex & index) const
 {
     return static_cast<AbstractPhotoEffectInterface*>(index.internalPointer());
 }
@@ -259,7 +278,7 @@ QVariant PhotoEffectsGroup::data(const QModelIndex & index, int role) const
         return i18n("Effect name");
     else
     {
-        AbstractPhotoEffectInterface * effect = getItem(index);
+        AbstractPhotoEffectInterface * effect = graphicsItem(index);
         if (effect)
             return effect->toString();
         else

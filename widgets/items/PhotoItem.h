@@ -13,7 +13,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            PhotoItem(const QImage & photo = QImage(), QGraphicsScene * scene = 0);
+            PhotoItem(const QImage & photo = QImage());
             virtual ~PhotoItem();
 
             /// Convert photo item to SVG format
@@ -40,21 +40,15 @@ namespace KIPIPhotoFramesEditor
             }
 
             /// Reimplemented from QGraphicsItem
-            virtual QPainterPath shape() const
+            virtual QPainterPath itemShape() const
             {
-                return m_complete_path;
+                return m_image_path;
             }
 
             /// Reimplemented from QGraphicsItem
-            virtual QPainterPath opaqueArea() const
+            virtual QPainterPath itemOpaqueArea() const
             {
-                return m_complete_path;
-            }
-
-            /// Reimplemented from QGraphicsItem
-            virtual QRectF boundingRect() const
-            {
-                return m_complete_path.boundingRect();
+                return m_image_path;
             }
 
             /// Returns item's property browser
@@ -65,8 +59,13 @@ namespace KIPIPhotoFramesEditor
             /// Converts item data to SVG format
             virtual QDomElement svgVisibleArea(QDomDocument & document) const;
 
+            QVariant itemChange(GraphicsItemChange change, const QVariant & value);
+
             /// Updates item icon
             virtual void updateIcon();
+
+            /// Scales image to fit scenes rect
+            void fitToRect(const QRect & rect);
 
             /// Reimplemented from AbstractPhoto
             void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);

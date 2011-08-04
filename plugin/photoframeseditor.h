@@ -57,11 +57,8 @@ namespace KIPIPhotoFramesEditor
             void setupActions();
             void createWidgets();
             void loadEffects();
+            void loadBorders();
             void prepareSignalsConnections();
-            virtual void inputMethodEvent(QInputMethodEvent *)
-            {
-                qDebug() << "pfs::input";
-            }
 
             Canvas * m_canvas;
 

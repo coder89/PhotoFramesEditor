@@ -1,5 +1,9 @@
 #include "BorderEditTool.h"
 #include "ToolsDockWidget.h"
+#include "AbstractPhoto.h"
+
+#include "BordersGroup.h"
+#include "BorderDrawersLoader.h"
 
 #include <QDebug>
 #include <QGridLayout>
@@ -7,6 +11,9 @@
 #include <QLabel>
 #include <QFont>
 #include <QColorDialog>
+#include <QMetaProperty>
+#include <QtTreePropertyBrowser>
+#include "KEditFactory.h"
 
 #include <kpushbutton.h>
 #include <klocalizedstring.h>
@@ -14,60 +21,31 @@
 using namespace KIPIPhotoFramesEditor;
 
 BorderEditTool::BorderEditTool(ToolsDockWidget * parent) :
-    QDockWidget(parent)
+    AbstractListTool(i18n("Borders editor"), parent)
 {
-    this->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    QWidget * widget = new QWidget(this);
-    QFormLayout * layout = new QFormLayout(widget);
-
-    m_width_widget = new QDoubleSpinBox(widget);
-    layout->addRow(i18n("Width:"), m_width_widget);
-    connect(m_width_widget,SIGNAL(valueChanged(double)),this,SLOT(widthChanged(double)));
-
-    m_corners_style_widget = new KComboBox(this);
-    m_corners_style_widget->addItem("Miter", Qt::MiterJoin);
-    m_corners_style_widget->addItem("Round", Qt::RoundJoin);
-    m_corners_style_widget->addItem("Bevel", Qt::BevelJoin);
-    layout->addRow(i18n("Corners style:"), m_corners_style_widget);
-    connect(m_corners_style_widget,SIGNAL(currentIndexChanged(int)),this,SLOT(cornerStyleChanged(int)));
-
-    m_color_widget = new KColorButton(this);
-    m_color_widget->setFlat(true);
-    m_color_widget->setFocusPolicy(Qt::NoFocus);
-    layout->addRow(i18n("Color:"), m_color_widget);
-    connect(m_color_widget,SIGNAL(changed(QColor)),this,SLOT(colorChanged(QColor)));
-
-    m_apply_button = new KPushButton(i18n("Apply"), widget);
-    m_cancel_button = new KPushButton(i18n("Cancel"), widget);
-    connect(m_apply_button,SIGNAL(clicked()),this,SLOT(emitBorderStyleChanged()));
-    connect(m_cancel_button,SIGNAL(clicked()),this,SLOT(resetForm()));
-    layout->addRow(m_apply_button,m_cancel_button);
-
-    widget->setLayout(layout);
-    this->setWidget(widget);
-
-    QLabel * title = new QLabel(i18n("Borders"), this);
-    QFont titleFont = title->font();
-    titleFont.setBold(true);
-    title->setFont(titleFont);
-    this->setTitleBarWidget(title);
 }
 
-void BorderEditTool::setInitialValues(qreal width, Qt::PenJoinStyle cornersStyle, const QColor & color)
+QStringList BorderEditTool::options() const
 {
-    m_apply_button->setEnabled(false);
-    m_cancel_button->setEnabled(false);
+    return BorderDrawersLoader::registeredDrawers();
+}
 
-    // Width selector
-    m_width = width;
-    m_width_widget->setValue(width);
+AbstractMovableModel * BorderEditTool::model()
+{
+    if (currentItem() && currentItem()->bordersGroup())
+        return currentItem()->bordersGroup();
+    return 0;
+}
 
-    // Corner style selector
-    m_corner_style = cornersStyle;
-    for (int i = m_corners_style_widget->count()-1; i >= 0; --i)
-        if (m_corners_style_widget->itemData(i) == cornersStyle)
-            m_corners_style_widget->setCurrentIndex(i);
+QObject * BorderEditTool::createItem(const QString & name)
+{
+    return BorderDrawersLoader::getDrawerByName(name);
+}
 
-    m_color = color;
-    m_color_widget->setColor(color);
+QWidget * BorderEditTool::createEditor(QObject * item, bool createCommands)
+{
+    BorderDrawerInterface * drawer = qobject_cast<BorderDrawerInterface*>(item);
+    if (!drawer)
+        return 0;
+    return BorderDrawersLoader::createEditor(drawer, createCommands);
 }

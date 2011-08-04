@@ -3,6 +3,10 @@
 #include "global.h"
 #include "QGraphicsRotationItem.h"
 
+#include "LayersModel.h"
+#include "LayersModelItem.h"
+#include "LayersSelectionModel.h"
+
 // Qt
 #include <QGraphicsTextItem>
 #include <QGraphicsRectItem>
@@ -20,6 +24,7 @@
 #include <QGraphicsWidget>
 #include <qmath.h>
 #include <QUndoCommand>
+#include <QtAlgorithms>
 
 // KDE
 #include <kapplication.h>
@@ -41,6 +46,8 @@ class KIPIPhotoFramesEditor::ScenePrivate
     ScenePrivate(Scene * parent) :
         //m_edit_widget(new QGraphicsEditionWidget),
         m_parent(parent),
+        model(new LayersModel(parent)),
+        selection_model(new LayersSelectionModel(model, parent)),
         m_pressed_item(0),
         m_selected_items_all_movable(true),
         m_selection_visible(true),
@@ -75,7 +82,6 @@ class KIPIPhotoFramesEditor::ScenePrivate
         event->setLastPos(item->mapFromScene(event->lastScenePos()));
         item->mousePressEvent(event);
     }
-
     void sendMoveEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
         // Send mousepressevent to the pressed item
@@ -85,7 +91,6 @@ class KIPIPhotoFramesEditor::ScenePrivate
         event->setLastPos(item->mapFromScene(event->lastScenePos()));
         item->mouseMoveEvent(event);
     }
-
     void sendReleaseEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
         // Send mousepressevent to the pressed item
@@ -95,7 +100,6 @@ class KIPIPhotoFramesEditor::ScenePrivate
         event->setLastPos(item->mapFromScene(event->lastScenePos()));
         item->mouseReleaseEvent(event);
     }
-
     void sendDoubleClickEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
         // Send mousepressevent to the pressed item
@@ -108,6 +112,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
 
     // Parent scene
     QGraphicsScene * m_parent;
+    // Scene's model
+    LayersModel * model;
+    LayersSelectionModel * selection_model;
     // Background item
     QGraphicsRectItem * m_background;
 
@@ -186,55 +193,193 @@ class KIPIPhotoFramesEditor::ScenePrivate
     friend class Scene;
 };
 
-class KIPIPhotoFramesEditor::MoveItemsUndoCommand : public QUndoCommand
+class KIPIPhotoFramesEditor::AddItemsCommand : public QUndoCommand
+{
+        QList<AbstractPhoto*> items;
+        int position;
+        Scene * scene;
+        bool done;
+    public:
+        AddItemsCommand(AbstractPhoto * item, int position, Scene * scene, QUndoCommand * parent = 0) :
+            QUndoCommand(parent),
+            position(position),
+            scene(scene),
+            done(false)
+        {
+            items << item;
+        }
+        AddItemsCommand(const QList<AbstractPhoto*> & items, int position, Scene * scene, QUndoCommand * parent = 0) :
+            QUndoCommand(parent),
+            items(items),
+            position(position),
+            scene(scene),
+            done(false)
+        {}
+        ~AddItemsCommand()
+        {
+            if (done)
+                return;
+            foreach (AbstractPhoto * item, items)
+                if (!item->scene())
+                    item->deleteLater();
+            items.clear();
+        }
+        virtual void redo()
+        {
+            foreach (AbstractPhoto * item, items)
+                scene->QGraphicsScene::addItem(item);
+            scene->model()->insertItems(items, position);
+            done = true;
+        }
+        virtual void undo()
+        {
+            foreach (AbstractPhoto * item, items)
+                scene->QGraphicsScene::removeItem(item);
+            scene->model()->removeRows(position, items.count());
+            done = false;
+        }
+};
+class KIPIPhotoFramesEditor::MoveItemsCommand : public QUndoCommand
 {
         QMap<AbstractItemInterface*,QPointF> m_items;
         Scene * m_scene;
         bool done;
-        static int num;
     public:
-        MoveItemsUndoCommand(QMap<AbstractItemInterface*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
+        MoveItemsCommand(QMap<AbstractItemInterface*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
             QUndoCommand(i18n("Move items"), parent),
             m_items(items),
             m_scene(scene),
             done(true)
         {}
-        virtual void redo();
-        virtual void undo();
+        virtual void redo()
+        {
+            if (!done)
+            {
+                QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
+                while(it != m_items.end())
+                {
+                    QPointF temp = it.key()->pos();
+                    it.key()->setPos( it.value() );
+                    it.value() = temp;
+                    ++it;
+                }
+                done = !done;
+                m_scene->calcSelectionBoundingRect();
+            }
+        }
+        virtual void undo()
+        {
+            if (done)
+            {
+                QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
+                while(it != m_items.end())
+                {
+                    QPointF temp = it.key()->pos();
+                    it.key()->setPos( it.value() );
+                    it.value() = temp;
+                    ++it;
+                }
+                done = !done;
+                m_scene->calcSelectionBoundingRect();
+            }
+        }
 };
-int KIPIPhotoFramesEditor::MoveItemsUndoCommand::num = 0;
-void MoveItemsUndoCommand::redo()
+class KIPIPhotoFramesEditor::RemoveItemsCommand : public QUndoCommand
 {
-    if (!done)
-    {
-        QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
-        while(it != m_items.end())
+        AbstractPhoto * item;
+        int item_row;
+        AbstractPhoto * item_parent;
+        Scene * m_scene;
+        bool done;
+    public:
+        RemoveItemsCommand(AbstractPhoto * item, Scene * scene, QUndoCommand * parent = 0) :
+            QUndoCommand(QString("Remove item"), parent),
+            item(item),
+            m_scene(scene),
+            done(false)
         {
-            QPointF temp = it.key()->pos();
-            it.key()->setPos( it.value() );
-            it.value() = temp;
-            ++it;
+            item_parent = dynamic_cast<AbstractPhoto*>(item->parentItem());
         }
-        done = !done;
-        m_scene->calcSelectionBoundingRect();
-    }
-}
-void MoveItemsUndoCommand::undo()
-{
-    if (done)
-    {
-        QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
-        while(it != m_items.end())
+        ~RemoveItemsCommand()
         {
-            QPointF temp = it.key()->pos();
-            it.key()->setPos( it.value() );
-            it.value() = temp;
-            ++it;
+            if (done)
+            {
+                if (item && !item->scene() && !item->parentItem())
+                    delete item;
+            }
         }
-        done = !done;
-        m_scene->calcSelectionBoundingRect();
-    }
-}
+        virtual void redo()
+        {
+            QPersistentModelIndex parentIndex = QPersistentModelIndex(m_scene->model()->findIndex( item_parent ));
+            if (item_parent && !(parentIndex.isValid() && item_parent->scene()))
+                return;
+
+            // Remove from model
+            QModelIndex itemIndex = m_scene->model()->findIndex(item, parentIndex);
+            item_row = itemIndex.row();
+            if (itemIndex.isValid())
+                m_scene->model()->removeRow(item_row, parentIndex);
+
+            // Remove from scene
+            if (item->scene() == m_scene)
+                m_scene->QGraphicsScene::removeItem(item);
+            done = true;
+        }
+        virtual void undo()
+        {
+            if (!done)
+                return;
+
+            // Add to scene
+            if (item->scene() != m_scene)
+                m_scene->QGraphicsScene::addItem( item );
+            item->setParentItem( item_parent );
+
+            // Add to model
+            QPersistentModelIndex parentIndex = QPersistentModelIndex( m_scene->model()->findIndex( item_parent ) );
+            if (!m_scene->model()->hasIndex(item_row, 0, parentIndex) ||
+                    static_cast<LayersModelItem*>(m_scene->model()->index(item_row, 0, parentIndex).internalPointer())->photo() != item)
+            {
+                if (m_scene->model()->insertRow(item_row, parentIndex))
+                {
+                    static_cast<LayersModelItem*>(m_scene->model()->index(item_row, 0, parentIndex).internalPointer())->setPhoto(item);
+                    // Add items children to model
+                    appendChild(item, m_scene->model()->index(item_row, 0, parentIndex));
+                }
+            }
+            done = false;
+        }
+    private:
+        static bool compareGraphicsItems(QGraphicsItem * i1, QGraphicsItem * i2)
+        {
+            if ((i1 && i2) && (i1->zValue() < i2->zValue()))
+                return true;
+            return false;
+        }
+        void appendChild(AbstractPhoto * item, const QModelIndex & parent)
+        {
+            QList<QGraphicsItem*> items = item->childItems();
+            if (items.count())
+            {
+                // Sort using z-Values (z-Value == models row)
+                qSort(items.begin(), items.end(), KIPIPhotoFramesEditor::RemoveItemsCommand::compareGraphicsItems);
+                int i = 0;
+                foreach (QGraphicsItem * childItem, items)
+                {
+                    AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(childItem);
+                    if (photo)
+                    {
+                        if (m_scene->model()->insertRow(i,parent))
+                        {
+                            static_cast<LayersModelItem*>(m_scene->model()->index(i, 0, parent).internalPointer())->setPhoto(photo);
+                            this->appendChild(photo, m_scene->model()->index(i, 0, parent));
+                            ++i;
+                        }
+                    }
+                }
+            }
+        }
+};
 
 Scene::Scene(const QRectF & dimension, QObject * parent) :
     QGraphicsScene(dimension, parent),
@@ -270,34 +415,41 @@ Scene::~Scene()
 }
 
 //#####################################################################################################
+LayersModel * Scene::model() const
+{
+    return d->model;
+}
+
+//#####################################################################################################
+LayersSelectionModel * Scene::selectionModel() const
+{
+    return d->selection_model;
+}
+
+//#####################################################################################################
 void Scene::removeItem(AbstractPhoto * item)
 {
-    emit itemAboutToBeRemoved(item);
+    if (!askAboutRemoving(1))
+        return;
+    QUndoCommand * command = new RemoveItemsCommand(item, this);
+    PFE_PostUndoCommand(command);
 }
 
 //#####################################################################################################
 void Scene::removeItems(const QList<AbstractPhoto *> & items)
 {
-    emit itemsAboutToBeRemoved(items);
-}
-
-//#####################################################################################################
-void Scene::enableItemsDrawing()
-{
-    //this->m_interaction_mode = Drawing;
-    temp_path = QPainterPath();
-    this->temp_widget = new QGraphicsPathItem(temp_path);
-    //temp_widget->setZValue(zIndex++);
-    QGraphicsScene::addItem(temp_widget);
-}
-
-//#####################################################################################################
-void Scene::disableitemsDrawing()
-{
-    this->QGraphicsScene::removeItem(temp_widget);
-    delete temp_widget;
-    temp_widget = 0;
-    m_interaction_mode = DEFAULT_EDITING_MODE;
+    if (!askAboutRemoving(items.count()))
+        return;
+    QUndoCommand * command;
+    QUndoCommand * parent = 0;
+    if (items.count() > 1)
+        parent = new QUndoCommand("Remove items");
+    foreach (AbstractPhoto * item, items)
+        command = new RemoveItemsCommand(item, this, parent);
+    if (parent)
+        PFE_PostUndoCommand(parent);
+    else
+        PFE_PostUndoCommand(command);
 }
 
 //#####################################################################################################
@@ -336,7 +488,7 @@ void Scene::keyPressEvent(QKeyEvent * event)
             event->setAccepted(true);
             break;
         case Qt::Key_Escape:
-            disableitemsDrawing();
+            //disableitemsDrawing();
             break;
     }
     if (event->isAccepted())
@@ -471,7 +623,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
             // Post move command to QUndoStack
             if ((m_interaction_mode & Moving) && d->wasMoved())
             {
-                QUndoCommand * command = new MoveItemsUndoCommand(d->m_selected_items, this);
+                QUndoCommand * command = new MoveItemsCommand(d->m_selected_items, this);
                 PFE_PostUndoCommand(command);
             }
         }
@@ -764,10 +916,23 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
 //#####################################################################################################
 void Scene::addItem(AbstractPhoto * item)
 {
-    if (item->scene() != this)
-        this->QGraphicsScene::addItem(item);
-    this->children.append(item);
-    emit newItemAdded(item);
+    // Prevent multiple addition of the item
+    if (item->scene() == this)
+        return;
+
+    QModelIndexList selectedIndexes = d->selection_model->selectedIndexes();
+    unsigned insertionRow = -1;
+    foreach (QModelIndex index, selectedIndexes)
+    {
+        if (index.column() != LayersModelItem::NameString)
+            continue;
+        if (insertionRow > (unsigned)index.row())
+            insertionRow = index.row();
+    }
+    if (insertionRow == (unsigned)-1)
+        insertionRow = 0;
+    QUndoCommand * command = new AddItemsCommand(item, insertionRow, this);
+    PFE_PostUndoCommand(command);
 }
 
 //#####################################################################################################
@@ -815,6 +980,18 @@ void Scene::calcSelectionBoundingRect()
     d->m_selected_items_path = QPainterPath();
     foreach (AbstractItemInterface * item, d->m_selected_items.keys())
         d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
+}
+
+//#####################################################################################################
+bool Scene::askAboutRemoving(int count)
+{
+    if (count)
+    {
+        int result = KMessageBox::questionYesNo(KApplication::activeWindow(), i18n("Are you sure you want to delete %1 selected item%2?", QString::number(count), (count>1?"s":"")), i18n("Items deleting"));
+        if (result == KMessageBox::Yes)
+            return true;
+    }
+    return false;
 }
 
 //#####################################################################################################

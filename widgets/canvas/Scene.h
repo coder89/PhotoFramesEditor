@@ -16,12 +16,19 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class Canvas;
-    class CanvasWidget;
     class ScenePrivate;
-    class MoveItemsUndoCommand;
 
-    class Scene : protected QGraphicsScene
+    // My classes declarations
+    class Canvas;
+    class LayersModel;
+    class LayersSelectionModel;
+
+    // Undo commands
+    class AddItemsCommand;
+    class MoveItemsCommand;
+    class RemoveItemsCommand;
+
+    class Scene : public QGraphicsScene
     {
             Q_OBJECT
 
@@ -49,9 +56,11 @@ namespace KIPIPhotoFramesEditor
             explicit Scene(const QRectF & dimension, QObject * parent = 0);
             ~Scene();
 
+            LayersModel * model() const;
+            LayersSelectionModel * selectionModel() const;
+
             void removeItem(AbstractPhoto * item);
             void removeItems(const QList<AbstractPhoto*> & items);
-            void addItem(AbstractPhoto * item);
             QList<AbstractPhoto*> selectedItems() const;
             void setInteractionMode(int mode);
             void setSelectionMode(SelectionMode selectionMode);
@@ -74,15 +83,13 @@ namespace KIPIPhotoFramesEditor
 
             void finishEditing(const QPainterPath & path);
             void gridChanged(qreal x, qreal y);
-            void newItemAdded(AbstractPhoto * item);
             void itemAboutToBeRemoved(AbstractPhoto * item);
             void itemsAboutToBeRemoved(const QList<AbstractPhoto*> & items);
             void mousePressedPoint(const QPointF & point);
 
         public Q_SLOTS:
 
-            void enableItemsDrawing();
-            void disableitemsDrawing();
+            void addItem(AbstractPhoto * item);
             void removeSelectedItems();
             void setGrid(qreal x, qreal y);
             void setGridVisible(bool visible);
@@ -109,6 +116,8 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
+            bool askAboutRemoving(int count);
+
             int m_interaction_mode;
             static const int DEFAULT_EDITING_MODE = Moving & Selecting;
 
@@ -117,8 +126,6 @@ namespace KIPIPhotoFramesEditor
 
             QGraphicsPathItem * temp_widget;
             QPainterPath temp_path;
-
-            QList<AbstractPhoto*> children;
 
             // Grid properties
             qreal x_grid;
@@ -133,7 +140,7 @@ namespace KIPIPhotoFramesEditor
             friend class CanvasWidget;
             friend class ScenePrivate;
             friend class AbstractPhoto;
-            friend class MoveItemsUndoCommand;
+            friend class MoveItemsCommand;
     };
 
 }

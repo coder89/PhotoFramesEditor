@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "photo_context_menu.h"
 #include "PhotoEffectsGroup.h"
+#include "BordersGroup.h"
 #include "global.h"
 
 #include <QMenu>
@@ -20,8 +21,8 @@ using namespace KIPIPhotoFramesEditor;
 
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
-AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
-    AbstractItemInterface(0,scene),
+AbstractPhoto::AbstractPhoto() :
+    AbstractItemInterface(0,0),
     m_name("New layer"),
     m_border_width(0)
 {
@@ -29,6 +30,10 @@ AbstractPhoto::AbstractPhoto(QGraphicsScene * scene) :
 
     // Effects group
     m_effects_group = new PhotoEffectsGroup(this);
+
+    // Effects group
+    m_borders_group = new BordersGroup(this);
+    connect(this, SIGNAL(changed()), m_borders_group, SLOT(refresh()));
 }
 
 AbstractPhoto::~AbstractPhoto()
@@ -62,11 +67,6 @@ void AbstractPhoto::setupItem()
 {
     this->setFlag(QGraphicsItem::ItemIsSelectable);
     this->setFlag(QGraphicsItem::ItemIsMovable);
-
-    // Default border style
-    this->setBorderWidth(0);
-    this->setBorderColor(Qt::black);
-    this->setBorderCornersStyle(Qt::RoundJoin);
 }
 
 QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
@@ -228,6 +228,11 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     return true;
 }
 
+void AbstractPhoto::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
+{
+    bordersGroup()->paint(painter, option);
+}
+
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
 {
     qDebug() << "dragEnterEvent";
@@ -300,28 +305,4 @@ QString AbstractPhoto::id() const
     if (m_id.isEmpty())
         m_id = QString::number((long long)this, 16);
     return m_id;
-}
-
-void AbstractPhoto::recalcShape()
-{
-//    if (m_border_width)
-//    {
-//        QPainterPathStroker s;
-//        s.setWidth(m_border_width);
-//        s.setJoinStyle(m_border_corner_style);
-//        m_border_path = s.createStroke(m_image_path);
-//    }
-//    else
-//        m_border_path = QPainterPath();
-//    m_complete_path = m_border_path.united(m_image_path);
-//    prepareGeometryChange();
-
-//    try // I'm not sure how to properly/safely cast from QGraphicsScene* -> Scene*
-//    {
-//        Scene * m_scene = (Scene*)this->scene();
-//        if (m_scene)
-//            m_scene->updateSelection();
-//    }
-//    catch(...)
-//    {}
 }

@@ -69,15 +69,9 @@ namespace KIPIPhotoFramesEditor
                 return m_scene;
             }
 
-            LayersModel * model() const
-            {
-                return m_model;
-            }
+            LayersModel * model() const;
 
-            LayersSelectionModel * selectionModel() const
-            {
-                return m_selmodel;
-            }
+            LayersSelectionModel * selectionModel() const;
 
             QUndoStack * undoStack() const
             {
@@ -91,17 +85,17 @@ namespace KIPIPhotoFramesEditor
 
             operator LayersModel*()
             {
-                return m_model;
+                return this->model();
+            }
+
+            operator LayersSelectionModel*()
+            {
+                return this->selectionModel();
             }
 
             operator QUndoStack*()
             {
                 return m_undo_stack;
-            }
-
-            operator LayersSelectionModel*()
-            {
-                return m_selmodel;
             }
 
         public slots:
@@ -118,9 +112,6 @@ namespace KIPIPhotoFramesEditor
             /// Move selected items down on scene & model. (Called by layers tree)
             void moveSelectedRowsDown();
 
-            /// Create undo/redo command
-            void removeComand(AbstractPhoto * item);
-
             /// Remove item selected on scene (remove from scene & model => calls removeComand())
             void removeItem(AbstractPhoto * item);
 
@@ -130,17 +121,11 @@ namespace KIPIPhotoFramesEditor
             /// Remove items selected on model (remove from model & scene => calls removeComand())
             void removeSelectedRows();
 
-            /// Shows confirm dialog
-            bool askAboutRemoving(int count);
-
             /// Select items on model (synchronize model with scene)
             void selectionChanged();
 
             /// Select items on scene (synchronize scene with model)
             void selectionChanged(const QItemSelection & newSelection, const QItemSelection & oldSelection);
-
-            /// Sets border style for selected item
-            void borderChangeCommand(qreal width, Qt::PenJoinStyle cornerStyle, const QColor & color);
 
             /// Conrtols saved-state of the canvas
             void isSavedChanged(int currentCommandIndex);
@@ -179,6 +164,9 @@ namespace KIPIPhotoFramesEditor
             /// Sets rotating mode
             void enableRotateEditingMode();
 
+            /// Sets borders editing mode
+            void enableBordersEditingMode();
+
             /// Refresh widgets connections to canvas signals
             void refreshWidgetConnections(bool isVisible);
 
@@ -197,9 +185,6 @@ namespace KIPIPhotoFramesEditor
             /// Used when new item has been created and needs to be added to the scene and to the model
             void addNewItem(AbstractPhoto * item);
 
-            /// Used for synchronization scene with model (adds to model item added directly from scene)
-            void addNewItemToModel(AbstractPhoto * item);
-
         private:
 
             void init();
@@ -211,8 +196,6 @@ namespace KIPIPhotoFramesEditor
             int m_saved_on_index;
 
             Scene * m_scene;
-            LayersModel * m_model;
-            LayersSelectionModel * m_selmodel;
             QUndoStack * m_undo_stack;
             double m_scale_factor;
 

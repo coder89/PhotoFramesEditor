@@ -2,6 +2,7 @@
 #include "ColorizeTool.h"
 #include "EffectsEditorTool.h"
 #include "TextEditorTool.h"
+#include "BorderEditTool.h"
 
 #include <QDebug>
 #include <QButtonGroup>
@@ -127,7 +128,9 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_border->setCheckable(true);
     group->addButton(m_tool_border);
     formLayout->addWidget(m_tool_border, 1,1, Qt::AlignCenter);
-    connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(emitBorderToolSelected(bool)));
+    m_border_widget = new BorderEditTool(this);
+    m_tool_widget_layout->addWidget(m_border_widget);
+    connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(setBordersWidgetVisible(bool)));
 
     // Spacer
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,6);
@@ -211,6 +214,20 @@ void ToolsDockWidget::setRotateWidgetVisible(bool isVisible)
         m_tool_widget_layout->setCurrentIndex(0);
         emit requireSingleSelection();
         emit rotateToolSelected();
+        this->adjustSize();
+    }
+}
+
+void ToolsDockWidget::setBordersWidgetVisible(bool isVisible)
+{
+    emit borderToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        m_border_widget->setCurrentItem(m_currentPhoto);
+        m_tool_widget_layout->setCurrentWidget(m_border_widget);
+        this->unsetCursor();
+        emit requireSingleSelection();
+        emit borderToolSelected();
         this->adjustSize();
     }
 }

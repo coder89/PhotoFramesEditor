@@ -30,7 +30,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            TextItem(const QString & text = QString(), QGraphicsScene * scene = 0);
+            TextItem(const QString & text = QString());
             virtual void focusInEvent(QFocusEvent *event);
             virtual void focusOutEvent(QFocusEvent *event);
             virtual void keyPressEvent(QKeyEvent * event);
@@ -51,10 +51,8 @@ namespace KIPIPhotoFramesEditor
             QString textMultiline() const;
             void setText(const QString & text);
 
-            virtual QRectF boundingRect() const;
-            virtual QPainterPath shape() const;
-            virtual QPainterPath opaqueArea() const;
-            virtual bool contains(const QPointF & point) const;
+            virtual QPainterPath itemShape() const;
+            virtual QPainterPath itemOpaqueArea() const;
 
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 

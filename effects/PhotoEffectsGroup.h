@@ -1,9 +1,10 @@
 #ifndef ABSTRACTPHOTOEFFECTSGROUP_H
 #define ABSTRACTPHOTOEFFECTSGROUP_H
 
-#include <QAbstractItemModel>
 #include <QPixmap>
 #include <QDomDocument>
+
+#include "AbstractMovableModel.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -11,7 +12,7 @@ namespace KIPIPhotoFramesEditor
     class PhotoEffectsLoader;
     class AbstractPhotoEffectInterface;
 
-    class PhotoEffectsGroup : public QAbstractItemModel
+    class PhotoEffectsGroup : public AbstractMovableModel
     {
             Q_OBJECT
 
@@ -28,8 +29,9 @@ namespace KIPIPhotoFramesEditor
             QDomElement toSvg(QDomDocument & document) const;
             static PhotoEffectsGroup * fromSvg(QDomElement & element);
             AbstractPhoto * photo() const;
-            void setPhoto(AbstractPhoto * photo);
-            AbstractPhotoEffectInterface * getItem(const QModelIndex & index = QModelIndex()) const;
+            virtual QObject * item(const QModelIndex & index) const;
+            virtual void setItem(QObject * graphicsItem, const QModelIndex & index);
+            AbstractPhotoEffectInterface * graphicsItem(const QModelIndex & index = QModelIndex()) const;
             bool moveRows(int sourcePosition, int sourceCount, int destPosition);
             bool insertRow(int row, AbstractPhotoEffectInterface * effect);
             bool insertRow(int row, const QModelIndex & index = QModelIndex());
@@ -57,11 +59,13 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
+            void setPhoto(AbstractPhoto * photo);
             void moveRowsInModel(int sourcePosition, int sourceCount, int destPosition);
             QList<AbstractPhotoEffectInterface*> removeRowsInModel(int startingPosition, int count);
             void insertRemovedRowsInModel(const QList<AbstractPhotoEffectInterface*> & itemList, int startingPosition);
             void setEffectPointer(int row, AbstractPhotoEffectInterface * effect);
 
+        friend class AbstractPhoto;
         friend class MoveItemsUndoCommand;
         friend class RemoveItemsUndoCommand;
         friend class InsertItemUndoCommand;

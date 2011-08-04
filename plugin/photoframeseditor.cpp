@@ -10,6 +10,9 @@
 #include "AbstractPhotoEffectFactory.h"
 #include "ImageFileDialog.h"
 
+#include "BorderDrawerInterface.h"
+#include "BorderDrawersLoader.h"
+
 // Qt
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -55,6 +58,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
     d->settings = PFESettings::instance(this);
 
     loadEffects();
+    loadBorders();
     setupActions();
     createWidgets();
     refreshActions();
@@ -84,9 +88,16 @@ PhotoFramesEditor * PhotoFramesEditor::instancePhotoFramesEditor(QWidget * paren
 
 void PhotoFramesEditor::addUndoCommand(QUndoCommand * command)
 {
-    if (command && m_canvas)
-        m_canvas->undoStack()->push(command);
-    qDebug() << command->text() << command;
+    if (command)
+    {
+        if (m_canvas)
+            m_canvas->undoStack()->push(command);
+        else
+        {
+            command->redo();
+            delete command;
+        }
+    }
 }
 
 void PhotoFramesEditor::setupActions()
@@ -268,7 +279,8 @@ void PhotoFramesEditor::prepareSignalsConnections()
     connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableEffectsEditingMode()));
     connect(d->toolsWidget,SIGNAL(textToolSelected()),m_canvas,SLOT(enableTextEditingMode()));
     connect(d->toolsWidget,SIGNAL(rotateToolSelected()),m_canvas,SLOT(enableRotateEditingMode()));
-    connect(d->toolsWidget,SIGNAL(newItemCreated(AbstractPhoto*)),m_canvas,SLOT(addNewItem(AbstractPhoto*)));
+    connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBordersEditingMode()));
+    connect(d->toolsWidget,SIGNAL(newItemCreated(AbstractPhoto*)),m_canvas->scene(),SLOT(addItem(AbstractPhoto*)));
     connect(m_canvas->scene()->toGraphicsScene(), SIGNAL(mousePressedPoint(QPointF)), d->toolsWidget, SLOT(mousePositionChoosen(QPointF)));
 
     d->toolsWidget->setDefaultTool();
@@ -487,5 +499,37 @@ void PhotoFramesEditor::loadEffects()
             qDebug() << loader.errorString();
 #endif
     }
-    qDebug() << PhotoEffectsLoader::registeredEffectsNames();
+}
+
+void PhotoFramesEditor::loadBorders()
+{
+    QDir bordersDir("./borders");
+    QStringList filters;
+    filters << "*.so" << "*.dll";
+    QFileInfoList filesList = bordersDir.entryInfoList(filters, QDir::Files);
+    foreach (QFileInfo fileInfo, filesList)
+    {
+        QPluginLoader loader(fileInfo.absoluteFilePath());
+        QObject * plugin = loader.instance();
+        if (plugin)
+        {
+            BorderDrawerFactoryInterface * newBorderFactory = qobject_cast<BorderDrawerFactoryInterface*>(plugin);
+            newBorderFactory->getDrawerInstance();
+            if (newBorderFactory)
+            {
+                BorderDrawersLoader::registerDrawer(newBorderFactory);
+#ifdef QT_DEBUG
+                qDebug() << "LOADED!";
+#endif
+            }
+#ifdef QT_DEBUG
+            else
+                qDebug() << "Invalid class interface!";
+#endif
+        }
+#ifdef QT_DEBUG
+        else
+            qDebug() << loader.errorString();
+#endif
+    }
 }

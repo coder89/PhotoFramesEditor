@@ -185,7 +185,7 @@ void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
     emit effectsToolSelectionChanged(isVisible);
     if (isVisible)
     {
-        m_effects_widget->setCurrentItem(m_currentPhoto);
+        m_effects_widget->setCurrentItem(0);
         m_tool_widget_layout->setCurrentWidget(m_effects_widget);
         emit requireSingleSelection();
         emit effectsToolSelected();
@@ -198,7 +198,7 @@ void ToolsDockWidget::setTextWidgetVisible(bool isVisible)
     emit textToolSelectionChanged(isVisible);
     if (isVisible)
     {
-        m_text_widget->setCurrentItem(m_currentPhoto);
+        m_text_widget->setCurrentItem(0);
         m_tool_widget_layout->setCurrentWidget(m_text_widget);
         emit requireSingleSelection();
         emit textToolSelected();
@@ -223,7 +223,7 @@ void ToolsDockWidget::setBordersWidgetVisible(bool isVisible)
     emit borderToolSelectionChanged(isVisible);
     if (isVisible)
     {
-        m_border_widget->setCurrentItem(m_currentPhoto);
+        m_border_widget->setCurrentItem(0);
         m_tool_widget_layout->setCurrentWidget(m_border_widget);
         this->unsetCursor();
         emit requireSingleSelection();

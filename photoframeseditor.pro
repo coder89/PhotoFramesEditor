@@ -24,9 +24,7 @@ SOURCES += main.cpp\
     models/LayersSelectionModel.cpp \
     widgets/canvas/Scene.cpp \
     widgets/canvas/Canvas.cpp \
-    widgets/canvas/QGraphicsSelectionItem.cpp \
     widgets/canvas/QGraphicsRotationItem.cpp \
-    widgets/canvas/QGraphicsEditionWidget.cpp \
     widgets/layers/LayersTree.cpp \
     widgets/layers/LayersTreeDelegate.cpp \
     widgets/menus/SceneMenu.cpp \
@@ -71,9 +69,7 @@ HEADERS  += plugin/photoframeseditor.h \
     models/LayersSelectionModel.h \
     widgets/canvas/Scene.h \
     widgets/canvas/Canvas.h \
-    widgets/canvas/QGraphicsSelectionItem.h \
     widgets/canvas/QGraphicsRotationItem.h \
-    widgets/canvas/QGraphicsEditionWidget.h \
     widgets/layers/LayersTree.h \
     widgets/layers/LayersTreeDelegate.h \
     widgets/menus/SceneMenu.h \

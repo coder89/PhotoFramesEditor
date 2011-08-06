@@ -16,20 +16,28 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class BorderCreatedCommand : public QUndoCommand
+class ItemCreatedCommand : public QUndoCommand
 {
     QObject * item;
     int row;
     AbstractMovableModel * model;
+    bool done;
 public:
-    BorderCreatedCommand(QObject * item, int row, AbstractMovableModel * model, QUndoCommand * parent = 0) :
+    ItemCreatedCommand(QObject * item, int row, AbstractMovableModel * model, QUndoCommand * parent = 0) :
         QUndoCommand(parent),
         item(item),
         row(row),
-        model(model)
+        model(model),
+        done(false)
     {}
+    ~ItemCreatedCommand()
+    {
+        if (!done)
+            delete item;
+    }
     virtual void redo()
     {
+        done = true;
         if (model->item(model->index(row, 0)) == item)
             return;
         model->insertRow(row);
@@ -37,7 +45,45 @@ public:
     }
     virtual void undo()
     {
+        done = false;
+        if (model->item(model->index(row, 0)) != item)
+            return;
         model->removeRow(row);
+    }
+};
+class ItemRemovedCommand : public QUndoCommand
+{
+    QObject * item;
+    int row;
+    AbstractMovableModel * model;
+    bool done;
+public:
+    ItemRemovedCommand(QObject * item, int row, AbstractMovableModel * model, QUndoCommand * parent = 0) :
+        QUndoCommand(parent),
+        item(item),
+        row(row),
+        model(model),
+        done(true)
+    {}
+    ~ItemRemovedCommand()
+    {
+        if (done)
+            delete item;
+    }
+    virtual void redo()
+    {
+        done = true;
+        if (model->item(model->index(row, 0)) != item)
+            return;
+        model->removeRow(row);
+    }
+    virtual void undo()
+    {
+        done = false;
+        if (model->item(model->index(row, 0)) == item)
+            return;
+        model->insertRow(row);
+        model->setItem(item, model->index(row, 0));
     }
 };
 
@@ -243,9 +289,17 @@ void AbstractListTool::removeSelected()
     if (!d->m_list_widget)
         return;
     QModelIndex index = d->m_list_widget->selectedIndex();
-    QAbstractItemModel * model = this->model();
+    AbstractMovableModel * model = this->model();
     if (model && index.isValid())
-        model->removeRow(index.row());
+    {
+        if (index.internalPointer())
+        {
+            ItemRemovedCommand * command = new ItemRemovedCommand(static_cast<QObject*>(index.internalPointer()), index.row(), model);
+            PFE_PostUndoCommand(command);
+        }
+        else
+            model->removeRow(index.row());
+    }
 }
 
 void AbstractListTool::moveSelectedDown()
@@ -287,7 +341,7 @@ void AbstractListTool::addItemCommand(QObject * item, int row)
     AbstractMovableModel * model = this->model();
     if (!item || !model)
         return;
-    BorderCreatedCommand * command = new BorderCreatedCommand(item, row, model);
+    ItemCreatedCommand * command = new ItemCreatedCommand(item, row, model);
     PFE_PostUndoCommand(command);
 }
 

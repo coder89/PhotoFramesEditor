@@ -41,28 +41,6 @@ AbstractPhoto::~AbstractPhoto()
     m_effects_group->deleteLater();
 }
 
-//void AbstractPhoto::setupWidget(const QPainterPath & path)
-//{
-//    //this->setAcceptDrops(true);
-//    this->setAcceptHoverEvents(true);
-
-//    this->m_image_path = path.translated(-path.boundingRect().topLeft());
-//    this->m_image_path = m_image_path.simplified();
-//    //m_pixmap_original = QPixmap(m_image_path.boundingRect().size().toSize());
-//    //m_pixmap_original.fill(Qt::transparent);
-//    //this->recalcShape();
-
-//    // Create effective pixmap
-//    //this->refreshPixmap();
-
-//    this->setFlag(QGraphicsItem::ItemIsSelectable);
-
-//    // Default border style
-//    this->setBorderWidth(0);
-//    this->setBorderColor(Qt::black);
-//    this->setBorderCornersStyle(Qt::RoundJoin);
-//}
-
 void AbstractPhoto::setupItem()
 {
     this->setFlag(QGraphicsItem::ItemIsSelectable);
@@ -71,33 +49,34 @@ void AbstractPhoto::setupItem()
 
 QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
 {
+    QTransform transform = this->transform();
+    qDebug() << transform;
     QString translate = "translate("+
                         QString::number(this->pos().x())+
                         ","+
                         QString::number(this->pos().y())+
                         ")";
-    QTransform transform = this->transform();
     QString matrix = "matrix("+
                      QString::number(transform.m11())+
                      ","+
-                     QString::number(transform.m21())+
-                     ","+
                      QString::number(transform.m12())+
+                     ","+
+                     QString::number(transform.m21())+
                      ","+
                      QString::number(transform.m22())+
                      ","+
-                     QString::number(transform.m13())+
+                     QString::number(transform.m31())+
                      ","+
-                     QString::number(transform.m23())+
+                     QString::number(transform.m32())+
                      ")";
-    QDomElement result = document.createElement("g");
-    result.setAttribute("transform", translate + " " + matrix);
-    result.setAttribute("id", this->id());
-    result.setAttribute("name", this->name());
+    QDomElement itemSVG = document.createElement("g");
+    itemSVG.setAttribute("transform", translate + " " + matrix);
+    itemSVG.setAttribute("id", this->id());
+    itemSVG.setAttribute("name", this->name());
 
     // 'defs' tag
     QDomElement defs = document.createElement("defs");
-    result.appendChild(defs);
+    itemSVG.appendChild(defs);
 
     // 'defs'->'clipPath'
     QDomElement clipPath = document.createElement("clipPath");
@@ -109,6 +88,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     appNS.setPrefix(KIPIPhotoFramesEditor::name());
     defs.appendChild(appNS);
     appNS.appendChild(m_effects_group->toSvg(document));
+    appNS.appendChild(m_borders_group->toSvg(document));
 
     // Convert visible area to SVG path's 'd' attribute
     QPainterPath visibleArea = this->opaqueArea();
@@ -119,19 +99,21 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
         clipPath.appendChild(path);
     }
 
-    QDomElement visibleData = this->svgVisibleArea(document);
+    QDomElement visibleData = document.createElement("g");
     visibleData.setAttribute("id", "data_" + this->id());
     defs.appendChild(visibleData);
+    visibleData.appendChild(this->svgVisibleArea(document));
+    //visibleData.appendChild(this->m_borders_group->svgVisibleArea(document));
 
-    // 'defs'->'use'
+    // 'use'
     QDomElement use = document.createElement("use");
     use.setAttribute("xlink:href","#"+visibleData.attribute("id"));
     use.setAttribute("style","clip-path: url(#" + clipPath.attribute("id") + ");");
-    result.appendChild(use);
+    itemSVG.appendChild(use);
 
     // 'g'
     QDomElement g2 = document.createElement("g");
-    result.appendChild(g2);
+    itemSVG.appendChild(g2);
 
     // 'g'->'use'
     QDomElement use3 = document.createElement("use");
@@ -158,7 +140,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
       * </g>
       */
 
-    return result;
+    return itemSVG;
 }
 
 bool AbstractPhoto::fromSvg(QDomElement & element)
@@ -169,11 +151,14 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     // Position & transformation
     this->setPos(0,0);
     QString transform = element.attribute("transform");
+    qDebug() << "load from svg";
     if (!transform.isEmpty())
     {
-        QRegExp tr("translate\\([0-9.]+,[0-9.]+\\)");
+        qDebug() << "there is transformation";
+        QRegExp tr("translate\\([-0-9.]+,[-0-9.]+\\)");
         if (tr.indexIn(transform) >= 0)
         {
+            qDebug() << "translate";
             QStringList list = tr.capturedTexts();
             QString translate = list.at(0);
             list = translate.split(',');
@@ -182,22 +167,24 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
             this->setPos( x.right(x.length()-10).toDouble(),
                           y.left(y.length()-1).toDouble());
         }
-        QRegExp rot("matrix\\([0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+,[0-9.]+\\)");
+        QRegExp rot("matrix\\([-0-9.]+,[-0-9.]+,[-0-9.]+,[-0-9.]+,[-0-9.]+,[-0-9.]+\\)");
         if (rot.indexIn(transform) >= 0)
         {
+            qDebug() << "matrix";
             QStringList list = rot.capturedTexts();
             QString matrix = list.at(0);
             matrix.remove(matrix.length()-1,1).remove(0,7);
             list = matrix.split(',');
-            QString a = list.at(0);
-            QString b = list.at(1);
-            QString c = list.at(2);
-            QString d = list.at(3);
-            QString e = list.at(4);
-            QString f = list.at(5);
-            this->setTransform(QTransform(a.toDouble(), c.toDouble(), e.toDouble(),
-                                          b.toDouble(), d.toDouble(), f.toDouble(),
-                                          0, 0, 1));
+            QString m11 = list.at(0);
+            QString m12 = list.at(1);
+            QString m21 = list.at(2);
+            QString m22 = list.at(3);
+            QString m31 = list.at(4);
+            QString m32 = list.at(5);
+            this->setTransform(QTransform(m11.toDouble(), m12.toDouble(), 0,
+                                          m21.toDouble(), m22.toDouble(), 0,
+                                          m31.toDouble(), m32.toDouble(), 1));
+            qDebug() << this->transform();
         }
     }
 
@@ -217,13 +204,20 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     QDomElement appNS = defs.firstChildElement("data");
     if (appNS.isNull() || appNS.prefix() != KIPIPhotoFramesEditor::name())
         return false;
-    if (m_effects_group)
-        delete m_effects_group;
-    m_effects_group = PhotoEffectsGroup::fromSvg(appNS);
-    if (!m_effects_group)
-        return false;
-    else
-        m_effects_group->setPhoto(this);
+
+        // Effects
+        if (m_effects_group)
+            delete m_effects_group;
+        m_effects_group = PhotoEffectsGroup::fromSvg(appNS, this);
+        if (!m_effects_group)
+            return false;
+
+        // Borders
+        if (m_borders_group)
+            delete m_borders_group;
+        m_borders_group = BordersGroup::fromSvg(appNS, this);
+        if (!m_borders_group)
+            return false;
 
     return true;
 }

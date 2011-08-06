@@ -85,8 +85,7 @@ class SolidBorderDrawer : public BorderDrawerInterface
         }
         void setSpacing(int spacing)
         {
-            if (spacing > 0)
-                m_spacing = spacing;
+            m_spacing = spacing;
         }
 
         virtual QVariant stringNames(const QMetaProperty & property);

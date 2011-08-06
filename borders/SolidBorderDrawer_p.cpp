@@ -50,13 +50,23 @@ SolidBorderDrawer::SolidBorderDrawer(SolidBorderDrawerFactory * factory, QObject
 
 QPainterPath SolidBorderDrawer::path(const QPainterPath & path)
 {
-    QPainterPathStroker spacing;
-    spacing.setWidth(m_spacing);
-    spacing.setJoinStyle(Qt::MiterJoin);
+    QPainterPath temp = path;
+    if (m_spacing != 0)
+    {
+        QPainterPathStroker spacing;
+        spacing.setWidth(qAbs(m_spacing));
+        spacing.setJoinStyle(Qt::MiterJoin);
+        if (m_spacing > 0)
+            temp += spacing.createStroke(temp);
+        else
+            temp -= spacing.createStroke(path);
+    }
+    else
+        temp = path;
     QPainterPathStroker stroker;
     stroker.setJoinStyle(this->m_corners_style);
     stroker.setWidth(m_width);
-    m_path = stroker.createStroke( spacing.createStroke(path).united(path) );
+    m_path = stroker.createStroke( temp );
     return m_path;
 }
 

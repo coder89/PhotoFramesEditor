@@ -150,7 +150,7 @@ QDomElement PhotoEffectsGroup::toSvg(QDomDocument & document) const
     return effectsGroup;
 }
 
-PhotoEffectsGroup * PhotoEffectsGroup::fromSvg(QDomElement & element)
+PhotoEffectsGroup * PhotoEffectsGroup::fromSvg(QDomElement & element, AbstractPhoto * graphicsItem)
 {
     if (element.tagName() != "effects")
         element = element.firstChildElement("effects");
@@ -170,6 +170,7 @@ PhotoEffectsGroup * PhotoEffectsGroup::fromSvg(QDomElement & element)
         if (interface)
             group->push_back(interface);
     }
+    group->m_photo = graphicsItem;
     return group;
 }
 
@@ -201,11 +202,6 @@ QPixmap PhotoEffectsGroup::apply(const QPixmap & pixmap)
 AbstractPhoto * PhotoEffectsGroup::photo() const
 {
     return m_photo;
-}
-
-void PhotoEffectsGroup::setPhoto(AbstractPhoto * photo)
-{
-    m_photo = photo;
 }
 
 QObject * PhotoEffectsGroup::item(const QModelIndex & index) const

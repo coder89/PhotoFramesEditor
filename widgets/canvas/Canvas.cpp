@@ -684,6 +684,8 @@ void Canvas::isSavedChanged(bool isStackClean)
     emit savedStateChanged();
 }
 
+#include <QtSvg/QSvgGenerator>
+
 /** ###########################################################################################################################
  * Draws canvas content onto the QPaintDevice
  #############################################################################################################################*/
@@ -691,6 +693,14 @@ void Canvas::renderCanvas(QPaintDevice * device)
 {
     if (scene())
     {
+        scene()->setSelectionVisible(false);
+
+        QSvgGenerator gen;
+        gen.setFileName("/home/coder89/Desktop/dupa.svg");
+        gen.setViewBox(scene()->sceneRect());
+        QPainter p2(&gen);
+        scene()->render(&p2, scene()->sceneRect(), scene()->sceneRect());
+
         scene()->setSelectionVisible(false);
         QPainter p(device);
         scene()->render(&p, scene()->sceneRect(), scene()->sceneRect());

@@ -2,125 +2,83 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-RotationHandler::RotationHandler(QGraphicsItem * parent) :
-    AbstractItemInterface(parent)
+class KIPIPhotoFramesEditor::QGraphicsRotationItemPrivate
 {
-    this->setFlag(QGraphicsItem::ItemIsMovable);
-    setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    m_path.addRect(0,0,10,10);
-    reset();
-}
+    QGraphicsRotationItemPrivate(QGraphicsRotationItem * item) :
+        item(item)
+    {
+        handler_path.addRect(-5,-5,10,10);
+        elipse_path.addEllipse(-10,-10,20,20);
 
-void RotationHandler::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
-{
-    painter->drawPath(m_path);
-}
+        path += elipse_path;
+        path.moveTo(0,0);
+        path.lineTo(100,0);
+    }
+    QGraphicsRotationItem * item;
 
-QPainterPath RotationHandler::shape() const
-{
-    return m_path;
-}
+    QPointF viewportToItemPosition(const QPoint & pos, QWidget * widget)
+    {
+        QGraphicsView *view = 0;
+        if (widget)
+            view = qobject_cast<QGraphicsView *>(widget->parentWidget());
 
-QPainterPath RotationHandler::opaqueArea() const
-{
-    return m_path;
-}
+        if (view)
+        {
+            QTransform deviceTransform = item->deviceTransform(view->viewportTransform()).inverted();
+            return deviceTransform.map(QPointF(view->mapFromGlobal(pos)));
+        }
 
-QRectF RotationHandler::boundingRect() const
-{
-    return m_path.boundingRect();
-}
+        return pos;
+    }
+    QRectF itemToViewportRect(const QRectF & rect, QWidget * widget)
+    {
+        QGraphicsView *view = 0;
+        if (widget)
+            view = qobject_cast<QGraphicsView *>(widget->parentWidget());
 
-void RotationHandler::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
-{
-    this->setCursor(QCursor(Qt::OpenHandCursor));
-}
+        if (view)
+            return item->mapRectToScene(view->transform().inverted().mapRect(rect));
 
-void RotationHandler::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
-{
-    this->unsetCursor();
-}
+        return rect;
+    }
+    QPainterPath rotated_shape;
+    QPointF rotation_point;
+    QPainterPath path;
+    QPainterPath elipse_path;
+    QPainterPath handler_path;
+    QPointF initial_position;
+    QPointF handler_pos;
+    qreal rotation_angle;
+    bool elipse_pressed;
 
-void RotationHandler::mousePressEvent(QGraphicsSceneMouseEvent * event)
-{
-    qDebug() << "handler: press";
-    m_initial_position = pos();
-    this->setCursor(QCursor(Qt::ClosedHandCursor));
-}
-
-void RotationHandler::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
-{
-    qDebug() << "handler: release";
-    this->setCursor(QCursor(Qt::OpenHandCursor));
-}
-
-void RotationHandler::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
-{
-    qDebug() << "handler: move";
-    QGraphicsView *view = 0;
-    if (event->widget())
-        view = qobject_cast<QGraphicsView *>(event->widget()->parentWidget());
-    QTransform itemTransform;
-    itemTransform = this->transform();
-    QTransform viewToParentTransform = itemTransform * sceneTransform().inverted();
-    QPointF currentParentPos;
-    QPointF lastParentPos;
-    QPointF buttonDownParentPos;
-    currentParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->screenPos())));
-    lastParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->lastScreenPos())));
-    buttonDownParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->buttonDownScreenPos(Qt::LeftButton))));
-    QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
-    QPointF lastPos = pos();
-    qreal currentLength = qSqrt(currentPos.rx()*currentPos.rx()+currentPos.ry()*currentPos.ry());
-    qreal lastLength = qSqrt(lastPos.rx()*lastPos.rx()+lastPos.ry()*lastPos.ry());
-    qreal scale = lastLength/currentLength;
-    qreal scalar = currentPos.rx()*lastPos.rx()+currentPos.ry()*lastPos.ry();
-    qreal cos = scalar/(currentLength*lastLength);
-    if (currentPos.rx()*lastPos.ry()-currentPos.ry()*lastPos.rx()>0)
-        m_rotation_angle = -180*qAcos(cos)/M_PI;
-    else
-        m_rotation_angle = 180*qAcos(cos)/M_PI;
-    setPos(currentPos.rx()*scale,currentPos.ry()*scale);
-    emit rotationAngleChanged(m_rotation_angle,event->modifiers()&Qt::ShiftModifier);
-}
-
-
-
+    friend class QGraphicsRotationItem;
+};
 
 QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
-    AbstractItemInterface(parent)
-    //m_handler(new RotationHandler(this))
+    AbstractItemInterface(parent),
+    d(new QGraphicsRotationItemPrivate(this))
 {
-    //m_handler->setParent(this);
-    //m_handler->setPos(100,5);
-    //connect(m_handler,SIGNAL(rotationAngleChanged(qreal,bool)),this,SLOT(emitRotationChanges(qreal,bool)));
-    m_handler_path.addRect(0,0,10,10);
-
-    m_elipse_path.addEllipse(0,0,20,20);
-    m_path += m_elipse_path;
-    m_path.moveTo(10,10);
-    m_path.lineTo(100,10);
-
     this->setAcceptHoverEvents(true);
     this->setFlag(QGraphicsItem::ItemIsMovable);
     this->setFlag(QGraphicsItem::ItemIsSelectable, false);
-    setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
     reset();
 }
 
 void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
 {
-    painter->drawEllipse(0,0,20,20);
-    painter->setBrush(Qt::black);
-    painter->drawEllipse(7,7,6,6);
-    painter->drawPath(m_handler_path.translated(m_handler_pos));
-   // painter->drawLine(QPoint(10,10),m_handler->pos()+m_handler->boundingRect().center());
+    painter->save();
+    painter->fillPath(shape(), QColor(255,0,0,100));
+    painter->setPen(QPen(Qt::red, 2));
+    painter->setCompositionMode(QPainter::RasterOp_NotSourceAndNotDestination);
+    painter->drawPath((d->elipse_path));
+    painter->setBrush(Qt::white);
+    painter->drawEllipse(-3,-3,6,6);
+    painter->restore();
 }
 
 QPainterPath QGraphicsRotationItem::shape() const
 {
-    return m_path + m_handler_path.translated(m_handler_pos);
+    return d->path + d->rotated_shape;
 }
 
 QPainterPath QGraphicsRotationItem::opaqueArea() const
@@ -133,85 +91,116 @@ QRectF QGraphicsRotationItem::boundingRect() const
     return shape().boundingRect();
 }
 
-void QGraphicsRotationItem::center(const QRectF & boundingRect)
+void QGraphicsRotationItem::setRotatedShape(const QPainterPath & path)
 {
-    qDebug() << boundingRect;
-    this->setPos(boundingRect.center() - QPointF(10,10));
+    d->rotated_shape = path;
+    QRectF boundingRect = path.boundingRect();
+    this->setPos(boundingRect.center());
+    d->rotated_shape.translate(-boundingRect.center());
+    d->handler_pos = QPointF(100,0);
+    d->rotation_point = boundingRect.center();
+    d->rotation_angle = 0;
 }
 
-void QGraphicsRotationItem::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
+void QGraphicsRotationItem::reset()
 {
+    d->rotated_shape = QPainterPath();
+    d->handler_pos = QPointF(100,0);
+    d->rotation_point = QPointF();
+    d->rotation_angle = 0;
+}
+
+qreal QGraphicsRotationItem::angle() const
+{
+    return d->rotation_angle;
+}
+
+QPointF QGraphicsRotationItem::rotationPoint() const
+{
+    return d->rotation_point;
+}
+
+bool QGraphicsRotationItem::isRotated() const
+{
+    return d->rotation_angle != 0;
+}
+
+void QGraphicsRotationItem::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
+{
+    qDebug() << "rot enter";
     this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 void QGraphicsRotationItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
+    qDebug() << "rot leave";
     this->unsetCursor();
 }
 
 void QGraphicsRotationItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "rot: press" << event->buttonDownPos(Qt::LeftButton) << m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton));
-    if (m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton)))
+    qDebug() << "rot press";
+    QPointF buttonDownPos = d->viewportToItemPosition(event->buttonDownScreenPos(Qt::LeftButton), event->widget());
+    QRectF buttonDownPosRect(buttonDownPos-QPointF(1,1), QSizeF(2,2));
+    if (d->elipse_path.intersects(buttonDownPosRect))
     {
-        m_elipse_pressed = true;
-        m_initial_position = pos();
+        d->elipse_pressed = true;
+        d->initial_position = pos();
     }
     else
-        m_elipse_pressed = false;
+        d->elipse_pressed = false;
     this->setCursor(QCursor(Qt::ClosedHandCursor));
 }
 
-void QGraphicsRotationItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+void QGraphicsRotationItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event*/)
 {
+    qDebug() << "rot release";
     this->setCursor(QCursor(Qt::OpenHandCursor));
+    if (d->rotation_angle)
+        emit rotationFinished(d->rotation_point, d->rotation_angle);
+    d->rotation_angle = 0;
 }
 
 void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "rot: move" << event->buttonDownScenePos(Qt::LeftButton) << m_elipse_path.contains(event->buttonDownPos(Qt::LeftButton));
-    if (m_elipse_pressed)
+    qDebug() << "rot move";
+    if (d->elipse_pressed)
     {
-//        QGraphicsView *view = 0;
-//        if (event->widget())
-//            view = qobject_cast<QGraphicsView *>(event->widget()->parentWidget());
-//        QTransform itemTransform;
-//        itemTransform = this->transform();
-//        QTransform viewToParentTransform = itemTransform * sceneTransform().inverted();
-//        QPointF currentParentPos;
-//        QPointF lastParentPos;
-//        QPointF buttonDownParentPos;
-//        currentParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->screenPos())));
-//        lastParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->lastScreenPos())));
-//        buttonDownParentPos = viewToParentTransform.map(QPointF(view->mapFromGlobal(event->buttonDownScreenPos(Qt::LeftButton))));
-//        QPointF currentPos = m_initial_position+currentParentPos-buttonDownParentPos;
-//        m_rot_point += currentPos-pos();
-//        setPos(currentPos.rx(),currentPos.ry());
         QPointF dif = event->scenePos() - event->lastScenePos();
         moveBy(dif.x(), dif.y());
-        emit rotationPointChanged(m_rot_point);
+        d->rotation_point += dif;
+        d->rotated_shape.translate(-dif);
     }
     else
     {
-//        QPointF currentPos = m_handler_pos;
-//        qreal currentLength = qSqrt(currentPos.rx()*currentPos.rx()+currentPos.ry()*currentPos.ry());
-//        qreal lastLength = qSqrt(lastPos.rx()*lastPos.rx()+lastPos.ry()*lastPos.ry());
-//        qreal scale = lastLength/currentLength;
-//        qreal scalar = currentPos.rx()*lastPos.rx()+currentPos.ry()*lastPos.ry();
-//        qreal cos = scalar/(currentLength*lastLength);
-//        qreal m_rotation_angle;
-//        if (currentPos.rx()*lastPos.ry()-currentPos.ry()*lastPos.rx()>0)
-//            m_rotation_angle = -180*qAcos(cos)/M_PI;
-//        else
-//            m_rotation_angle = 180*qAcos(cos)/M_PI;
-//        m_handler_pos = QPointF(currentPos.rx()*scale,currentPos.ry()*scale);
-//        qDebug() << m_handler_pos;
+        // Calculate movement parameters
+        QRectF refreshRect = this->boundingRect();
+        QPointF itemPos = d->viewportToItemPosition(event->screenPos(), event->widget());
+        QPointF currentPos = d->viewportToItemPosition(event->buttonDownScreenPos(Qt::LeftButton), event->widget());
+        qreal currentLength = qSqrt(currentPos.rx()*currentPos.rx()+currentPos.ry()*currentPos.ry());
+        qreal newLength = qSqrt(itemPos.rx()*itemPos.rx()+itemPos.ry()*itemPos.ry());
+        qreal scalar = currentPos.rx()*itemPos.rx()+currentPos.ry()*itemPos.ry();
+
+        // Calculate angle
+        qreal cos = scalar/(currentLength*newLength);
+        qreal prev_rotation_angle = d->rotation_angle;
+        if (currentPos.rx()*itemPos.ry()-currentPos.ry()*itemPos.rx()>0)
+            d->rotation_angle = 180*qAcos(cos)/M_PI;
+        else
+            d->rotation_angle = -180*qAcos(cos)/M_PI;
+
+        QTransform transform;
+        transform//.translate(d->rotation_point.rx(), d->rotation_point.ry())
+                 .rotate(d->rotation_angle-prev_rotation_angle);
+                 //.translate(-d->rotation_point.rx(), -d->rotation_point.ry());
+        d->rotated_shape = transform.map(d->rotated_shape);
+
+        // Updates widgets view
+        refreshRect = refreshRect.united(this->boundingRect());
+        this->scene()->invalidate(d->itemToViewportRect(refreshRect, event->widget()));
+
+        // Emits rotation signal
+        emit rotationChanged(d->rotation_point, d->rotation_angle-prev_rotation_angle);
     }
     event->accept();
-}
-
-void QGraphicsRotationItem::emitRotationChanges(qreal deg, bool round)
-{
-    this->update();
-    emit rotationAngleChanged(deg, round);
 }

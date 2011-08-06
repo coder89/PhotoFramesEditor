@@ -27,6 +27,7 @@ namespace KIPIPhotoFramesEditor
     class AddItemsCommand;
     class MoveItemsCommand;
     class RemoveItemsCommand;
+    class RotateItemsCommand;
 
     class Scene : public QGraphicsScene
     {
@@ -113,6 +114,8 @@ namespace KIPIPhotoFramesEditor
         private Q_SLOTS:
 
             void calcSelectionBoundingRect();
+            void rotateSelectedItems(const QPointF & rotationPoint, qreal angle);
+            void rotationCommand(const QPointF & rotationPoint, qreal angle);
 
         private:
 

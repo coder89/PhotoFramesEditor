@@ -1,8 +1,9 @@
 #include "BordersGroup.h"
 #include "BorderDrawerInterface.h"
 #include "AbstractPhoto.h"
-
 #include "BorderDrawersLoader.h"
+
+#include <QGraphicsScene>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -32,7 +33,7 @@ QPainterPath BordersGroup::shape()
 {
     if (!graphicsItem())
         return QPainterPath();
-    if (d->shape.isEmpty())
+    if (d->shape.isEmpty() && d->borders.count())
         calculateShape();
     return d->shape;
 }
@@ -41,11 +42,10 @@ void BordersGroup::calculateShape()
 {
     QPainterPath photoShape = graphicsItem()->itemOpaqueArea();
     d->shape = QPainterPath();
-    for (int i = d->borders.count()-1; i >= 0; --i)
+    foreach (BorderDrawerInterface * drawer, d->borders)
     {
-        BorderDrawerInterface * border = d->borders.at(i);
-        if (border)
-            d->shape = d->shape.united( border->path(photoShape) );
+        if (drawer)
+            d->shape = d->shape.united( drawer->path(photoShape) );
     }
 }
 
@@ -68,15 +68,19 @@ void BordersGroup::paint(QPainter * painter, const QStyleOptionGraphicsItem * op
 
 void BordersGroup::refresh()
 {
-    QRectF updateRect;
-    if (graphicsItem())
-        updateRect = updateRect.united(graphicsItem()->boundingRect());
+    if (!graphicsItem())
+        return;
+
+    QRectF updateRect = graphicsItem()->boundingRect();
+
     this->calculateShape();
-    if (graphicsItem())
-    {
-        updateRect = updateRect.united(graphicsItem()->boundingRect());
+    updateRect = updateRect.united(graphicsItem()->boundingRect());
+
+    if (graphicsItem()->scene())
+        graphicsItem()->scene()->update(graphicsItem()->mapRectToScene(updateRect));
+    else
         graphicsItem()->update(updateRect);
-    }
+
     dataChanged(QModelIndex(), QModelIndex());
 }
 
@@ -128,8 +132,41 @@ QDomElement BordersGroup::toSvg(QDomDocument & document)
     return result;
 }
 
-BordersGroup * BordersGroup::fromSvg(QDomElement & element)
+BordersGroup * BordersGroup::fromSvg(QDomElement & element, AbstractPhoto * graphicsItem)
 {
+    if (element.tagName() != "borders")
+        return 0;
+    BordersGroup * result = new BordersGroup(0);
+    QDomNodeList children = element.childNodes();
+    for (int i = children.count()-1; i >= 0; --i)
+    {
+        QDomNode child = children.at(i);
+        QDomElement childElement;
+        if (!child.isElement() || (childElement = child.toElement()).isNull())
+            continue;
+        QMap<QString,QString> properties;
+        QDomNamedNodeMap attributes = childElement.attributes();
+        for (int j = attributes.count()-1; j >= 0; --j)
+        {
+            QDomAttr attr = attributes.item(j).toAttr();
+            if (attr.isNull())
+                continue;
+            properties.insert(attr.name(), attr.value());
+        }
+        BorderDrawerInterface * drawer = BorderDrawersLoader::getDrawerByName(childElement.attribute("name"), properties);
+        if (!drawer)
+            continue;
+        int z = childElement.attribute("z").toInt();
+        if (z < 0)
+            result->d->borders.push_front(drawer);
+        else if (z > result->d->borders.count())
+            result->d->borders.push_back(drawer);
+        else
+            result->d->borders.insert(z, drawer);
+    }
+
+    result->d->photo = graphicsItem;
+    return result;
 }
 
 QObject * BordersGroup::item(const QModelIndex & index) const
@@ -157,6 +194,8 @@ void BordersGroup::setItem(QObject * item, const QModelIndex & index)
 
 int BordersGroup::columnCount(const QModelIndex & parent) const
 {
+    if (parent.isValid())
+        return 0;
     return 1;
 }
 
@@ -191,7 +230,7 @@ bool BordersGroup::insertRows(int row, int count, const QModelIndex & parent)
     return true;
 }
 
-QModelIndex BordersGroup::parent(const QModelIndex & child) const
+QModelIndex BordersGroup::parent(const QModelIndex & /*child*/) const
 {
     return QModelIndex();
 }
@@ -231,4 +270,5 @@ bool BordersGroup::moveRows(int sourcePosition, int sourceCount, int destPositio
     endMoveRows();
     this->refresh();
     emit layoutChanged();
+    return true;
 }

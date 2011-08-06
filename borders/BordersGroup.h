@@ -36,7 +36,7 @@ namespace KIPIPhotoFramesEditor
             bool moveDrawer(int sourcePosition, int destinationPosition);
 
             QDomElement toSvg(QDomDocument & document);
-            static BordersGroup * fromSvg(QDomElement & element);
+            static BordersGroup * fromSvg(QDomElement & element, AbstractPhoto * graphicsItem);
 
         protected:
 

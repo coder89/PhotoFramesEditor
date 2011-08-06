@@ -27,7 +27,7 @@ namespace KIPIPhotoFramesEditor
 
             explicit PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
             QDomElement toSvg(QDomDocument & document) const;
-            static PhotoEffectsGroup * fromSvg(QDomElement & element);
+            static PhotoEffectsGroup * fromSvg(QDomElement & element, AbstractPhoto * graphicsItem);
             AbstractPhoto * photo() const;
             virtual QObject * item(const QModelIndex & index) const;
             virtual void setItem(QObject * graphicsItem, const QModelIndex & index);
@@ -59,7 +59,6 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            void setPhoto(AbstractPhoto * photo);
             void moveRowsInModel(int sourcePosition, int sourceCount, int destPosition);
             QList<AbstractPhotoEffectInterface*> removeRowsInModel(int startingPosition, int count);
             void insertRemovedRowsInModel(const QList<AbstractPhotoEffectInterface*> & itemList, int startingPosition);

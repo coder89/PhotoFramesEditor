@@ -45,7 +45,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
 
     ScenePrivate(Scene * parent) :
         //m_edit_widget(new QGraphicsEditionWidget),
-        m_parent(parent),
+        parent(parent),
         model(new LayersModel(parent)),
         selection_model(new LayersSelectionModel(model, parent)),
         m_pressed_item(0),
@@ -73,6 +73,26 @@ class KIPIPhotoFramesEditor::ScenePrivate
         //m_edit_widget->reset();
     }
 
+    QList<QGraphicsItem*> itemAtPosition(const QPointF & scenePos, QWidget * widget)
+    {
+        qDebug() << widget;
+        QGraphicsView * view = widget ? qobject_cast<QGraphicsView*>(widget->parentWidget()) : 0;
+        qDebug() << "itemsAtPosition";
+        if (!view)
+            return parent->items(scenePos, Qt::IntersectsItemShape, Qt::DescendingOrder, QTransform());
+        qDebug() << "has view";
+        const QRectF pointRect(scenePos, QSizeF(1, 1));
+        if (!view->isTransformed())
+            return parent->items(pointRect, Qt::IntersectsItemShape, Qt::DescendingOrder);
+        qDebug() << "has transformation";
+        const QTransform viewTransform = view->viewportTransform();
+        return parent->items(pointRect, Qt::IntersectsItemShape, Qt::DescendingOrder, viewTransform);
+    }
+    AbstractItemInterface * itemAt(const QPointF & scenePos, QWidget * widget)
+    {
+        QList<QGraphicsItem*> items = itemAtPosition(scenePos, widget);
+        return items.count() ? dynamic_cast<AbstractItemInterface*>(items.first()) : 0;
+    }
     void sendPressEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
         // Send mousepressevent to the pressed item
@@ -111,7 +131,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
 
     // Parent scene
-    QGraphicsScene * m_parent;
+    QGraphicsScene * parent;
     // Scene's model
     LayersModel * model;
     LayersSelectionModel * selection_model;
@@ -380,6 +400,61 @@ class KIPIPhotoFramesEditor::RemoveItemsCommand : public QUndoCommand
             }
         }
 };
+class KIPIPhotoFramesEditor::RotateItemsCommand : public QUndoCommand
+{
+    QList<AbstractItemInterface*> items;
+    QTransform transform;
+    QPointF rotationPoint;
+    qreal angle;
+    bool done;
+public:
+    RotateItemsCommand(const QList<AbstractItemInterface*> & items, const QPointF & rotationPoint, qreal angle, QUndoCommand * parent = 0) :
+        QUndoCommand(parent),
+        items(items),
+        rotationPoint(rotationPoint),
+        angle(angle),
+        done(true)
+    {
+        qDebug() << "create rot command";
+        transform.translate(this->rotationPoint.rx(), this->rotationPoint.ry());
+        transform.rotate(angle);
+        transform.translate(-this->rotationPoint.rx(), -this->rotationPoint.ry());
+    }
+    virtual void redo()
+    {
+        if (done)
+            return;
+        qDebug() << "redo rot";
+        foreach (AbstractItemInterface * item, items)
+        {
+            QRectF updateRect = item->mapRectToScene(item->boundingRect());
+            QTransform rotated = item->transform() * transform;
+            item->setTransform(rotated);
+            updateRect = updateRect.united( item->mapRectToScene(item->boundingRect()) );
+            if (item->scene())
+                item->scene()->invalidate(updateRect);
+        }
+        items.first()->scene()->clearSelection();
+        done = true;
+    }
+    virtual void undo()
+    {
+        if (!done)
+            return;
+        qDebug() << "undo rot";
+        foreach (AbstractItemInterface * item, items)
+        {
+            QRectF updateRect = item->mapRectToScene(item->boundingRect());
+            QTransform rotated = item->transform() * transform.inverted();
+            item->setTransform(rotated);
+            updateRect = updateRect.united( item->mapRectToScene(item->boundingRect()) );
+            if (item->scene())
+                item->scene()->invalidate(updateRect);
+        }
+        items.first()->scene()->clearSelection();
+        done = false;
+    }
+};
 
 Scene::Scene(const QRectF & dimension, QObject * parent) :
     QGraphicsScene(dimension, parent),
@@ -403,6 +478,9 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     // Create default grid
     setGrid(25,25);
     setGridVisible(false);
+
+    // Indexing method
+    this->setItemIndexMethod(QGraphicsScene::NoIndex);
 
     // Signal connections
     connect(this, SIGNAL(selectionChanged()), this, SLOT(updateSelection()));
@@ -499,6 +577,7 @@ void Scene::keyPressEvent(QKeyEvent * event)
 //#####################################################################################################
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "scene press";
     if (event->button() == Qt::LeftButton)
     {
         // If moving enabled
@@ -512,14 +591,13 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             // If single selection mode, clear CTRL modifier
             if (selectionMode & SingleSelection)
                 event->setModifiers(event->modifiers() & !Qt::ControlModifier);
-qDebug() << "----------------------" << event->scenePos();
+
             // Get pressed item
-            d->m_pressed_item = dynamic_cast<AbstractItemInterface*>(this->itemAt(event->scenePos()));
-qDebug() << (QGraphicsItem*)d->m_pressed_item;
+            d->m_pressed_item = d->itemAt(event->scenePos(), event->widget());
+
             // If it is rotation widget
-            if (m_interaction_mode & Rotating && d->m_pressed_item == d->m_rot_item)
+            if ((m_interaction_mode & Rotating) && d->m_pressed_item == d->m_rot_item)
             {
-                qDebug() << "press";
                 d->sendPressEventToItem(d->m_pressed_item, event);
                 return;
             }
@@ -569,6 +647,7 @@ qDebug() << (QGraphicsItem*)d->m_pressed_item;
 //#####################################################################################################
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "scene move";
     if (event->buttons() & Qt::LeftButton)
     {
         if (d->m_pressed_item)
@@ -600,12 +679,13 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         }
     }
     else
-        QGraphicsScene::mouseMoveEvent(event);
+        ;//QGraphicsScene::mouseMoveEvent(event);
 }
 
 //#####################################################################################################
 void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
+    qDebug() << "scene release";
     if (event->button() == Qt::LeftButton)
     {
         if (m_interaction_mode & Selecting)
@@ -835,7 +915,12 @@ void Scene::setRotationWidgetVisible(bool isVisible)
 
     if (isVisible)
     {
-        d->m_rot_item = new QGraphicsRotationItem();
+        if (!d->m_rot_item)
+        {
+            d->m_rot_item = new QGraphicsRotationItem();
+            connect(d->m_rot_item, SIGNAL(rotationChanged(QPointF,qreal)), this, SLOT(rotateSelectedItems(QPointF,qreal)));
+            connect(d->m_rot_item, SIGNAL(rotationFinished(QPointF,qreal)), this, SLOT(rotationCommand(QPointF,qreal)));
+        }
         d->m_rot_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_rot_item);
         if (d->m_selected_items.count())
@@ -963,10 +1048,9 @@ void Scene::updateSelection()
 
     if (m_interaction_mode & Rotating)
     {
-        qDebug() << "RESET POS!";
         if (d->m_selected_items.count())
         {
-            d->m_rot_item->center(d->m_selected_items_path.boundingRect());
+            d->m_rot_item->setRotatedShape(d->m_selected_items_path);
             d->m_rot_item->show();
         }
         else
@@ -980,6 +1064,34 @@ void Scene::calcSelectionBoundingRect()
     d->m_selected_items_path = QPainterPath();
     foreach (AbstractItemInterface * item, d->m_selected_items.keys())
         d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
+}
+
+//#####################################################################################################
+void Scene::rotateSelectedItems(const QPointF & rotationPoint, qreal angle)
+{
+    foreach (AbstractItemInterface * item, d->m_selected_items.keys())
+    {
+        QPointF point = rotationPoint;
+        QTransform transform;
+        transform.translate(point.rx(), point.ry());
+        transform.rotate(angle);
+        transform.translate(-point.rx(), -point.ry());
+        QRectF updateRect = item->mapRectToScene(item->boundingRect());
+        QTransform rotated = item->transform() * transform;
+        item->setTransform(rotated);
+        updateRect = updateRect.united( item->mapRectToScene( item->boundingRect() ) );
+        if (item->scene())
+            item->scene()->invalidate(updateRect);
+    }
+}
+
+//#####################################################################################################
+void Scene::rotationCommand(const QPointF & rotationPoint, qreal angle)
+{
+    QUndoCommand * command = new RotateItemsCommand(d->m_selected_items.keys(),
+                                                    rotationPoint,
+                                                    angle);
+    PFE_PostUndoCommand(command);
 }
 
 //#####################################################################################################

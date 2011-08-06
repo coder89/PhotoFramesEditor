@@ -56,11 +56,25 @@ BorderDrawerFactoryInterface * BorderDrawersLoader::getFactoryByName(const QStri
     return instance()->d->factories.value(name, 0);
 }
 
-BorderDrawerInterface * BorderDrawersLoader::getDrawerByName(const QString & name)
+BorderDrawerInterface * BorderDrawersLoader::getDrawerByName(const QString & name, const QMap<QString,QString> & properties)
 {
     BorderDrawerFactoryInterface * factory = getFactoryByName(name);
     if (factory)
-        return factory->getDrawerInstance(factory);
+    {
+        BorderDrawerInterface * drawer = factory->getDrawerInstance(factory);
+        if (!drawer)
+            return 0;
+        const QMetaObject * meta = drawer->metaObject();
+        for (int i = meta->propertyCount()-1; i >= 0; --i)
+        {
+            QMetaProperty prop = meta->property(i);
+            QString value = properties.value(QString(prop.name()));
+            if (value.isEmpty())
+                continue;
+            prop.write(drawer, QVariant(value.toAscii()));
+        }
+        return drawer;
+    }
     return 0;
 }
 

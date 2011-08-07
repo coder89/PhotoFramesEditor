@@ -37,14 +37,7 @@ QColor Scene::OUTSIDE_SCENE_COLOR;
 
 class KIPIPhotoFramesEditor::ScenePrivate
 {
-    enum
-    {
-        Rotation = 1,
-        Moving = 2,
-    };
-
     ScenePrivate(Scene * parent) :
-        //m_edit_widget(new QGraphicsEditionWidget),
         parent(parent),
         model(new LayersModel(parent)),
         selection_model(new LayersSelectionModel(model, parent)),
@@ -53,24 +46,11 @@ class KIPIPhotoFramesEditor::ScenePrivate
         m_selection_visible(true),
         m_rot_item(0)
     {
-        // Editing widget
-        setMode(0);
-        //QObject::connect(m_edit_widget, SIGNAL(deleteSelectedItems()), parent, SLOT(removeSelectedItems()));
-        //parent->QGraphicsScene::addItem(m_edit_widget);
-        //m_edit_widget->setZValue(1.0/0.0);
-
         // Background
         m_background = new QGraphicsRectItem(parent->sceneRect(), 0, parent);
         m_background->setZValue(-1.0/0.0);
         m_background->setBrush(Qt::white);
         m_background->setPen(QPen(Qt::transparent, 0));
-    }
-
-    void setMode(int mode)
-    {
-        m_mode = mode;
-        //m_edit_widget->setRotationVisible(mode & Rotation);
-        //m_edit_widget->reset();
     }
 
     QList<QGraphicsItem*> itemAtPosition(const QPointF & scenePos, QWidget * widget)
@@ -209,7 +189,6 @@ class KIPIPhotoFramesEditor::ScenePrivate
     // Used for rotating items
     QGraphicsRotationItem * m_rot_item;
 
-    int m_mode;
     friend class Scene;
 };
 
@@ -577,7 +556,6 @@ void Scene::keyPressEvent(QKeyEvent * event)
 //#####################################################################################################
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "scene press";
     if (event->button() == Qt::LeftButton)
     {
         // If moving enabled
@@ -647,7 +625,6 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 //#####################################################################################################
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "scene move";
     if (event->buttons() & Qt::LeftButton)
     {
         if (d->m_pressed_item)
@@ -685,7 +662,6 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 //#####################################################################################################
 void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
-    qDebug() << "scene release";
     if (event->button() == Qt::LeftButton)
     {
         if (m_interaction_mode & Selecting)
@@ -1048,9 +1024,10 @@ void Scene::updateSelection()
 
     if (m_interaction_mode & Rotating)
     {
-        if (d->m_selected_items.count())
+        if (d->m_selected_items.count() == 1)
         {
-            d->m_rot_item->setRotatedShape(d->m_selected_items_path);
+            AbstractItemInterface * item = d->m_selected_items.keys().first();
+            d->m_rot_item->initRotation(d->m_selected_items_path, item->boundingRect().center() * item->transform());
             d->m_rot_item->show();
         }
         else

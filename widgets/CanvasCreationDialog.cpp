@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QGroupBox>
 #include <QButtonGroup>
+#include <QDebug>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -52,7 +53,6 @@ class CanvasCreationDialog::CanvasCreationDialogPriv
             paperSizes.insert("Legal (8.5 x 14 inches, 215.9 x 355.6 mm)",QPrinter::Legal);
             paperSizes.insert("Letter (8.5 x 11 inches, 215.9 x 279.4 mm)",QPrinter::Letter);
             paperSizes.insert("Tabloid (279.4 x 431.8 mm)",QPrinter::Tabloid);
-            paperSizes.insert("Custom",QPrinter::Custom);
         }
 
         ~CanvasCreationDialogPriv()
@@ -60,8 +60,9 @@ class CanvasCreationDialog::CanvasCreationDialogPriv
         }
 
         void swapSizes();
-        QSize calculateSize();
         void updateSizeLabel();
+        int toPixels(qreal value, qreal resolution);
+        void setPaper(QPrinter::PageSize pageSize);
 
         QWidget *   sizeWidget;
         QWidget *   advancedWidget;
@@ -77,45 +78,190 @@ class CanvasCreationDialog::CanvasCreationDialogPriv
         QDoubleSpinBox *  yResolution;
         KComboBox * resolutionUnitsWidget;
 
-        qreal xSize_val;
-        qreal ySize_val;
+        static int WIDTH;
+        static int HEIGHT;
+        static QString currentSizeUnit;
 
-        QSize currentSize;
+        static qreal WIDTH_RES;
+        static qreal HEIGHT_RES;
+        static QString currentResolutionUnit;
 
         QMap<QString,QPrinter::PaperSize> paperSizes;
 };
 
+int CanvasCreationDialog::CanvasCreationDialogPriv::WIDTH = 800;
+int CanvasCreationDialog::CanvasCreationDialogPriv::HEIGHT = 800;
+QString CanvasCreationDialog::CanvasCreationDialogPriv::currentSizeUnit = KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Pixels);
+qreal CanvasCreationDialog::CanvasCreationDialogPriv::WIDTH_RES = 72;
+qreal CanvasCreationDialog::CanvasCreationDialogPriv::HEIGHT_RES = 72;
+QString CanvasCreationDialog::CanvasCreationDialogPriv::currentResolutionUnit = KIPIPhotoFramesEditor::resolutionUnitsNames().value(KIPIPhotoFramesEditor::PixelsPerInch);
+
 void CanvasCreationDialog::CanvasCreationDialogPriv::swapSizes()
 {
-    qreal width = xSize->value();
-    xSize->setValue(ySize->value());
-    ySize->setValue(width);
-    qreal xRes = xResolution->value();
-    xResolution->setValue(yResolution->value());
-    yResolution->setValue(xRes);
-}
+    // swap dimensions
+    qreal temp = WIDTH;
+    WIDTH = HEIGHT;
+    HEIGHT = temp;
+    temp = xSize->value();
+    xSize->setValue( ySize->value() );
+    ySize->setValue( temp );
 
-QSize CanvasCreationDialog::CanvasCreationDialogPriv::calculateSize()
-{
-    qreal factor = 1;
-    qreal xFactor = 1;
-    qreal yFactor = 1;
-    SizeUnits sizeUnit = KIPIPhotoFramesEditor::sizeUnitsNames().key(sizeUnitsWidget->currentText());
-    if (sizeUnit != KIPIPhotoFramesEditor::Pixels)
-    {
-        factor /= KIPIPhotoFramesEditor::sizeUnitsFactors().value(sizeUnit);
-        ResolutionUnits resolutionUnit = KIPIPhotoFramesEditor::resolutionUnitsNames().key(resolutionUnitsWidget->currentText());
-        factor *= KIPIPhotoFramesEditor::resolutionUnitsFactors().value(resolutionUnit);
-        xFactor = xResolution->value()*factor;
-        yFactor = yResolution->value()*factor;
-    }
-    return (currentSize = QSize(qRound(xSize->value()*xFactor), qRound(ySize->value()*yFactor)));
+    // Swap resolutions
+    temp = WIDTH_RES;
+    WIDTH_RES = HEIGHT_RES;
+    HEIGHT_RES = temp;
+    temp = xResolution->value();
+    xResolution->setValue(yResolution->value());
+    yResolution->setValue(temp);
 }
 
 void CanvasCreationDialog::CanvasCreationDialogPriv::updateSizeLabel()
 {
-    QSize size = calculateSize();
-    sizeLabel->setText(QString::number(size.width()).append(" x ").append(QString::number(size.height()).append(" px")));
+    sizeLabel->setText(QString::number(WIDTH).append(" x ").append(QString::number(HEIGHT).append(" px")));
+}
+
+int CanvasCreationDialog::CanvasCreationDialogPriv::toPixels(qreal value, qreal resolution)
+{
+    SizeUnits sizeUnit = KIPIPhotoFramesEditor::sizeUnitsNames().key(sizeUnitsWidget->currentText());
+    if (sizeUnit == KIPIPhotoFramesEditor::Pixels)
+        return value;
+    ResolutionUnits resolutionUnit = KIPIPhotoFramesEditor::resolutionUnitsNames().key(resolutionUnitsWidget->currentText());
+    qreal result = (KIPIPhotoFramesEditor::resolutionUnitsFactors().value(resolutionUnit) * resolution * value)
+                   / KIPIPhotoFramesEditor::sizeUnitsFactors().value(sizeUnit);
+    return qRound(result);
+}
+
+void CanvasCreationDialog::CanvasCreationDialogPriv::setPaper(QPrinter::PageSize pageSize)
+{
+    QSizeF result;
+    switch (pageSize)
+    {
+    case QPrinter::A0:
+        result = QSizeF(841,1189);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A1:
+        result = QSizeF(594,841);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A2:
+        result = QSizeF(420,594);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A3:
+        result = QSizeF(297,420);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A4:
+        result = QSizeF(210,297);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A5:
+        result = QSizeF(148,210);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A6:
+        result = QSizeF(105,148);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A7:
+        result = QSizeF(74,105);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A8:
+        result = QSizeF(52,74);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::A9:
+        result = QSizeF(37,52);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B0:
+        result = QSizeF(1030,1456);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B1:
+        result = QSizeF(728,1030);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B10:
+        result = QSizeF(32,45);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B2:
+        result = QSizeF(515,728);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B3:
+        result = QSizeF(364,515);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B4:
+        result = QSizeF(257,364);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B5:
+        result = QSizeF(182,257);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B6:
+        result = QSizeF(128,182);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B7:
+        result = QSizeF(91,128);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B8:
+        result = QSizeF(64,91);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::B9:
+        result = QSizeF(45,64);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::C5E:
+        result = QSizeF(163,229);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::Comm10E:
+        result = QSizeF(105,241);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::DLE:
+        result = QSizeF(110,220);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::Executive:
+        result = QSizeF(7.5,10);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Inches) );
+        break;
+    case QPrinter::Folio:
+        result = QSizeF(210,330);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::Ledger:
+        result = QSizeF(432,279);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::Legal:
+        result = QSizeF(8.5,14);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Inches) );
+        break;
+    case QPrinter::Letter:
+        result = QSizeF(8.5,11);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Inches) );
+        break;
+    case QPrinter::Tabloid:
+        result = QSizeF(279,432);
+        sizeUnitsWidget->setCurrentItem( KIPIPhotoFramesEditor::sizeUnitsNames().value(KIPIPhotoFramesEditor::Milimeters) );
+        break;
+    case QPrinter::Custom:
+        return;
+    }
+
+    xSize->setValue(result.width());
+    ySize->setValue(result.height());
 }
 
 CanvasCreationDialog::CanvasCreationDialog(QWidget *parent) :
@@ -141,8 +287,11 @@ void CanvasCreationDialog::setupDialog()
     /// ----------------------- TEMPLATES PART -----------------------
     QGridLayout * gridLayout = new QGridLayout();
     d->paperSize = new KComboBox(main);
-    connect(d->paperSize, SIGNAL(activated(QString)), this, SLOT(recalculatePaperSize(const QString&)));
+    d->paperSize->addItem( "Custom" );
+    d->paperSize->insertSeparator(1);
     d->paperSize->addItems(d->paperSizes.keys());
+    d->paperSize->setCurrentIndex(0);
+    connect(d->paperSize, SIGNAL(activated(QString)), this, SLOT(recalculatePaperSize(const QString&)));
     gridLayout->addWidget(new QLabel("Template:", main),0,0);
     gridLayout->addWidget(d->paperSize,0,1);
     vLayout->addLayout(gridLayout);
@@ -158,9 +307,7 @@ void CanvasCreationDialog::setupDialog()
     d->xSize = new QDoubleSpinBox(d->sizeWidget);
     d->xSize->setMinimum(0.00001);
     d->xSize->setMaximum(999999);
-    d->xSize->setValue(800);
-    d->xSize_val = 800;
-    d->xSize->setDecimals(3);
+    d->xSize->setValue(d->WIDTH);
     connect(d->xSize,SIGNAL(valueChanged(double)),this,SLOT(widthChanged(double)));
     gridLayout->addWidget(new QLabel("Width:", d->sizeWidget),0,0);
     gridLayout->addWidget(d->xSize,0,1);
@@ -169,24 +316,21 @@ void CanvasCreationDialog::setupDialog()
     d->ySize = new QDoubleSpinBox(d->sizeWidget);
     d->ySize->setMinimum(0.00001);
     d->ySize->setMaximum(999999);
-    d->ySize->setValue(800);
-    d->ySize_val = 800;
-    d->ySize->setDecimals(3);
+    d->ySize->setValue(d->HEIGHT);
     connect(d->ySize,SIGNAL(valueChanged(double)),this,SLOT(heightChanged(double)));
     gridLayout->addWidget(new QLabel("Height:", d->sizeWidget),1,0);
     gridLayout->addWidget(d->ySize,1,1);
 
     // Unit widget
     d->sizeUnitsWidget = new KComboBox(d->sizeWidget);
-    connect(d->sizeUnitsWidget, SIGNAL(activated(QString)), this, SLOT(sizeUnitsChanged(QString)));
     d->sizeUnitsWidget->addItems(KIPIPhotoFramesEditor::sizeUnitsNames().values());
+    d->sizeUnitsWidget->setCurrentItem( d->currentSizeUnit );
+    connect(d->sizeUnitsWidget, SIGNAL(activated(QString)), this, SLOT(sizeUnitsChanged(QString)));
     gridLayout->addWidget(d->sizeUnitsWidget,1,2);
 
     // Orientation buttons
-    d->orientationGroup = new QButtonGroup(d->sizeWidget);
     d->horizontalButton = new KPushButton(KIcon(":horizontal_orientation.png"),"",d->sizeWidget);
     d->horizontalButton->setCheckable(true);
-    d->horizontalButton->setChecked(true);
     d->horizontalButton->setFlat(true);
     d->horizontalButton->setIconSize(QSize(24,24));
     connect(d->horizontalButton, SIGNAL(toggled(bool)), this, SLOT(setHorizontal(bool)));
@@ -195,8 +339,6 @@ void CanvasCreationDialog::setupDialog()
     d->verticalButton->setFlat(true);
     d->verticalButton->setIconSize(QSize(24,24));
     connect(d->verticalButton, SIGNAL(toggled(bool)), this, SLOT(setVertical(bool)));
-    d->orientationGroup->addButton(d->horizontalButton);
-    d->orientationGroup->addButton(d->verticalButton);
     QHBoxLayout * hLayout = new QHBoxLayout();
     hLayout->addWidget(d->horizontalButton);
     hLayout->addWidget(d->verticalButton);
@@ -215,8 +357,9 @@ void CanvasCreationDialog::setupDialog()
     d->xResolution = new QDoubleSpinBox(d->advancedWidget);
     d->xResolution->setMinimum(0);
     d->xResolution->setMaximum(999999);
-    d->xResolution->setValue(800);
+    d->xResolution->setValue(d->WIDTH_RES);
     d->xResolution->setDecimals(3);
+    connect(d->xResolution, SIGNAL(valueChanged(double)), this, SLOT(xResolutionChanged(double)));
     gridLayout->addWidget(new QLabel("Resolution X:", d->advancedWidget),0,0);
     gridLayout->addWidget(d->xResolution,0,1);
 
@@ -224,86 +367,140 @@ void CanvasCreationDialog::setupDialog()
     d->yResolution = new QDoubleSpinBox(d->advancedWidget);
     d->yResolution->setMinimum(0);
     d->yResolution->setMaximum(999999);
-    d->yResolution->setValue(800);
+    d->yResolution->setValue(d->HEIGHT_RES);
     d->yResolution->setDecimals(3);
+    connect(d->yResolution, SIGNAL(valueChanged(double)), this, SLOT(yResolutionChanged(double)));
     gridLayout->addWidget(new QLabel("Resolution Y:", d->advancedWidget),1,0);
     gridLayout->addWidget(d->yResolution,1,1);
 
     // Unit widget
     d->resolutionUnitsWidget = new KComboBox(d->sizeWidget);
-    connect(d->resolutionUnitsWidget, SIGNAL(currentIndexChanged(QString)), this, SLOT(resolutionUnitsChanged(QString)));
     d->resolutionUnitsWidget->addItems(KIPIPhotoFramesEditor::resolutionUnitsNames().values());
+    d->resolutionUnitsWidget->setCurrentItem( d->currentResolutionUnit );
+    connect(d->resolutionUnitsWidget, SIGNAL(currentIndexChanged(QString)), this, SLOT(resolutionUnitsChanged(QString)));
     gridLayout->addWidget(d->resolutionUnitsWidget,1,2);
 
-    d->paperSize->setCurrentItem(d->paperSizes.key(QPrinter::Letter));
-    recalculatePaperSize(d->paperSize->currentText());
+    d->updateSizeLabel();
 }
 
 QSize CanvasCreationDialog::canvasSize()
 {
-    return d->calculateSize();
+    return QSize(d->WIDTH, d->HEIGHT);
 }
 
 void CanvasCreationDialog::recalculatePaperSize(const QString & paperSize)
 {
-    QPrinter::PaperSize printerPaperSize = d->paperSizes.value(paperSize);
-    if (printerPaperSize != QPrinter::Custom)
-    {}
+    d->setPaper( d->paperSizes.value(paperSize, QPrinter::Custom) );
     d->updateSizeLabel();
     sizeUnitsChanged(d->sizeUnitsWidget->currentText());
 }
-#include <QDebug>
+
 void CanvasCreationDialog::sizeUnitsChanged(const QString & unitName)
 {
-    QSize size = d->currentSize;
+    d->currentSizeUnit = unitName;
     SizeUnits unit = KIPIPhotoFramesEditor::sizeUnitsNames().key(unitName);
     if (unit == KIPIPhotoFramesEditor::Pixels)
     {
-        d->xSize->setValue(size.width());
-        d->ySize->setValue(size.height());
+        d->xSize->setValue(d->WIDTH);
+        d->ySize->setValue(d->HEIGHT);
+        d->xSize->setDecimals(0);
+        d->ySize->setDecimals(0);
         return;
     }
+    d->xSize->setDecimals(5);
+    d->ySize->setDecimals(5);
     ResolutionUnits resUnit = KIPIPhotoFramesEditor::resolutionUnitsNames().key(d->resolutionUnitsWidget->currentText());
-    qreal factor = KIPIPhotoFramesEditor::sizeUnitsFactors().value(unit) / KIPIPhotoFramesEditor::resolutionUnitsFactors().value(resUnit);
-    qDebug() << size.width() / d->xResolution->value() * factor;
-    d->xSize_val = size.width() / d->xResolution->value() * factor;
-    d->ySize_val = size.height() / d->yResolution->value() * factor;
-    d->xSize->setValue(d->xSize_val);
-    d->ySize->setValue(d->ySize_val);
+    qreal sizeFactor = KIPIPhotoFramesEditor::sizeUnitsFactors().value(unit);
+    qreal resolutionFactor = KIPIPhotoFramesEditor::resolutionUnitsFactors().value(resUnit);
+    qreal WIDTH = (d->WIDTH * sizeFactor) / (d->xResolution->value() * resolutionFactor);
+    qreal HEIGHT = (d->HEIGHT * sizeFactor) / (d->yResolution->value() * resolutionFactor);
+    d->xSize->setValue(WIDTH);
+    d->ySize->setValue(HEIGHT);
 }
 
 void CanvasCreationDialog::resolutionUnitsChanged(const QString & unitName)
 {
-    QSize size = d->currentSize;
-    SizeUnits unit = KIPIPhotoFramesEditor::sizeUnitsNames().key(d->resolutionUnitsWidget->currentText());
-    if (unit == KIPIPhotoFramesEditor::Pixels)
+    d->currentResolutionUnit = unitName;
+    ResolutionUnits unit = KIPIPhotoFramesEditor::resolutionUnitsNames().key(unitName);
+    if (unit == KIPIPhotoFramesEditor::PixelsPerInch)
+    {
+        d->xResolution->setValue(d->WIDTH_RES);
+        d->yResolution->setValue(d->HEIGHT_RES);
         return;
+    }
+    qreal factor = KIPIPhotoFramesEditor::resolutionUnitsFactors().value(unit);
+    d->xResolution->setValue(d->WIDTH_RES / factor);
+    d->yResolution->setValue(d->HEIGHT_RES / factor);
 }
 
 void CanvasCreationDialog::setHorizontal(bool isHorizontal)
 {
-    if (isHorizontal && d->xSize_val < d->ySize_val)
-        d->swapSizes();
+    if (isHorizontal)
+    {
+        if (d->WIDTH < d->HEIGHT)
+        {
+            d->swapSizes();
+            d->updateSizeLabel();
+        }
+    }
+    d->horizontalButton->setChecked(d->WIDTH > d->HEIGHT);
+    d->verticalButton->setChecked(d->WIDTH < d->HEIGHT);
 }
 
 void CanvasCreationDialog::setVertical(bool isVertical)
 {
-    if (isVertical && d->ySize_val < d->xSize_val)
-        d->swapSizes();
+    if (isVertical)
+    {
+        if (d->HEIGHT < d->WIDTH)
+        {
+            d->swapSizes();
+            d->updateSizeLabel();
+        }
+    }
+    d->horizontalButton->setChecked(d->WIDTH > d->HEIGHT);
+    d->verticalButton->setChecked(d->WIDTH < d->HEIGHT);
 }
 
 void CanvasCreationDialog::widthChanged(double width)
 {
-    d->updateSizeLabel();
-    if (d->currentSize.height() < d->currentSize.width())
-        d->horizontalButton->setChecked(true);
+    width = d->toPixels(width, d->xResolution->value());
+    d->WIDTH = width;
+    d->horizontalButton->setChecked(d->WIDTH > d->HEIGHT);
+    d->verticalButton->setChecked(d->WIDTH < d->HEIGHT);
     d->updateSizeLabel();
 }
 
 void CanvasCreationDialog::heightChanged(double height)
 {
+    height = d->toPixels(height, d->yResolution->value());
+    d->HEIGHT = height;
+    d->horizontalButton->setChecked(d->WIDTH > d->HEIGHT);
+    d->verticalButton->setChecked(d->WIDTH < d->HEIGHT);
     d->updateSizeLabel();
-    if (d->currentSize.width() < d->currentSize.height())
-        d->verticalButton->setChecked(true);
+}
+
+void CanvasCreationDialog::xResolutionChanged(double xResolution)
+{
+    SizeUnits sizeUnit = KIPIPhotoFramesEditor::sizeUnitsNames().key(d->sizeUnitsWidget->currentText());
+    if (sizeUnit == KIPIPhotoFramesEditor::Pixels)
+        return;
+    ResolutionUnits resolutionUnit = KIPIPhotoFramesEditor::resolutionUnitsNames().key(d->resolutionUnitsWidget->currentText());
+    qreal resolutionFactor = KIPIPhotoFramesEditor::resolutionUnitsFactors().value(resolutionUnit);
+    qreal width = d->toPixels(d->xSize->value(), xResolution);
+    d->WIDTH = width;
+    d->WIDTH_RES = xResolution * resolutionFactor;
+    d->updateSizeLabel();
+}
+
+void CanvasCreationDialog::yResolutionChanged(double yResolution)
+{
+    SizeUnits sizeUnit = KIPIPhotoFramesEditor::sizeUnitsNames().key(d->sizeUnitsWidget->currentText());
+    if (sizeUnit == KIPIPhotoFramesEditor::Pixels)
+        return;
+    ResolutionUnits resolutionUnit = KIPIPhotoFramesEditor::resolutionUnitsNames().key(d->resolutionUnitsWidget->currentText());
+    qreal resolutionFactor = KIPIPhotoFramesEditor::resolutionUnitsFactors().value(resolutionUnit);
+    qreal height = d->toPixels(d->ySize->value(), yResolution);
+    d->HEIGHT = height;
+    d->HEIGHT_RES = yResolution * resolutionFactor;
     d->updateSizeLabel();
 }

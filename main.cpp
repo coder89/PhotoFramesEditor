@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     KAboutData aboutData("photoframeseditor",
                          0,
-                         ki18n("Photo Framed Editor"),
+                         ki18n("Photo Frames Editor"),
                          QString("").toUtf8(),
                          ki18n(""),
                          KAboutData::License_GPL,

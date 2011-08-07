@@ -145,9 +145,9 @@ const QMap<KIPIPhotoFramesEditor::ResolutionUnits,qreal> & KIPIPhotoFramesEditor
         resolutionUnits.insert(PixelsPerCentimeter, 2.54);
         resolutionUnits.insert(PixelsPerMeter, 0.0254);
         resolutionUnits.insert(PixelsPerInch, 1);
-        resolutionUnits.insert(PixelsPerFeet, 0.83333);
+        resolutionUnits.insert(PixelsPerFeet, 0.083333);
         resolutionUnits.insert(PixelsPerYard, 0.027778);
-        resolutionUnits.insert(PixelsPerPoint, 72);
+        resolutionUnits.insert(PixelsPerPoint, 72.27);
         resolutionUnits.insert(PixelsPerPicas, 6.0225);
     }
     return resolutionUnits;
@@ -179,9 +179,9 @@ const QMap<KIPIPhotoFramesEditor::SizeUnits,qreal> & KIPIPhotoFramesEditor::size
         sizeUnits.insert(Centimeters, 2.54);
         sizeUnits.insert(Meters, 0.0254);
         sizeUnits.insert(Inches, 1);
-        sizeUnits.insert(Feet, 0.83333);
+        sizeUnits.insert(Feet, 0.083333);
         sizeUnits.insert(Yards, 0.027778);
-        sizeUnits.insert(Points, 72);
+        sizeUnits.insert(Points, 72.27);
         sizeUnits.insert(Picas, 6.0225);
     }
     return sizeUnits;

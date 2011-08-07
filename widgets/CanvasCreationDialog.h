@@ -19,10 +19,6 @@ namespace KIPIPhotoFramesEditor
             ~CanvasCreationDialog();
             QSize canvasSize();
 
-        Q_SIGNALS:
-
-        public Q_SLOTS:
-
         protected Q_SLOTS:
 
             void recalculatePaperSize(const QString & paperSize);
@@ -32,6 +28,8 @@ namespace KIPIPhotoFramesEditor
             void setVertical(bool);
             void widthChanged(double width);
             void heightChanged(double height);
+            void xResolutionChanged(double xResolution);
+            void yResolutionChanged(double yResolution);
 
         private:
 

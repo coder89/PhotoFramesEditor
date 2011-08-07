@@ -27,7 +27,7 @@ namespace KIPIPhotoFramesEditor
             virtual QPainterPath shape() const;
             virtual QPainterPath opaqueArea() const;
             virtual QRectF boundingRect() const;
-            void setRotatedShape(const QPainterPath & path);
+            void initRotation(const QPainterPath & path, const QPointF & rotationPoint);
             void reset();
             qreal angle() const;
             QPointF rotationPoint() const;

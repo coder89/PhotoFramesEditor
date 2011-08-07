@@ -512,12 +512,9 @@ void Canvas::newUndoCommand(QUndoCommand * command)
  #############################################################################################################################*/
 void Canvas::wheelEvent(QWheelEvent * event)
 {
+    int steps = event->delta() / 120;
     double scaleFactor;
-    if(event->delta() > 0)
-        scaleFactor = (m_scale_factor + 0.1) / m_scale_factor;
-    else
-        scaleFactor = (m_scale_factor - 0.1) / m_scale_factor;
-
+    scaleFactor = (m_scale_factor + steps * 0.1) / m_scale_factor;
     scale(scaleFactor, event->pos());
 }
 
@@ -578,7 +575,7 @@ Canvas * Canvas::fromSvg(QDomDocument & document)
 void Canvas::scale(qreal factor, const QPoint & center)
 {
     // Scaling limitation
-    if (factor <= 0 || !scene() || (m_scale_factor > MAX_SCALE_LIMIT && factor > 1) || (m_scale_factor < MIN_SCALE_LIMIT && factor < 1) )
+    if (factor <= 0 || !scene() || (m_scale_factor*factor <= 0.1 && factor < 1))
         return;
 
     QGraphicsView::scale(factor, factor);
@@ -694,6 +691,8 @@ void Canvas::renderCanvas(QPaintDevice * device)
     if (scene())
     {
         scene()->setSelectionVisible(false);
+        bool isGridVisible = scene()->isGridVisible();
+        scene()->setGridVisible(false);
 
         QSvgGenerator gen;
         gen.setFileName("/home/coder89/Desktop/dupa.svg");
@@ -705,7 +704,9 @@ void Canvas::renderCanvas(QPaintDevice * device)
         QPainter p(device);
         scene()->render(&p, scene()->sceneRect(), scene()->sceneRect());
         p.end();
+
         scene()->setSelectionVisible(true);
+        scene()->setGridVisible(isGridVisible);
     }
 }
 

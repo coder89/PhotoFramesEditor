@@ -9,6 +9,7 @@
 #include "PhotoEffectsLoader.h"
 #include "AbstractPhotoEffectFactory.h"
 #include "ImageFileDialog.h"
+#include "GridSetupDialog.h"
 
 #include "BorderDrawerInterface.h"
 #include "BorderDrawersLoader.h"
@@ -463,9 +464,12 @@ void PhotoFramesEditor::setupGrid()
 
     if (m_canvas && m_canvas->scene())
     {
-        qreal x = 25;
-        qreal y = 25;
-        m_canvas->scene()->setGrid(x, y);
+        GridSetupDialog dialog(this);
+        dialog.setHorizontalDistance( m_canvas->scene()->gridHorizontalDistance() );
+        dialog.setVerticalDistance( m_canvas->scene()->gridVerticalDistance() );
+        dialog.exec();
+        m_canvas->scene()->setGrid(dialog.horizontalDistance(),
+                                   dialog.verticalDistance());
     }
 }
 

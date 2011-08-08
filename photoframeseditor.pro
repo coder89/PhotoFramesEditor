@@ -18,7 +18,7 @@ SOURCES += main.cpp\
     widgets/photo_context_menu.cpp \
     events/canvasmouseevent.cpp \
     widgets/canvas/SwitchableIcon.cpp \
-    widgets/CanvasCreationDialog.cpp \
+    widgets/dialogs/CanvasCreationDialog.cpp \
     models/LayersModel.cpp \
     models/LayersModelItem.cpp \
     models/LayersSelectionModel.cpp \
@@ -53,7 +53,8 @@ SOURCES += main.cpp\
     borders/BordersGroup.cpp \
     widgets/tools/AbstractListTool.cpp \
     borders/BorderDrawersLoader.cpp \
-    borders/BorderChangeListener.cpp
+    borders/BorderChangeListener.cpp \
+    widgets/dialogs/GridSetupDialog.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -62,8 +63,7 @@ HEADERS  += plugin/photoframeseditor.h \
     plugin/photoframeseditor_p.h \
     utils/global.h \
     widgets/canvas/SwitchableIcon.h \
-    widgets/dialogs/GridConfigDialog.h \
-    widgets/CanvasCreationDialog.h \
+    widgets/dialogs/CanvasCreationDialog.h \
     models/LayersModel.h \
     models/LayersModelItem.h \
     models/LayersSelectionModel.h \
@@ -104,7 +104,8 @@ HEADERS  += plugin/photoframeseditor.h \
     borders/BorderDrawerInterface.h \
     borders/BorderDrawersLoader.h \
     borders/BorderDrawerFactoryInterface.h \
-    borders/BorderChangeListener.h
+    borders/BorderChangeListener.h \
+    widgets/dialogs/GridSetupDialog.h
 
 LIBS += \
     -L/usr \

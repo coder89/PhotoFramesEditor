@@ -812,14 +812,15 @@ void Scene::setGrid(qreal x, qreal y)
             }
         }
 
+        QList<QGraphicsItem*> toRemove;
         while (it != children.end())
+            toRemove.append(*(it++));
+        while (toRemove.count())
         {
-            grid_item->removeFromGroup(*it);
-            delete *it;
+            QGraphicsItem * temp = toRemove.takeAt(0);
+            grid_item->removeFromGroup(temp);
+            delete temp;
         }
-
-//        if (grid_visible)
-//            updateChildernsGrid(x,y);
     }
 }
 
@@ -829,10 +830,6 @@ void Scene::setGridVisible(bool visible)
     if (grid_visible == visible)
         return;
     grid_item->setVisible((grid_visible = visible));
-//    if (visible)
-//        updateChildernsGrid(x_grid,y_grid);
-//    else
-//        updateChildernsGrid(1,1);
 }
 
 //#####################################################################################################
@@ -904,6 +901,18 @@ void Scene::setRotationWidgetVisible(bool isVisible)
         else
             d->m_rot_item->hide();
     }
+}
+
+//#####################################################################################################
+qreal Scene::gridHorizontalDistance() const
+{
+    return this->x_grid;
+}
+
+//#####################################################################################################
+qreal Scene::gridVerticalDistance() const
+{
+    return this->y_grid;
 }
 
 //#####################################################################################################

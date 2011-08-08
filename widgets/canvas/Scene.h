@@ -71,6 +71,8 @@ namespace KIPIPhotoFramesEditor
             void addSelectingFilter(const QMetaObject & classMeta);
             void clearSelectingFilters();
             void setRotationWidgetVisible(bool isVisible);
+            qreal gridHorizontalDistance() const;
+            qreal gridVerticalDistance() const;
             const QGraphicsScene * toGraphicsScene() const
             {
                 return this;

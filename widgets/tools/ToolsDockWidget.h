@@ -38,6 +38,8 @@ namespace KIPIPhotoFramesEditor
 
             AbstractPhoto * m_currentPhoto;
 
+            Scene * m_scene;
+
         public:
 
             explicit ToolsDockWidget(QWidget * parent = 0);

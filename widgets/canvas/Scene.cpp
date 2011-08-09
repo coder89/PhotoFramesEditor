@@ -3,6 +3,7 @@
 #include "global.h"
 #include "QGraphicsRotationItem.h"
 #include "SceneBackground.h"
+#include "MousePressListener.h"
 
 #include "LayersModel.h"
 #include "LayersModelItem.h"
@@ -47,7 +48,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
         m_pressed_item(0),
         m_selected_items_all_movable(true),
         m_selection_visible(true),
-        m_rot_item(0)
+        m_rot_item(0),
+        m_readSceneMousePress_listener(0),
+        m_readSceneMousePress_enabled(false)
     {
         // Background of the scene
         m_background = new SceneBackground(m_scene);
@@ -188,6 +191,11 @@ class KIPIPhotoFramesEditor::ScenePrivate
 
     // Used for rotating items
     QGraphicsRotationItem * m_rot_item;
+
+
+    // For reading mouse press
+    MousePressListener * m_readSceneMousePress_listener;
+    bool m_readSceneMousePress_enabled;
 
     friend class Scene;
 };
@@ -458,6 +466,8 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
         OUTSIDE_SCENE_COLOR.setAlpha(190);
     }
 
+    this->setBackgroundBrush(Qt::transparent);
+
     // Mouse interaction mode
     setInteractionMode(DEFAULT_EDITING_MODE);
 
@@ -570,6 +580,13 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
+        // Return mouse position to the listener
+        if (d->m_readSceneMousePress_enabled)
+        {
+            d->m_readSceneMousePress_listener->mousePress(event->scenePos());
+            return;
+        }
+
         // If moving enabled
         if (m_interaction_mode & Selecting)
         {
@@ -639,6 +656,9 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
+        if (d->m_readSceneMousePress_enabled)
+            return;
+
         if (d->m_pressed_item)
             d->sendMoveEventToItem(d->m_pressed_item, event);
 
@@ -668,7 +688,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         }
     }
     else
-        ;//QGraphicsScene::mouseMoveEvent(event);
+        QGraphicsScene::mouseMoveEvent(event);
 }
 
 //#####################################################################################################
@@ -676,6 +696,13 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton)
     {
+        if (d->m_readSceneMousePress_enabled)
+        {
+            d->m_readSceneMousePress_enabled = false;
+            this->views().at(0)->unsetCursor();
+            return;
+        }
+
         if (m_interaction_mode & Selecting)
         {
             // Selecting pressed item
@@ -1072,6 +1099,17 @@ void Scene::render(QPainter * painter, const QRectF & target, const QRectF & sou
     d->m_selection_visible = true;
     if (d->m_rot_item)
         d->m_rot_item->hide();
+}
+
+//#####################################################################################################
+void Scene::readSceneMousePress(MousePressListener * mouseListsner)
+{
+    d->m_readSceneMousePress_listener = mouseListsner;
+    if (mouseListsner)
+    {
+        d->m_readSceneMousePress_enabled = true;
+        this->views().at(0)->setCursor(Qt::CrossCursor);
+    }
 }
 
 //#####################################################################################################

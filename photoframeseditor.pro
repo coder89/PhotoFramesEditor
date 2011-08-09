@@ -56,7 +56,8 @@ SOURCES += main.cpp\
     widgets/canvas/SceneBackground.cpp \
     widgets/tools/CanvasEditTool.cpp \
     widgets/tools/AbstractItemsTool.cpp \
-    widgets/tools/AbstractItemsListViewTool.cpp
+    widgets/tools/AbstractItemsListViewTool.cpp \
+    widgets/extra/PatternsComboBox.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -110,7 +111,9 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/AbstractItemsTool.h \
     widgets/tools/AbstractItemsListViewTool.h \
     widgets/tools/AbstractItemsListViewTool_p.h \
-    widgets/tools/AbstractTool.h
+    widgets/tools/AbstractTool.h \
+    widgets/canvas/MousePressListener.h \
+    widgets/extra/PatternsComboBox.h
 
 LIBS += \
     -L/usr \
@@ -121,6 +124,7 @@ LIBS += \
 INCLUDEPATH += \
     plugin \
     widgets \
+    widgets/extra \
     widgets/canvas \
     widgets/dialogs \
     widgets/items \

@@ -34,6 +34,10 @@ namespace KIPIPhotoFramesEditor
             void imageBackgroundSelected();
             void patternBackgroundSelected();
             void colorChanged(const QColor & color);
+            void patternColorChanged(const QColor & color);
+            void patternChanged(Qt::BrushStyle);
+
+            void readMousePosition(const QPointF & scenePos);
 
         private:
 

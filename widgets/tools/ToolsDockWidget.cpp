@@ -36,7 +36,8 @@ class MyStackedLayout : public QStackedLayout
 ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     QDockWidget("Tools",parent),
     m_has_selection(false),
-    m_currentPhoto(0)
+    m_currentPhoto(0),
+    m_scene(0)
 {
     this->setFeatures(QDockWidget::DockWidgetMovable);
     this->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -171,7 +172,11 @@ void ToolsDockWidget::setDefaultTool()
 
 void ToolsDockWidget::setScene(Scene * scene)
 {
-    this->connect(scene, SIGNAL(destroyed()), this, SLOT(setScene()));
+    if (scene)
+        this->connect(scene, SIGNAL(destroyed()), this, SLOT(setScene()));
+    if (sender() && !scene && this->m_scene)
+        return;
+    m_scene = scene;
     m_canvas_widget->setScene(scene);
     m_effects_widget->setScene(scene);
     m_text_widget->setScene(scene);

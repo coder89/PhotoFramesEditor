@@ -39,7 +39,7 @@ public:
 
 SceneBackground::SceneBackground(QGraphicsScene * scene) :
     QGraphicsItem(0, scene),
-    m_brush(Qt::white)
+    m_brush(Qt::transparent)
 {
     this->setZValue(-1.0/0.0);
     this->setFlags(0);
@@ -51,10 +51,37 @@ QRectF SceneBackground::boundingRect() const
     return m_rect;
 }
 
-void SceneBackground::setBrush(const QBrush &backgroundBrush)
+void SceneBackground::setBrush(const QBrush & backgroundBrush)
 {
     BackgroundChangedCommand * command = new BackgroundChangedCommand(backgroundBrush, this);
     PFE_PostUndoCommand(command);
+}
+
+bool SceneBackground::isColor() const
+{
+    return m_brush.style() & Qt::SolidPattern;
+}
+
+bool SceneBackground::isGradient() const
+{
+    return m_brush.style() & Qt::LinearGradientPattern ||
+           m_brush.style() & Qt::RadialGradientPattern ||
+           m_brush.style() & Qt::ConicalGradientPattern;
+}
+
+bool SceneBackground::isImage() const
+{
+    return m_brush.style() & Qt::TexturePattern;
+}
+
+bool SceneBackground::isPattern() const
+{
+    return !(isColor() || isGradient() || isImage());
+}
+
+QColor SceneBackground::color() const
+{
+    return m_brush.color();
 }
 
 QVariant SceneBackground::itemChange(GraphicsItemChange change, const QVariant &value)

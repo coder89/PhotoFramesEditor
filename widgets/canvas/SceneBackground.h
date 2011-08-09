@@ -18,6 +18,13 @@ namespace KIPIPhotoFramesEditor
             virtual QRectF boundingRect() const;
             void setBrush(const QBrush & backgroundBrush);
 
+            bool isColor() const;
+            bool isGradient() const;
+            bool isImage() const;
+            bool isPattern() const;
+
+            QColor color() const;
+
             QBrush fd;
 
         protected:

@@ -401,6 +401,7 @@ void PhotoFramesEditor::exportFile()
         if (format)
         {
             QPixmap image(m_canvas->sceneRect().size().toSize());
+            image.fill(Qt::transparent);
             m_canvas->renderCanvas(&image);
             QImageWriter writer(imageDialog.selectedFile());
             writer.setFormat(format);
@@ -421,7 +422,7 @@ void PhotoFramesEditor::exportFile()
 
 void PhotoFramesEditor::printPreview()
 {
-    QImage img;
+     QImage img;
      QPainter p(&img);
      if (m_canvas && m_canvas->scene())
      {

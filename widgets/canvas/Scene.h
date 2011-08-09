@@ -21,6 +21,7 @@ namespace KIPIPhotoFramesEditor
     // My classes declarations
     class Canvas;
     class SceneBackground;
+    class MousePressListener;
     class LayersModel;
     class LayersSelectionModel;
 
@@ -85,6 +86,8 @@ namespace KIPIPhotoFramesEditor
                 return this;
             }
             void render(QPainter * painter, const QRectF & target = QRectF(), const QRectF & source = QRectF(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);
+
+            void readSceneMousePress(MousePressListener * mouseListener);
 
         Q_SIGNALS:
 

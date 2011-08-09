@@ -1,7 +1,7 @@
 #ifndef BORDEREDITTOOL_H
 #define BORDEREDITTOOL_H
 
-#include "AbstractListTool.h"
+#include "AbstractItemsListViewTool.h"
 
 #include <QDockWidget>
 #include <QDoubleSpinBox>
@@ -12,13 +12,13 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class BorderEditTool : public AbstractListTool
+    class BorderEditTool : public AbstractItemsListViewTool
     {
             Q_OBJECT
 
         public:
 
-            explicit BorderEditTool(ToolsDockWidget * parent = 0);
+            explicit BorderEditTool(Scene * scene, ToolsDockWidget * parent = 0);
             virtual QStringList options() const;
             virtual AbstractMovableModel * model();
             virtual QObject * createItem(const QString & name);

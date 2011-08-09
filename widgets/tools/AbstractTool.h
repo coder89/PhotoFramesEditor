@@ -1,65 +1,43 @@
-#ifndef ABSTRACTPROPERTIESMODEL_H
-#define ABSTRACTPROPERTIESMODEL_H
+#ifndef ABSTRACTTOOL_H
+#define ABSTRACTTOOL_H
 
 #include <QWidget>
 
+#include "Scene.h"
+#include "ToolsDockWidget.h"
+
 namespace KIPIPhotoFramesEditor
 {
-    class AbstractPhoto;
-    class EffectsListView;
     class ToolsDockWidget;
-
     class AbstractTool : public QWidget
     {
-            Q_OBJECT
-            Q_PROPERTY(AbstractPhoto * m_photo READ currentItem WRITE setCurrentItem)
-
-            AbstractPhoto * m_photo;
-            QPointF m_point;
+            Scene * m_scene;
 
         public:
 
-            AbstractTool(ToolsDockWidget * parent = 0);
+            AbstractTool(Scene * scene, ToolsDockWidget * parent = 0) :
+                QWidget(parent),
+                m_scene(scene)
+            {}
 
-          /** Current photo property
-            * This property holds an information which item is currently editing.
-            */
-            Q_PROPERTY(AbstractPhoto * m_photo READ currentItem WRITE setCurrentItem)
+            Scene * scene() const
+            {
+                return m_scene;
+            }
 
-            AbstractPhoto * currentItem();
-            void setCurrentItem(AbstractPhoto * photo);
+        protected:
 
-            QPointF mousePosition();
-            void setMousePosition(const QPointF & position);
+            void setScene(Scene * scene)
+            {
+                this->m_scene = scene;
+                if (scene)
+                    this->setEnabled(true);
+                else
+                    this->setEnabled(false);
+            }
 
-        signals:
-
-            void itemCreated(AbstractPhoto * item);
-
-        public slots:
-
-          /** This slot is called before current item change
-            * It gives a chanse to save changes of currently edited item.
-            */
-            virtual void currentItemAboutToBeChanged() = 0;
-
-          /** This slot is called after current item changed.
-            * This is a notification to open editors/tools and configure it for new item.
-            */
-            virtual void currentItemChanged() = 0;
-
-          /** This slot is called before current mouse position change.
-            * This is a notification for the editor/tool to clear it's drawing on the current
-            * position.
-            */
-            virtual void positionAboutToBeChanged() = 0;
-
-          /** This slot is called after current mouse position changed.
-            * This is a notification for the editor/tool to draw it's data on the new position.
-            */
-            virtual void positionChanged() = 0;
-
+        friend class ToolsDockWidget;
     };
 }
 
-#endif // ABSTRACTPROPERTIESMODEL_H
+#endif // ABSTRACTTOOL_H

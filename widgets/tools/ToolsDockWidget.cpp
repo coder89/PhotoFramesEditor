@@ -1,5 +1,5 @@
 #include "ToolsDockWidget.h"
-#include "ColorizeTool.h"
+#include "CanvasEditTool.h"
 #include "EffectsEditorTool.h"
 #include "TextEditorTool.h"
 #include "BorderEditTool.h"
@@ -83,18 +83,18 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     formLayout->addWidget(m_tool_hand, 0,2, Qt::AlignCenter);
     connect(m_tool_hand,SIGNAL(toggled(bool)),this,SLOT(emitHandToolSelected(bool)));
 
-    // Effects tool
-    m_effects_button = new KPushButton(KGuiItem("", ":tool_effects.png",
-                                              i18n("Effects editor"),
-                                              i18n("This tool allows you to edit existing effects of your layers and add some new one.")), widget);
-    m_effects_button->setIconSize(QSize(24,24));
-    m_effects_button->setFixedSize(32,32);
-    m_effects_button->setCheckable(true);
-    group->addButton(m_effects_button);
-    formLayout->addWidget(m_effects_button, 0,3, Qt::AlignCenter);
-    m_effects_widget = new EffectsEditorTool(this);
-    m_tool_widget_layout->addWidget(m_effects_widget);
-    connect(m_effects_button,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
+    // Canvas edit tool
+    m_canvas_button = new KPushButton(KGuiItem("", ":tool_canvas.png",
+                                               i18n("Canvas editor"),
+                                               i18n("This tool allows you to edit canvas properties like size and background.")), widget);
+    m_canvas_button->setIconSize(QSize(24,24));
+    m_canvas_button->setFixedSize(32,32);
+    m_canvas_button->setCheckable(true);
+    group->addButton(m_canvas_button);
+    formLayout->addWidget(m_canvas_button, 0,3, Qt::AlignCenter);
+    m_canvas_widget = new CanvasEditTool(0, this);
+    m_tool_widget_layout->addWidget(m_canvas_widget);
+    connect(m_canvas_button,SIGNAL(toggled(bool)),this,SLOT(setCanvasWidgetVisible(bool)));
 
     // Text tool
     m_text_button = new KPushButton(KGuiItem("", ":tool_text.png",
@@ -105,7 +105,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_text_button->setCheckable(true);
     group->addButton(m_text_button);
     formLayout->addWidget(m_text_button, 0,4, Qt::AlignCenter);
-    m_text_widget = new TextEditorTool(this);
+    m_text_widget = new TextEditorTool(0, this);
     m_tool_widget_layout->addWidget(m_text_widget);
     connect(m_text_button,SIGNAL(toggled(bool)),this,SLOT(setTextWidgetVisible(bool)));
     connect(m_text_widget, SIGNAL(itemCreated(AbstractPhoto*)), this, SLOT(emitNewItemCreated(AbstractPhoto*)));
@@ -121,14 +121,27 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     formLayout->addWidget(m_rotate_button, 0,5, Qt::AlignCenter);
     connect(m_rotate_button,SIGNAL(toggled(bool)),this,SLOT(setRotateWidgetVisible(bool)));
 
+    // Photo effects tool
+    m_effects_button = new KPushButton(KGuiItem("", ":tool_effects.png",
+                                              i18n("Image effects editor"),
+                                              i18n("This tool allows you to edit existing effects of your photo layers and add some new once.")), widget);
+    m_effects_button->setIconSize(QSize(24,24));
+    m_effects_button->setFixedSize(32,32);
+    m_effects_button->setCheckable(true);
+    group->addButton(m_effects_button);
+    formLayout->addWidget(m_effects_button, 1,1, Qt::AlignCenter);
+    m_effects_widget = new EffectsEditorTool(0, this);
+    m_tool_widget_layout->addWidget(m_effects_widget);
+    connect(m_effects_button,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
+
     // Border edit tool
     m_tool_border = new KPushButton(KIcon(":tool_border.png"), "", widget);
     m_tool_border->setIconSize(QSize(24,24));
     m_tool_border->setFixedSize(32,32);
     m_tool_border->setCheckable(true);
     group->addButton(m_tool_border);
-    formLayout->addWidget(m_tool_border, 1,1, Qt::AlignCenter);
-    m_border_widget = new BorderEditTool(this);
+    formLayout->addWidget(m_tool_border, 1,2, Qt::AlignCenter);
+    m_border_widget = new BorderEditTool(0, this);
     m_tool_widget_layout->addWidget(m_border_widget);
     connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(setBordersWidgetVisible(bool)));
 
@@ -149,7 +162,6 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     setDefaultTool();
 }
 
-/// Default tool selection
 void ToolsDockWidget::setDefaultTool()
 {
     qDebug() << "setDefaultTool";
@@ -157,18 +169,27 @@ void ToolsDockWidget::setDefaultTool()
     this->emitHandToolSelected(true);
 }
 
+void ToolsDockWidget::setScene(Scene * scene)
+{
+    this->connect(scene, SIGNAL(destroyed()), this, SLOT(setScene()));
+    m_canvas_widget->setScene(scene);
+    m_effects_widget->setScene(scene);
+    m_text_widget->setScene(scene);
+    m_border_widget->setScene(scene);
+}
+
 void ToolsDockWidget::itemSelected(AbstractPhoto * photo)
 {
-    qDebug() << "itemSelected" << photo;
+    qDebug() << "itemSelected" << (QGraphicsItem*)photo;
     m_currentPhoto = photo;
-    AbstractTool * tool =qobject_cast<AbstractTool*>(m_tool_widget_layout->currentWidget());
+    AbstractItemsTool * tool =qobject_cast<AbstractItemsTool*>(m_tool_widget_layout->currentWidget());
     if (tool)
         tool->setCurrentItem(photo);
 }
 
 void ToolsDockWidget::mousePositionChoosen(const QPointF & position)
 {
-    AbstractTool * tool =qobject_cast<AbstractTool*>(m_tool_widget_layout->currentWidget());
+    AbstractItemsTool * tool =qobject_cast<AbstractItemsTool*>(m_tool_widget_layout->currentWidget());
     if (tool)
         tool->setMousePosition(position);
 }
@@ -178,6 +199,18 @@ void ToolsDockWidget::emitNewItemCreated(AbstractPhoto * item)
     if (!item)
         return;
     emit newItemCreated(item);
+}
+
+void ToolsDockWidget::setCanvasWidgetVisible(bool isVisible)
+{
+    emit canvasToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        m_tool_widget_layout->setCurrentWidget(m_canvas_widget);
+        emit requireMultiSelection();
+        emit canvasToolSelected();
+        this->adjustSize();
+    }
 }
 
 void ToolsDockWidget::setEffectsWidgetVisible(bool isVisible)
@@ -225,7 +258,6 @@ void ToolsDockWidget::setBordersWidgetVisible(bool isVisible)
     {
         m_border_widget->setCurrentItem(0);
         m_tool_widget_layout->setCurrentWidget(m_border_widget);
-        this->unsetCursor();
         emit requireSingleSelection();
         emit borderToolSelected();
         this->adjustSize();

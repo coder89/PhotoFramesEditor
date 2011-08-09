@@ -88,10 +88,9 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     appNS.setPrefix(KIPIPhotoFramesEditor::name());
     defs.appendChild(appNS);
     appNS.appendChild(m_effects_group->toSvg(document));
-    appNS.appendChild(m_borders_group->toSvg(document));
 
     // Convert visible area to SVG path's 'd' attribute
-    QPainterPath visibleArea = this->opaqueArea();
+    QPainterPath visibleArea = this->shape();
     if (!visibleArea.isEmpty())
     {
         // 'defs'->'clipPath'->'path'
@@ -103,7 +102,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     visibleData.setAttribute("id", "data_" + this->id());
     defs.appendChild(visibleData);
     visibleData.appendChild(this->svgVisibleArea(document));
-    //visibleData.appendChild(this->m_borders_group->svgVisibleArea(document));
+    visibleData.appendChild(this->m_borders_group->toSvg(document));
 
     // 'use'
     QDomElement use = document.createElement("use");
@@ -126,11 +125,13 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
       *         <clipPath>      // clippingPath == m_image_path
       *             <path />
       *         </clipPath>
-      *           .........     // Children data
+      *         <g>
+      *             .........     // Children data
+      *             .........     // Borders applied to the item
+      *         </g>
       *         <pfe:data>
-      *           .........     // Effects applied to the item
-      *           .........     // Borders applied to the item
-      *           .........     // Other data from the AbstractPhoto class.
+      *             .........     // Effects applied to the item
+      *             .........     // Other data from the AbstractPhoto class.
       *         </pfe:data>
       *     </defs>
       *     <use />             // Cuts image
@@ -151,14 +152,11 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     // Position & transformation
     this->setPos(0,0);
     QString transform = element.attribute("transform");
-    qDebug() << "load from svg";
     if (!transform.isEmpty())
     {
-        qDebug() << "there is transformation";
         QRegExp tr("translate\\([-0-9.]+,[-0-9.]+\\)");
         if (tr.indexIn(transform) >= 0)
         {
-            qDebug() << "translate";
             QStringList list = tr.capturedTexts();
             QString translate = list.at(0);
             list = translate.split(',');
@@ -167,10 +165,10 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
             this->setPos( x.right(x.length()-10).toDouble(),
                           y.left(y.length()-1).toDouble());
         }
+
         QRegExp rot("matrix\\([-0-9.]+,[-0-9.]+,[-0-9.]+,[-0-9.]+,[-0-9.]+,[-0-9.]+\\)");
         if (rot.indexIn(transform) >= 0)
         {
-            qDebug() << "matrix";
             QStringList list = rot.capturedTexts();
             QString matrix = list.at(0);
             matrix.remove(matrix.length()-1,1).remove(0,7);
@@ -184,13 +182,31 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
             this->setTransform(QTransform(m11.toDouble(), m12.toDouble(), 0,
                                           m21.toDouble(), m22.toDouble(), 0,
                                           m31.toDouble(), m32.toDouble(), 1));
-            qDebug() << this->transform();
         }
     }
 
     // ID & name
     m_id = element.attribute("id");
     setName(element.attribute("name"));
+
+    // Borders
+    QDomNodeList children = element.childNodes();
+    for (int i = children.count()-1; i >= 0; --i)
+    {
+        if (!children.at(i).isElement())
+            continue;
+
+        QDomElement itemDataElement = children.at(i).toElement();
+        if (itemDataElement.attribute("id") != "data_"+m_id)
+            continue;
+
+        // Borders
+        if (m_borders_group)
+            delete m_borders_group;
+        m_borders_group = BordersGroup::fromSvg(itemDataElement, this);
+        if (!m_borders_group)
+            return false;
+    }
 
     // Validation purpose
     QDomElement defs = element.firstChildElement("defs");
@@ -205,19 +221,12 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     if (appNS.isNull() || appNS.prefix() != KIPIPhotoFramesEditor::name())
         return false;
 
-        // Effects
-        if (m_effects_group)
-            delete m_effects_group;
-        m_effects_group = PhotoEffectsGroup::fromSvg(appNS, this);
-        if (!m_effects_group)
-            return false;
-
-        // Borders
-        if (m_borders_group)
-            delete m_borders_group;
-        m_borders_group = BordersGroup::fromSvg(appNS, this);
-        if (!m_borders_group)
-            return false;
+    // Effects
+    if (m_effects_group)
+        delete m_effects_group;
+    m_effects_group = PhotoEffectsGroup::fromSvg(appNS, this);
+    if (!m_effects_group)
+        return false;
 
     return true;
 }

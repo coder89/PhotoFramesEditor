@@ -17,7 +17,6 @@ SOURCES += main.cpp\
     widgets/abstract_photo_resizer.cpp \
     widgets/photo_context_menu.cpp \
     events/canvasmouseevent.cpp \
-    widgets/canvas/SwitchableIcon.cpp \
     widgets/dialogs/CanvasCreationDialog.cpp \
     models/LayersModel.cpp \
     models/LayersModelItem.cpp \
@@ -36,7 +35,6 @@ SOURCES += main.cpp\
     widgets/items/AbstractPhoto.cpp \
     widgets/items/PhotoItem.cpp \
     widgets/tools/EffectsEditorTool.cpp \
-    widgets/tools/AbstractTool.cpp \
     effects/PhotoEffectsGroup.cpp \
     utils/KEditFactory.cpp \
     events/UndoCommandEvent.cpp \
@@ -51,10 +49,14 @@ SOURCES += main.cpp\
     listeners/TextFontChangeListener.cpp \
     widgets/items/AbstractItemInterface.cpp \
     borders/BordersGroup.cpp \
-    widgets/tools/AbstractListTool.cpp \
     borders/BorderDrawersLoader.cpp \
     borders/BorderChangeListener.cpp \
-    widgets/dialogs/GridSetupDialog.cpp
+    widgets/dialogs/GridSetupDialog.cpp \
+    plugin/plugin_photoframeseditor.cpp \
+    widgets/canvas/SceneBackground.cpp \
+    widgets/tools/CanvasEditTool.cpp \
+    widgets/tools/AbstractItemsTool.cpp \
+    widgets/tools/AbstractItemsListViewTool.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -62,7 +64,6 @@ HEADERS  += plugin/photoframeseditor.h \
     events/canvasmouseevent.h \
     plugin/photoframeseditor_p.h \
     utils/global.h \
-    widgets/canvas/SwitchableIcon.h \
     widgets/dialogs/CanvasCreationDialog.h \
     models/LayersModel.h \
     models/LayersModelItem.h \
@@ -82,7 +83,6 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/items/AbstractPhoto.h \
     widgets/items/PhotoItem.h \
     widgets/tools/EffectsEditorTool.h \
-    widgets/tools/AbstractTool.h \
     effects/PhotoEffectsGroup.h \
     utils/KEditFactory.h \
     events/UndoCommandEvent.h \
@@ -98,19 +98,25 @@ HEADERS  += plugin/photoframeseditor.h \
     listeners/TextFontChangeListener.h \
     widgets/items/AbstractItemInterface.h \
     borders/BordersGroup.h \
-    widgets/tools/AbstractListTool.h \
-    widgets/tools/AbstractListTool_p.h \
     models/AbstractMovableModel.h \
     borders/BorderDrawerInterface.h \
     borders/BorderDrawersLoader.h \
     borders/BorderDrawerFactoryInterface.h \
     borders/BorderChangeListener.h \
-    widgets/dialogs/GridSetupDialog.h
+    widgets/dialogs/GridSetupDialog.h \
+    plugin/plugin_photoframeseditor.h \
+    widgets/canvas/SceneBackground.h \
+    widgets/tools/CanvasEditTool.h \
+    widgets/tools/AbstractItemsTool.h \
+    widgets/tools/AbstractItemsListViewTool.h \
+    widgets/tools/AbstractItemsListViewTool_p.h \
+    widgets/tools/AbstractTool.h
 
 LIBS += \
     -L/usr \
     -lkdeui \
-    -lkio
+    -lkio \
+    -lkipi
 
 INCLUDEPATH += \
     plugin \

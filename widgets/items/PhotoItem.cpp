@@ -5,6 +5,7 @@
 #include "BordersGroup.h"
 #include "global.h"
 #include "PFESettings.h"
+#include "photoframeseditor.h"
 
 #include <QBuffer>
 #include <QStyleOptionGraphicsItem>
@@ -107,9 +108,12 @@ QDomElement PhotoItem::toSvg(QDomDocument & document) const
         QString data(byteArray);
         image.setAttribute("data", data);
     }
-    /// TODO : saving digiKam file "ID??"
-    //if ()
-    //{}
+
+    if (PhotoFramesEditor::instance()->hasInterface())
+    {
+        /// Save with KIPI::Interface
+    }
+
     // Saving image path
     if (!m_file_path.isEmpty())
         image.setAttribute("xlink:href", m_file_path);
@@ -156,8 +160,10 @@ PhotoItem * PhotoItem::fromSvg(QDomElement & element)
                 goto _delete;
         }
         // Try to load from digikam database
-        else if (!(imageAttribute = image.attribute("digikam")).isEmpty())
-        {}
+        else if (!(imageAttribute = image.attribute("kipi")).isEmpty())
+        {
+            /// TODO : load using KIPI::Interface
+        }
         // Fullsize image is embedded in SVG file!
         else if (!(imageAttribute = image.attribute("data")).isEmpty())
         {
@@ -191,7 +197,7 @@ QDomElement PhotoItem::svgVisibleArea(QDomDocument & document) const
     QDomElement img = document.createElement("image");
     img.setAttribute("width",m_pixmap.width());
     img.setAttribute("height",m_pixmap.height());
-    img.setAttribute("xlink:href","data:image/png;base64,"+QString::fromLatin1(byteArray.toBase64().data()));
+    img.setAttribute("xlink:href",QString("data:image/png;base64,")+byteArray.toBase64());
     return img;
 }
 

@@ -10,8 +10,10 @@
 
 namespace KIPIPhotoFramesEditor
 {
+    class Scene;
     class AbstractPhoto;
-    class AbstractTool;
+    class AbstractItemsTool;
+    class CanvasEditTool;
 
     class ToolsDockWidget : public QDockWidget
     {
@@ -19,6 +21,7 @@ namespace KIPIPhotoFramesEditor
 
             KPushButton * m_tool_pointer;
             KPushButton * m_tool_hand;
+            KPushButton * m_canvas_button;
             KPushButton * m_effects_button;
             KPushButton * m_text_button;
             KPushButton * m_rotate_button;
@@ -28,9 +31,10 @@ namespace KIPIPhotoFramesEditor
             bool m_has_selection;
 
             QStackedLayout * m_tool_widget_layout;
-            AbstractTool * m_effects_widget;
-            AbstractTool * m_text_widget;
-            AbstractTool * m_border_widget;
+            CanvasEditTool * m_canvas_widget;
+            AbstractItemsTool * m_effects_widget;
+            AbstractItemsTool * m_text_widget;
+            AbstractItemsTool * m_border_widget;
 
             AbstractPhoto * m_currentPhoto;
 
@@ -50,6 +54,9 @@ namespace KIPIPhotoFramesEditor
             void pointerToolSelected();
             void handToolSelected();
             // Effects tool selection signals
+            void canvasToolSelectionChanged(bool);
+            void canvasToolSelected();
+            // Effects tool selection signals
             void effectsToolSelectionChanged(bool);
             void effectsToolSelected();
             // Text tool selection signals
@@ -64,6 +71,7 @@ namespace KIPIPhotoFramesEditor
 
         public slots:
 
+            void setScene(Scene * scene = 0);
             void itemSelected(AbstractPhoto * photo);
             void mousePositionChoosen(const QPointF & position);
             void emitNewItemCreated(AbstractPhoto * item);
@@ -76,6 +84,7 @@ namespace KIPIPhotoFramesEditor
                 m_has_selection = hasSelection;
             }
 
+            void setCanvasWidgetVisible(bool isVisible);
             void setEffectsWidgetVisible(bool isVisible);
             void setTextWidgetVisible(bool isVisible);
             void setRotateWidgetVisible(bool isVisible);

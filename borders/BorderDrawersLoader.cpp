@@ -78,6 +78,36 @@ BorderDrawerInterface * BorderDrawersLoader::getDrawerByName(const QString & nam
     return 0;
 }
 
+BorderDrawerInterface * BorderDrawersLoader::getDrawerFromSvg(QDomElement & drawerElement)
+{
+
+
+//    QMap<QString,QString> properties;
+//    QDomNamedNodeMap attributes = childElement.attributes();
+//    for (int j = attributes.count()-1; j >= 0; --j)
+//    {
+//        QDomAttr attr = attributes.item(j).toAttr();
+//        if (attr.isNull())
+//            continue;
+//        properties.insert(attr.name(), attr.value());
+//    }
+
+    QString drawerName = drawerElement.attribute("name");
+    if (!instance()->registeredDrawers().contains(drawerName))
+        return 0;
+    return getDrawerByName(drawerName);
+}
+
+QDomElement BorderDrawersLoader::drawerToSvg(BorderDrawerInterface * drawer, QDomDocument & document)
+{
+    if (!drawer)
+        return QDomElement();
+    QDomElement result = document.createElement("g");
+    result.setAttribute("name", drawer->factory()->drawerName());
+
+    return result;
+}
+
 QWidget * BorderDrawersLoader::createEditor(BorderDrawerInterface * drawer, bool createCommands)
 {
     if (!drawer)

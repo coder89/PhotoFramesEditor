@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     QResource::registerResource("resources/icons.qcc");
 
-    PhotoFramesEditor * w = PhotoFramesEditor::instancePhotoFramesEditor(0);
+    PhotoFramesEditor * w = PhotoFramesEditor::instance(0);
     w->setAttribute(Qt::WA_DeleteOnClose, true);
     int height = QApplication::desktop()->height()-500;
     w->resize(round(height*16.0/9.0),height);

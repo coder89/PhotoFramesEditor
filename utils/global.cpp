@@ -19,7 +19,7 @@ QString KIPIPhotoFramesEditor::uri()
 
 void KIPIPhotoFramesEditor::PFE_PostUndoCommand(QUndoCommand * command)
 {
-    PhotoFramesEditor::instancePhotoFramesEditor()->addUndoCommand(command);
+    PhotoFramesEditor::instance()->addUndoCommand(command);
 }
 
 QDomElement KIPIPhotoFramesEditor::pathToSvg(const QPainterPath & path, QDomDocument & document)

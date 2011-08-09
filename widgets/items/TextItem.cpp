@@ -267,7 +267,7 @@ void TextItem::focusInEvent(QFocusEvent * event)
 
 void TextItem::focusOutEvent(QFocusEvent * event)
 {
-    if (d->m_temp_string != m_string_list)
+    if (this->scene() && d->m_temp_string != m_string_list)
     {
         QUndoCommand * undo = new TextEditUndoCommand(d->m_temp_string, this);
         PFE_PostUndoCommand(undo);

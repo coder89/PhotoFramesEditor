@@ -46,9 +46,10 @@ using namespace KIPIPhotoFramesEditor;
 
 PhotoFramesEditor * PhotoFramesEditor::m_instance = 0;
 
-PhotoFramesEditor::PhotoFramesEditor(QWidget *parent) :
+PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
     KXmlGuiWindow(parent),
     m_canvas(0),
+    m_interface(0),
     d(new PhotoFramesEditorPriv)
 {
     setXMLFile(QApplication::applicationDirPath()+"/resources/photoframeseditorui.rc");
@@ -75,7 +76,7 @@ PhotoFramesEditor::~PhotoFramesEditor()
         delete d;
 }
 
-PhotoFramesEditor * PhotoFramesEditor::instancePhotoFramesEditor(QWidget * parent)
+PhotoFramesEditor * PhotoFramesEditor::instance(QWidget * parent)
 {
     if (m_instance)
         return m_instance;
@@ -99,6 +100,17 @@ void PhotoFramesEditor::addUndoCommand(QUndoCommand * command)
             delete command;
         }
     }
+}
+
+void PhotoFramesEditor::setInterface(KIPI::Interface * interface)
+{
+    if (interface)
+        m_interface = interface;
+}
+
+bool PhotoFramesEditor::hasInterface() const
+{
+    return (bool) m_interface;
 }
 
 void PhotoFramesEditor::setupActions()
@@ -260,28 +272,32 @@ void PhotoFramesEditor::prepareSignalsConnections()
     d->centralWidget->layout()->addWidget(m_canvas);
     d->tree->setModel(m_canvas->model());
     d->tree->setSelectionModel(m_canvas->selectionModel());
+    d->toolsWidget->setScene(m_canvas->scene());
+
+    // undo stack signals
+    connect(m_canvas,               SIGNAL(savedStateChanged()),    this,                   SLOT(refreshActions()));
+    connect(m_canvas->undoStack(),  SIGNAL(canRedoChanged(bool)),   d->redoAction,          SLOT(setEnabled(bool)));
+    connect(m_canvas->undoStack(),  SIGNAL(canUndoChanged(bool)),   d->undoAction,          SLOT(setEnabled(bool)));
+    connect(d->undoAction,          SIGNAL(triggered()),            m_canvas->undoStack(),  SLOT(undo()));
+    connect(d->redoAction,          SIGNAL(triggered()),            m_canvas->undoStack(),  SLOT(redo()));
 
     // model/tree/canvas synchronization signals
-    connect(m_canvas,SIGNAL(savedStateChanged()),this,SLOT(refreshActions()));
-    connect(m_canvas->undoStack(),SIGNAL(canRedoChanged(bool)),d->redoAction,SLOT(setEnabled(bool)));
-    connect(m_canvas->undoStack(),SIGNAL(canUndoChanged(bool)),d->undoAction,SLOT(setEnabled(bool)));
-    connect(d->undoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(undo()));
-    connect(d->redoAction,SIGNAL(triggered()),m_canvas->undoStack(),SLOT(redo()));
-    connect(d->tree,SIGNAL(selectedRowsAboutToBeRemoved()),m_canvas,SLOT(removeSelectedRows()));
-    connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedUp()),m_canvas,SLOT(moveSelectedRowsUp()));
-    connect(d->tree,SIGNAL(selectedRowsAboutToBeMovedDown()),m_canvas,SLOT(moveSelectedRowsDown()));
-    connect(d->treeTitle->moveUpButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsUp()));
-    connect(d->treeTitle->moveDownButton(),SIGNAL(clicked()),m_canvas,SLOT(moveSelectedRowsDown()));
+    connect(d->tree,    SIGNAL(selectedRowsAboutToBeRemoved()),     m_canvas,   SLOT(removeSelectedRows()));
+    connect(d->tree,    SIGNAL(selectedRowsAboutToBeMovedUp()),     m_canvas,   SLOT(moveSelectedRowsUp()));
+    connect(d->tree,    SIGNAL(selectedRowsAboutToBeMovedDown()),   m_canvas,   SLOT(moveSelectedRowsDown()));
+    connect(d->treeTitle->moveUpButton(),   SIGNAL(clicked()),      m_canvas,   SLOT(moveSelectedRowsUp()));
+    connect(d->treeTitle->moveDownButton(), SIGNAL(clicked()),      m_canvas,   SLOT(moveSelectedRowsDown()));
     // interaction modes (tools)
-    connect(d->toolsWidget,SIGNAL(undoCommandCreated(QUndoCommand*)),m_canvas,SLOT(newUndoCommand(QUndoCommand*)));
-    connect(m_canvas,SIGNAL(selectedItem(AbstractPhoto*)),d->toolsWidget,SLOT(itemSelected(AbstractPhoto*)));
-    connect(d->toolsWidget,SIGNAL(pointerToolSelected()),m_canvas,SLOT(enableDefaultSelectionMode()));
-    connect(d->toolsWidget,SIGNAL(handToolSelected()),m_canvas,SLOT(enableViewingMode()));
-    connect(d->toolsWidget,SIGNAL(effectsToolSelected()),m_canvas,SLOT(enableEffectsEditingMode()));
-    connect(d->toolsWidget,SIGNAL(textToolSelected()),m_canvas,SLOT(enableTextEditingMode()));
-    connect(d->toolsWidget,SIGNAL(rotateToolSelected()),m_canvas,SLOT(enableRotateEditingMode()));
-    connect(d->toolsWidget,SIGNAL(borderToolSelected()),m_canvas,SLOT(enableBordersEditingMode()));
-    connect(d->toolsWidget,SIGNAL(newItemCreated(AbstractPhoto*)),m_canvas->scene(),SLOT(addItem(AbstractPhoto*)));
+    connect(m_canvas,       SIGNAL(selectedItem(AbstractPhoto*)),       d->toolsWidget,SLOT(itemSelected(AbstractPhoto*)));
+    connect(d->toolsWidget, SIGNAL(undoCommandCreated(QUndoCommand*)),  m_canvas,   SLOT(newUndoCommand(QUndoCommand*)));
+    connect(d->toolsWidget, SIGNAL(pointerToolSelected()),              m_canvas,   SLOT(enableDefaultSelectionMode()));
+    connect(d->toolsWidget, SIGNAL(handToolSelected()),                 m_canvas,   SLOT(enableViewingMode()));
+    connect(d->toolsWidget, SIGNAL(canvasToolSelected()),               m_canvas,   SLOT(enableCanvasEditingMode()));
+    connect(d->toolsWidget, SIGNAL(effectsToolSelected()),              m_canvas,   SLOT(enableEffectsEditingMode()));
+    connect(d->toolsWidget, SIGNAL(textToolSelected()),                 m_canvas,   SLOT(enableTextEditingMode()));
+    connect(d->toolsWidget, SIGNAL(rotateToolSelected()),               m_canvas,   SLOT(enableRotateEditingMode()));
+    connect(d->toolsWidget, SIGNAL(borderToolSelected()),               m_canvas,   SLOT(enableBordersEditingMode()));
+    connect(d->toolsWidget, SIGNAL(newItemCreated(AbstractPhoto*)),     m_canvas,   SLOT(addNewItem(AbstractPhoto*)));
     connect(m_canvas->scene()->toGraphicsScene(), SIGNAL(mousePressedPoint(QPointF)), d->toolsWidget, SLOT(mousePositionChoosen(QPointF)));
 
     d->toolsWidget->setDefaultTool();
@@ -461,7 +477,6 @@ void PhotoFramesEditor::setGridVisible(bool isVisible)
 
 void PhotoFramesEditor::setupGrid()
 {
-
     if (m_canvas && m_canvas->scene())
     {
         GridSetupDialog dialog(this);

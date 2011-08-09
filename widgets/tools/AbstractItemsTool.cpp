@@ -1,20 +1,20 @@
-#include "AbstractTool.h"
+#include "AbstractItemsTool.h"
 #include "AbstractPhoto.h"
 #include "ToolsDockWidget.h"
 
 using namespace KIPIPhotoFramesEditor;
 
-AbstractTool::AbstractTool(ToolsDockWidget * parent) :
-    QWidget(parent)
+AbstractItemsTool::AbstractItemsTool(Scene * scene, ToolsDockWidget * parent) :
+    AbstractTool(scene, parent)
 {
 }
 
-AbstractPhoto * AbstractTool::currentItem()
+AbstractPhoto * AbstractItemsTool::currentItem()
 {
     return m_photo;
 }
 
-void AbstractTool::setCurrentItem(AbstractPhoto * photo)
+void AbstractItemsTool::setCurrentItem(AbstractPhoto * photo)
 {
     if (m_photo == photo)
         return;
@@ -24,12 +24,12 @@ void AbstractTool::setCurrentItem(AbstractPhoto * photo)
     currentItemChanged();
 }
 
-QPointF AbstractTool::mousePosition()
+QPointF AbstractItemsTool::mousePosition()
 {
     return m_point;
 }
 
-void AbstractTool::setMousePosition(const QPointF & position)
+void AbstractItemsTool::setMousePosition(const QPointF & position)
 {
     if (m_point == position)
         return;

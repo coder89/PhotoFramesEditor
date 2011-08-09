@@ -1,7 +1,7 @@
 #ifndef COLORIZETOOL_H
 #define COLORIZETOOL_H
 
-#include "AbstractTool.h"
+#include "AbstractItemsTool.h"
 
 #include <QDockWidget>
 #include <QSlider>
@@ -13,7 +13,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class ColorizeTool : public AbstractTool
+    class ColorizeTool : public AbstractItemsTool
     {
             enum ColorizeType
             {

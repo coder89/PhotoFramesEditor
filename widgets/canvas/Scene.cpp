@@ -2,6 +2,7 @@
 #include "QGraphicsEditionWidget.h"
 #include "global.h"
 #include "QGraphicsRotationItem.h"
+#include "SceneBackground.h"
 
 #include "LayersModel.h"
 #include "LayersModelItem.h"
@@ -24,12 +25,14 @@
 #include <QGraphicsWidget>
 #include <qmath.h>
 #include <QUndoCommand>
+#include <QImageReader>
 #include <QtAlgorithms>
 
 // KDE
 #include <kapplication.h>
 #include <kmessagebox.h>
 #include <klocalizedstring.h>
+#include <kurl.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -37,20 +40,17 @@ QColor Scene::OUTSIDE_SCENE_COLOR;
 
 class KIPIPhotoFramesEditor::ScenePrivate
 {
-    ScenePrivate(Scene * parent) :
-        parent(parent),
-        model(new LayersModel(parent)),
-        selection_model(new LayersSelectionModel(model, parent)),
+    ScenePrivate(Scene * scene) :
+        m_scene(scene),
+        model(new LayersModel(scene)),
+        selection_model(new LayersSelectionModel(model, scene)),
         m_pressed_item(0),
         m_selected_items_all_movable(true),
         m_selection_visible(true),
         m_rot_item(0)
     {
-        // Background
-        m_background = new QGraphicsRectItem(parent->sceneRect(), 0, parent);
-        m_background->setZValue(-1.0/0.0);
-        m_background->setBrush(Qt::white);
-        m_background->setPen(QPen(Qt::transparent, 0));
+        // Background of the scene
+        m_background = new SceneBackground(m_scene);
     }
 
     QList<QGraphicsItem*> itemAtPosition(const QPointF & scenePos, QWidget * widget)
@@ -59,14 +59,14 @@ class KIPIPhotoFramesEditor::ScenePrivate
         QGraphicsView * view = widget ? qobject_cast<QGraphicsView*>(widget->parentWidget()) : 0;
         qDebug() << "itemsAtPosition";
         if (!view)
-            return parent->items(scenePos, Qt::IntersectsItemShape, Qt::DescendingOrder, QTransform());
+            return m_scene->items(scenePos, Qt::IntersectsItemShape, Qt::DescendingOrder, QTransform());
         qDebug() << "has view";
         const QRectF pointRect(scenePos, QSizeF(1, 1));
         if (!view->isTransformed())
-            return parent->items(pointRect, Qt::IntersectsItemShape, Qt::DescendingOrder);
+            return m_scene->items(pointRect, Qt::IntersectsItemShape, Qt::DescendingOrder);
         qDebug() << "has transformation";
         const QTransform viewTransform = view->viewportTransform();
-        return parent->items(pointRect, Qt::IntersectsItemShape, Qt::DescendingOrder, viewTransform);
+        return m_scene->items(pointRect, Qt::IntersectsItemShape, Qt::DescendingOrder, viewTransform);
     }
     AbstractItemInterface * itemAt(const QPointF & scenePos, QWidget * widget)
     {
@@ -111,12 +111,12 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
 
     // Parent scene
-    QGraphicsScene * parent;
+    QGraphicsScene * m_scene;
     // Scene's model
     LayersModel * model;
     LayersSelectionModel * selection_model;
     // Background item
-    QGraphicsRectItem * m_background;
+    SceneBackground * m_background;
 
     // Used for selecting items
     void deselectSelected()
@@ -232,9 +232,16 @@ class KIPIPhotoFramesEditor::AddItemsCommand : public QUndoCommand
         }
         virtual void undo()
         {
+            QRectF region;
             foreach (AbstractPhoto * item, items)
+            {
+                region = region.united( item->mapRectToScene(item->boundingRect()) );
+                if (item->isSelected())
+                    item->setSelected(false);
                 scene->QGraphicsScene::removeItem(item);
+            }
             scene->model()->removeRows(position, items.count());
+            scene->update(region);
             done = false;
         }
 };
@@ -443,7 +450,7 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
     grid_visible(false),
     grid_item(0),
     grid_changed(true)
-{
+{   
     if (!OUTSIDE_SCENE_COLOR.isValid())
     {
         QPalette pal = this->palette();
@@ -469,6 +476,12 @@ Scene::Scene(const QRectF & dimension, QObject * parent) :
 Scene::~Scene()
 {
     delete d;
+}
+
+//#####################################################################################################
+SceneBackground * Scene::background()
+{
+    return d->m_background;
 }
 
 //#####################################################################################################
@@ -522,9 +535,8 @@ void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
     if (event->isAccepted())
         return;
     QMenu menu;
-    QMenu * add = menu.addMenu("Add item");
-    QAction * polygon = add->addAction("Polygon");
-    connect(polygon,SIGNAL(triggered()),this,SLOT(enableItemsDrawing()));
+    QAction * background = menu.addAction("Background");
+    connect(background,SIGNAL(triggered()),this,SLOT(enableItemsDrawing()));
     menu.exec(event->screenPos());
 }
 
@@ -707,19 +719,6 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 }
 
 //#####################################################################################################
-void Scene::dropEvent(QGraphicsSceneDragDropEvent *event)
-{
-    // scene()->addItem(it);
-    qDebug() << event->mimeData();
-}
-
-//#####################################################################################################
-void Scene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
-{
-    QGraphicsScene::dragMoveEvent(event);
-}
-
-//#####################################################################################################
 void Scene::drawBackground(QPainter * painter, const QRectF & rect)
 {
     QGraphicsScene::drawBackground(painter, rect.intersect(this->sceneRect()));
@@ -746,6 +745,84 @@ void Scene::drawForeground(QPainter * painter, const QRectF & rect)
         painter->setCompositionMode(QPainter::RasterOp_NotSourceAndNotDestination);
         painter->drawPath(d->m_selected_items_path);
         painter->restore();
+    }
+}
+
+//#####################################################################################################
+void Scene::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
+{
+    if (canDecode(event->mimeData()))
+    {
+        event->setDropAction(Qt::CopyAction);
+        event->setAccepted(true);
+    }
+    else
+    {
+        event->setDropAction(Qt::IgnoreAction);
+        event->setAccepted(false);
+    }
+}
+
+//#####################################################################################################
+void Scene::dragMoveEvent(QGraphicsSceneDragDropEvent * /*event*/)
+{
+}
+
+//#####################################################################################################
+void Scene::dropEvent(QGraphicsSceneDragDropEvent * event)
+{
+    qDebug() << "dropEvent();";
+    const QMimeData * mimeData = event->mimeData();
+    qDebug() << mimeData->formats();
+    if (mimeData->hasFormat("digikam/item-ids") &&
+            mimeData->hasFormat("digikam/digikamalbums") &&
+            mimeData->hasFormat("digikam/album-ids") &&
+            mimeData->hasFormat("digikam/image-ids-long"))
+    {
+        qDebug() << "digikam/item-ids";
+        /** For example:
+          * (QUrl("file:///home/coder89/Obrazy/Max/2007_12_28/Zdjęcie 0505.CR2") )
+          */
+        KUrl::List urls;
+        QByteArray ba = mimeData->data("digikam/item-ids");
+        QDataStream ds(&ba, QIODevice::ReadOnly);
+        ds >> urls;
+        qDebug() << urls;
+        foreach (KUrl u, urls)
+        {
+            QImageReader ir (u.toLocalFile());
+                    qDebug() << ir.canRead();
+        }
+
+        qDebug() << "digikam/digikamalbums";
+        /** For example:
+          * (QUrl("digikamalbums:/Max/2007_12_28/Zdjęcie 0505.CR2?albumRoot=/home/coder89/Obrazy&albumRootId=1&databaseType=QSQLITE&databaseName=/home/coder89/Obrazy/digikam4.db&connectOptions=&hostName=&userName=&password=") )
+          */
+        KUrl::List kioUrls;
+        QByteArray ba2 = mimeData->data("digikam/digikamalbums");
+        QDataStream ds2(&ba2, QIODevice::ReadOnly);
+        ds2 >> kioUrls;
+        qDebug() << kioUrls;
+
+        qDebug() << "digikam/album-ids";
+        /** For example:
+          * (3)
+          */
+        QList<int> albumIDs;
+        QByteArray ba3 = mimeData->data("digikam/album-ids");
+        QDataStream ds3(&ba3, QIODevice::ReadOnly);
+        ds3 >> albumIDs;
+        qDebug() << albumIDs;
+
+        qDebug() << "digikam/image-ids-long";
+        /** For example:
+          * (113)
+          */
+        QList<qlonglong> imageIDs;
+        QByteArray ba4 = mimeData->data("digikam/image-ids-long");
+        QDataStream ds4(&ba4, QIODevice::ReadOnly);
+        ds4 >> imageIDs;
+        qDebug() << imageIDs;
     }
 }
 
@@ -984,6 +1061,20 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
 }
 
 //#####################################################################################################
+void Scene::render(QPainter * painter, const QRectF & target, const QRectF & source, Qt::AspectRatioMode aspectRatioMode)
+{
+    if (d->m_rot_item)
+        d->m_rot_item->hide();
+    d->m_selection_visible = false;
+
+    QGraphicsScene::render(painter, target, source, aspectRatioMode);
+
+    d->m_selection_visible = true;
+    if (d->m_rot_item)
+        d->m_rot_item->hide();
+}
+
+//#####################################################################################################
 void Scene::addItem(AbstractPhoto * item)
 {
     // Prevent multiple addition of the item
@@ -999,8 +1090,10 @@ void Scene::addItem(AbstractPhoto * item)
         if (insertionRow > (unsigned)index.row())
             insertionRow = index.row();
     }
+
     if (insertionRow == (unsigned)-1)
         insertionRow = 0;
+
     QUndoCommand * command = new AddItemsCommand(item, insertionRow, this);
     PFE_PostUndoCommand(command);
 }
@@ -1090,6 +1183,25 @@ bool Scene::askAboutRemoving(int count)
             return true;
     }
     return false;
+}
+
+//#####################################################################################################
+bool Scene::canDecode(const QMimeData * mimeData)
+{
+    if (mimeData->hasFormat("digikam/item-ids") &&
+            mimeData->hasFormat("digikam/digikamalbums") &&
+            mimeData->hasFormat("digikam/album-ids") &&
+            mimeData->hasFormat("digikam/image-ids-long"))
+        return true;
+
+    QList<QUrl> urls = mimeData->urls();
+    foreach (QUrl url, urls)
+    {
+        QImageReader ir(url.toLocalFile());
+        if (!ir.canRead())
+            return false;
+    }
+    return true;
 }
 
 //#####################################################################################################

@@ -155,6 +155,9 @@ namespace KIPIPhotoFramesEditor
             /// Sets viewing mode
             void enableViewingMode();
 
+            /// Sets canvas editing mode
+            void enableCanvasEditingMode();
+
             /// Sets effects editing mode
             void enableEffectsEditingMode();
 

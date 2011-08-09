@@ -1,5 +1,5 @@
-#include "AbstractListTool.h"
-#include "AbstractListTool_p.h"
+#include "AbstractItemsListViewTool.h"
+#include "AbstractItemsListViewTool_p.h"
 #include "AbstractPhoto.h"
 #include "ToolsDockWidget.h"
 #include "BorderDrawersLoader.h"
@@ -87,9 +87,9 @@ public:
     }
 };
 
-class KIPIPhotoFramesEditor::AbstractListToolPrivate
+class KIPIPhotoFramesEditor::AbstractItemsListViewToolPrivate
 {
-    AbstractListToolPrivate() :
+    AbstractItemsListViewToolPrivate() :
         m_list_widget(0),
         m_add_button(0),
         m_remove_button(0),
@@ -133,12 +133,12 @@ class KIPIPhotoFramesEditor::AbstractListToolPrivate
         m_up_button->setEnabled(isEnabled && index.isValid() && index.row() > 0);
     }
 
-    friend class AbstractListTool;
+    friend class AbstractItemsListViewTool;
 };
 
-AbstractListTool::AbstractListTool(const QString & toolName, ToolsDockWidget * parent) :
-    AbstractTool(parent),
-    d(new AbstractListToolPrivate)
+AbstractItemsListViewTool::AbstractItemsListViewTool(const QString & toolName, Scene * scene, ToolsDockWidget * parent) :
+    AbstractItemsTool(scene, parent),
+    d(new AbstractItemsListViewToolPrivate)
 {
     QGridLayout * layout = new QGridLayout(this);
 
@@ -191,23 +191,23 @@ AbstractListTool::AbstractListTool(const QString & toolName, ToolsDockWidget * p
     d->setButtonsEnabled(false);
 }
 
-AbstractListTool::~AbstractListTool()
+AbstractItemsListViewTool::~AbstractItemsListViewTool()
 {
     delete d;
 }
 
-void AbstractListTool::currentItemAboutToBeChanged()
+void AbstractItemsListViewTool::currentItemAboutToBeChanged()
 {
     this->chooserCancelled();
 }
 
-void AbstractListTool::currentItemChanged()
+void AbstractItemsListViewTool::currentItemChanged()
 {
     d->m_list_widget->setModel(model());
     d->setButtonsEnabled(true);
 }
 
-void AbstractListTool::viewCurrentEditor(const QModelIndex & index)
+void AbstractItemsListViewTool::viewCurrentEditor(const QModelIndex & index)
 {
     closeEditor();
     d->setButtonsEnabled(true);
@@ -219,7 +219,7 @@ void AbstractListTool::viewCurrentEditor(const QModelIndex & index)
     }
 }
 
-void AbstractListTool::createChooser()
+void AbstractItemsListViewTool::createChooser()
 {
     AbstractMovableModel * model = this->model();
     if (model)
@@ -247,7 +247,7 @@ void AbstractListTool::createChooser()
     }
 }
 
-void AbstractListTool::itemSelected(const QString & name)
+void AbstractItemsListViewTool::itemSelected(const QString & name)
 {
     AbstractListToolViewDelegate * w = d->m_opened_editor.first;
     AbstractMovableModel * model = this->model();
@@ -266,7 +266,7 @@ void AbstractListTool::itemSelected(const QString & name)
     }
 }
 
-void AbstractListTool::chooserAccepted()
+void AbstractItemsListViewTool::chooserAccepted()
 {
     addItemCommand(d->m_editors_object, d->m_opened_editor.second.row());
     closeEditor();
@@ -275,7 +275,7 @@ void AbstractListTool::chooserAccepted()
     d->setButtonsEnabled(true);
 }
 
-void AbstractListTool::chooserCancelled()
+void AbstractItemsListViewTool::chooserCancelled()
 {
     closeEditor();
     d->removeChoosed();
@@ -284,7 +284,7 @@ void AbstractListTool::chooserCancelled()
     d->setButtonsEnabled(true);
 }
 
-void AbstractListTool::removeSelected()
+void AbstractItemsListViewTool::removeSelected()
 {
     if (!d->m_list_widget)
         return;
@@ -302,7 +302,7 @@ void AbstractListTool::removeSelected()
     }
 }
 
-void AbstractListTool::moveSelectedDown()
+void AbstractItemsListViewTool::moveSelectedDown()
 {
     if (!d->m_list_widget)
         return;
@@ -313,7 +313,7 @@ void AbstractListTool::moveSelectedDown()
     d->setButtonsEnabled(true);
 }
 
-void AbstractListTool::moveSelectedUp()
+void AbstractItemsListViewTool::moveSelectedUp()
 {
     if (!d->m_list_widget)
         return;
@@ -324,7 +324,7 @@ void AbstractListTool::moveSelectedUp()
     d->setButtonsEnabled(true);
 }
 
-void AbstractListTool::closeEditor()
+void AbstractItemsListViewTool::closeEditor()
 {
     QLayoutItem * itemBrowser = static_cast<QGridLayout*>(layout())->itemAtPosition(2,0);
     if (!itemBrowser)
@@ -336,7 +336,7 @@ void AbstractListTool::closeEditor()
     browser->deleteLater();
 }
 
-void AbstractListTool::addItemCommand(QObject * item, int row)
+void AbstractItemsListViewTool::addItemCommand(QObject * item, int row)
 {
     AbstractMovableModel * model = this->model();
     if (!item || !model)

@@ -20,8 +20,8 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-BorderEditTool::BorderEditTool(ToolsDockWidget * parent) :
-    AbstractListTool(i18n("Borders editor"), parent)
+BorderEditTool::BorderEditTool(Scene * scene, ToolsDockWidget * parent) :
+    AbstractItemsListViewTool(i18n("Borders editor"), scene, parent)
 {
 }
 

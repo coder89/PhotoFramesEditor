@@ -20,6 +20,7 @@ namespace KIPIPhotoFramesEditor
 
     // My classes declarations
     class Canvas;
+    class SceneBackground;
     class LayersModel;
     class LayersSelectionModel;
 
@@ -57,6 +58,8 @@ namespace KIPIPhotoFramesEditor
             explicit Scene(const QRectF & dimension, QObject * parent = 0);
             ~Scene();
 
+            SceneBackground * background();
+
             LayersModel * model() const;
             LayersSelectionModel * selectionModel() const;
 
@@ -81,6 +84,7 @@ namespace KIPIPhotoFramesEditor
             {
                 return this;
             }
+            void render(QPainter * painter, const QRectF & target = QRectF(), const QRectF & source = QRectF(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);
 
         Q_SIGNALS:
 
@@ -105,6 +109,7 @@ namespace KIPIPhotoFramesEditor
             virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             virtual void drawBackground(QPainter * painter, const QRectF & rect);
             virtual void drawForeground(QPainter * painter, const QRectF & rect);
+            virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragMoveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
             virtual void keyPressEvent(QKeyEvent * event);
@@ -122,6 +127,7 @@ namespace KIPIPhotoFramesEditor
         private:
 
             bool askAboutRemoving(int count);
+            bool canDecode(const QMimeData * mimeData);
 
             int m_interaction_mode;
             static const int DEFAULT_EDITING_MODE = Moving & Selecting;

@@ -119,14 +119,13 @@ bool BordersGroup::moveDrawer(int sourcePosition, int destinationPosition)
 
 QDomElement BordersGroup::toSvg(QDomDocument & document)
 {
-    QDomElement result = document.createElement("borders");
-    int i = 0;
+    QDomElement result = document.createElement("g");
+    result.setAttribute("class", "borders");
     foreach (BorderDrawerInterface * border, d->borders)
     {
-        QDomElement temp = border->toSvg(document);
+        QDomElement temp = BorderDrawersLoader::drawerToSvg(border, document);
         if (temp.isNull())
             continue;
-        temp.setAttribute("z", i++);
         result.appendChild(temp);
     }
     return result;
@@ -134,38 +133,47 @@ QDomElement BordersGroup::toSvg(QDomDocument & document)
 
 BordersGroup * BordersGroup::fromSvg(QDomElement & element, AbstractPhoto * graphicsItem)
 {
-    if (element.tagName() != "borders")
-        return 0;
-    BordersGroup * result = new BordersGroup(0);
+    // Find borders specific element
+    QDomElement bordersElement;
     QDomNodeList children = element.childNodes();
+    for (int i = children.count()-1; i >= 0; --i)
+    {
+        if (!children.at(i).isElement())
+            continue;
+        bordersElement = children.at(i).toElement();
+        if (bordersElement.tagName() != "g" || bordersElement.attribute("class") != "borders")
+        {
+            bordersElement = QDomElement();
+            continue;
+        }
+        break;
+    }
+
+    // If not found return 0 == Corrupted or invalid file
+    if (bordersElement.isNull())
+        return 0;
+
+    // Load drawers in loop
+    BordersGroup * result = new BordersGroup(0);
+    children = bordersElement.childNodes();
     for (int i = children.count()-1; i >= 0; --i)
     {
         QDomNode child = children.at(i);
         QDomElement childElement;
         if (!child.isElement() || (childElement = child.toElement()).isNull())
             continue;
-        QMap<QString,QString> properties;
-        QDomNamedNodeMap attributes = childElement.attributes();
-        for (int j = attributes.count()-1; j >= 0; --j)
-        {
-            QDomAttr attr = attributes.item(j).toAttr();
-            if (attr.isNull())
-                continue;
-            properties.insert(attr.name(), attr.value());
-        }
-        BorderDrawerInterface * drawer = BorderDrawersLoader::getDrawerByName(childElement.attribute("name"), properties);
+
+        // Create drawer from DOM element
+        BorderDrawerInterface * drawer = BorderDrawersLoader::getDrawerFromSvg(childElement);
         if (!drawer)
             continue;
-        int z = childElement.attribute("z").toInt();
-        if (z < 0)
-            result->d->borders.push_front(drawer);
-        else if (z > result->d->borders.count())
-            result->d->borders.push_back(drawer);
-        else
-            result->d->borders.insert(z, drawer);
+
+        // Insert it into model
+        result->d->borders.push_back(drawer);
     }
 
     result->d->photo = graphicsItem;
+    result->refresh();
     return result;
 }
 

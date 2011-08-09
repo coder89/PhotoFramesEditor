@@ -60,8 +60,8 @@ class KIPIPhotoFramesEditor::EffectsEditorToolPrivate
     friend class EffectsEditorTool;
 };
 
-EffectsEditorTool::EffectsEditorTool(ToolsDockWidget * parent) :
-    AbstractTool(parent),
+EffectsEditorTool::EffectsEditorTool(Scene * scene, ToolsDockWidget * parent) :
+    AbstractItemsTool(scene, parent),
     d(new EffectsEditorToolPrivate)
 {
     QGridLayout * layout = new QGridLayout(this);

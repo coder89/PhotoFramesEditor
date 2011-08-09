@@ -89,6 +89,9 @@ QVariant LayersModel::data(const QModelIndex & index, int role) const
             if (index.column() == LayersModelItem::NameString)
                 return item->data(LayersModelItem::NameString);
             break;
+        case Qt::SizeHintRole:
+            return QSize(-1,50);
+            break;
     }
     return QVariant();
 }

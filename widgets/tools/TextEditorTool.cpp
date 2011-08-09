@@ -6,9 +6,10 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-TextEditorTool::TextEditorTool(ToolsDockWidget * parent) :
-    AbstractTool(parent),
+TextEditorTool::TextEditorTool(Scene * scene, ToolsDockWidget * parent) :
+    AbstractItemsTool(scene, parent),
     m_text_item(0),
+    m_created_text_item(0),
     m_browser(0),
     m_create_new_item(true)
 {
@@ -49,7 +50,9 @@ void TextEditorTool::positionChanged()
 {
     if (!m_create_new_item)
         return;
-    setCurrentItem( new TextItem() );
+    if (!m_created_text_item || !m_created_text_item->text().join("\n").isEmpty())
+        m_created_text_item = new TextItem();
+    setCurrentItem( m_created_text_item );
     currentItem()->setPos( this->mousePosition() );
     emit itemCreated( currentItem() );
 }

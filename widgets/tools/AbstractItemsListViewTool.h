@@ -1,23 +1,23 @@
 #ifndef ABSTRACTLISTTOOL_H
 #define ABSTRACTLISTTOOL_H
 
-#include "AbstractTool.h"
+#include "AbstractItemsTool.h"
 #include "AbstractMovableModel.h"
 
 namespace KIPIPhotoFramesEditor
 {
-    class AbstractListToolPrivate;
+    class AbstractItemsListViewToolPrivate;
 
     class AbstractListToolView;
     class AbstractListToolViewDelegate;
 
-    class AbstractListTool : public AbstractTool
+    class AbstractItemsListViewTool : public AbstractItemsTool
     {
             Q_OBJECT
 
         public:
-            explicit AbstractListTool(const QString & toolsName, ToolsDockWidget * parent = 0);
-            ~AbstractListTool();
+            explicit AbstractItemsListViewTool(const QString & toolsName, Scene * scene, ToolsDockWidget * parent = 0);
+            ~AbstractItemsListViewTool();
             virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();
             virtual void positionAboutToBeChanged(){} // Unused
@@ -41,7 +41,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
             void closeEditor();
-            AbstractListToolPrivate * d;
+            AbstractItemsListViewToolPrivate * d;
     };
 }
 

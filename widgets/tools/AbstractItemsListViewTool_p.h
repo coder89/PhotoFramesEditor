@@ -7,7 +7,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class AbstractListTool;
+    class AbstractItemsListViewTool;
 
     class AbstractListToolViewDelegate : public QWidget
     {
@@ -69,7 +69,7 @@ namespace KIPIPhotoFramesEditor
                 emit selectedIndex(QModelIndex());
             }
 
-        friend class AbstractListTool;
+        friend class AbstractItemsListViewTool;
     };
 }
 

@@ -9,6 +9,9 @@
 #include <kxmlguiwindow.h>
 #include <kurl.h>
 
+// LibKIPI
+#include <libkipi/interface.h>
+
 // Local
 #include "CanvasWidget.h"
 #include "UndoCommandEvent.h"
@@ -24,8 +27,10 @@ namespace KIPIPhotoFramesEditor
         public:
 
             ~PhotoFramesEditor();
-            static PhotoFramesEditor * instancePhotoFramesEditor(QWidget * parent = 0);
+            static PhotoFramesEditor * instance(QWidget * parent = 0);
             void addUndoCommand(QUndoCommand * command);
+            void setInterface(KIPI::Interface * interface);
+            bool hasInterface() const;
 
         public Q_SLOTS:
 
@@ -61,6 +66,7 @@ namespace KIPIPhotoFramesEditor
             void prepareSignalsConnections();
 
             Canvas * m_canvas;
+            KIPI::Interface * m_interface;
 
             class PhotoFramesEditorPriv;
             PhotoFramesEditorPriv * const d;

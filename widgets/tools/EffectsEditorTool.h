@@ -1,7 +1,7 @@
 #ifndef EFFECTSEDITORTOOL_H
 #define EFFECTSEDITORTOOL_H
 
-#include "AbstractTool.h"
+#include "AbstractItemsTool.h"
 
 #include <QListView>
 #include <QModelIndex>
@@ -40,12 +40,12 @@ namespace KIPIPhotoFramesEditor
             }
     };
 
-    class EffectsEditorTool : public AbstractTool
+    class EffectsEditorTool : public AbstractItemsTool
     {
             Q_OBJECT
 
         public:
-            explicit EffectsEditorTool(ToolsDockWidget * parent = 0);
+            explicit EffectsEditorTool(Scene * scene, ToolsDockWidget * parent = 0);
             ~EffectsEditorTool();
             virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();

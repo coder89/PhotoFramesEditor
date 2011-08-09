@@ -69,13 +69,6 @@ void Canvas::setupGUI()
     QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
     img.setText("File","routing.jpg");
     this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
-//    this->addImage(img);                                /// TODO : Remove after finish
     this->addImage(img);                                /// TODO : Remove after finish
     this->addText(QString::fromUtf8("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
     this->addText(QString::fromUtf8("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
@@ -101,7 +94,7 @@ void Canvas::setSelectionMode(SelectionMode mode)
 {
     if (mode & Viewing)
     {
-        this->setInteractive(false);
+        this->setInteractive(true);
         this->setDragMode(QGraphicsView::ScrollHandDrag);
         m_scene->setSelectionMode(Scene::NoSelection);
         goto save;
@@ -171,6 +164,7 @@ void Canvas::addText(const QString & text)
  #############################################################################################################################*/
 void Canvas::addNewItem(AbstractPhoto * item)
 {
+    qDebug() << "text item added";
     if (!item)
         return;
 
@@ -436,6 +430,17 @@ void Canvas::enableViewingMode()
     m_scene->setInteractionMode(Scene::View);
     setSelectionMode(Viewing);
     this->unsetCursor();
+    m_scene->clearSelectingFilters();
+}
+
+/** ###########################################################################################################################
+ * Sets canvas editing mode
+ #############################################################################################################################*/
+void Canvas::enableCanvasEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting);
+    setSelectionMode(MultiSelecting);
+    this->setCursor(QCursor(Qt::ArrowCursor));
     m_scene->clearSelectingFilters();
 }
 

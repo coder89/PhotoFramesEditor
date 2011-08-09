@@ -1,7 +1,7 @@
 #ifndef TEXTEDITORTOOL_H
 #define TEXTEDITORTOOL_H
 
-#include "AbstractTool.h"
+#include "AbstractItemsTool.h"
 
 #include <QtAbstractPropertyBrowser>
 
@@ -9,17 +9,18 @@ namespace KIPIPhotoFramesEditor
 {
     class TextItem;
 
-    class TextEditorTool : public AbstractTool
+    class TextEditorTool : public AbstractItemsTool
     {
             Q_OBJECT
 
             TextItem * m_text_item;
+            TextItem * m_created_text_item;
             QtAbstractPropertyBrowser * m_browser;
             bool m_create_new_item;
 
         public:
 
-            explicit TextEditorTool(ToolsDockWidget * parent = 0);
+            explicit TextEditorTool(Scene * scene, ToolsDockWidget * parent = 0);
 
         signals:
 

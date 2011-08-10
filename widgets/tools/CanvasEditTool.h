@@ -15,6 +15,7 @@ namespace KIPIPhotoFramesEditor
             Q_OBJECT
 
             CanvasEditToolPrivate * d;
+            bool hold_update;
 
         public:
 
@@ -27,21 +28,45 @@ namespace KIPIPhotoFramesEditor
 
             void backgroundTypeChanged(const QString & typeName);
 
+        protected:
+
+            virtual void sceneChange();
+            virtual void sceneChanged();
+
         protected slots:
 
+            // Type of background selection
             void colorBackgroundSelected();
             void gradientBackgroundSelected();
             void imageBackgroundSelected();
             void patternBackgroundSelected();
-            void colorChanged(const QColor & color);
-            void patternColorChanged(const QColor & color);
-            void patternChanged(Qt::BrushStyle);
 
+            // Solid background
+            void colorChanged(const QColor & color);
+
+            // Pattern background
+            void patternFirstColorChanged(const QColor & color);
+            void patternSecondColorChanged(const QColor & color);
+            void patternStyleChanged(Qt::BrushStyle patternStyle);
+
+            // Image background
+            void imageUrlChanged(const KUrl & fileUrl);
+            void imageScallingChanged(const QString & scallingName);
+            void imageTiledChanged(int state);
+            void imageHorizontalAlignmentChanged(int index);
+            void imageVerticalAlignmentChanged(int index);
+            void imageWidthChanged();
+            void imageHeightChanged();
+
+            // Other (currently unused... :P)
             void readMousePosition(const QPointF & scenePos);
 
         private:
 
+            void setImageBackground();
+            void setPatternBackground();
             void setupGUI();
+            void prepareSignalsConnections();
     };
 }
 

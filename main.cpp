@@ -10,6 +10,9 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+#include <QtSvg/QSvgGenerator>
+#include <QPainter>
+
 int main(int argc, char *argv[])
 {
 

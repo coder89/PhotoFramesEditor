@@ -57,9 +57,9 @@ void Canvas::init()
 void Canvas::setupGUI()
 {
     this->setAcceptDrops(true);
-    this->setAutoFillBackground(false);
-    this->viewport()->setAutoFillBackground(false);
-    this->setCacheMode(QGraphicsView::CacheBackground);
+    this->setAutoFillBackground(true);
+    this->viewport()->setAutoFillBackground(true);
+    this->setCacheMode(QGraphicsView::CacheNone);
     /*this->setRenderHint(QPainter::Antialiasing);*/                                /// It causes worst quality!
     /*this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);*/  /// It causes worst quality!
 
@@ -69,7 +69,10 @@ void Canvas::setupGUI()
     p.fillRect(0,0,20,20,Qt::lightGray);
     p.fillRect(0,10,10,10,Qt::darkGray);
     p.fillRect(10,0,10,10,Qt::darkGray);
-    this->setBackgroundBrush(QBrush(pixmap));
+    QPalette viewportPalette = this->viewport()->palette();
+    viewportPalette.setBrush(QPalette::Background, QBrush(pixmap));
+    this->viewport()->setPalette(viewportPalette);
+    this->viewport()->setBackgroundRole(QPalette::Background);
 
     this->setScene(m_scene);
 

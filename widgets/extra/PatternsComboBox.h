@@ -12,6 +12,8 @@ namespace KIPIPhotoFramesEditor
         public:
 
             explicit PatternsComboBox(QWidget * parent = 0);
+            Qt::BrushStyle pattern() const;
+            void setPattern(Qt::BrushStyle pattern);
 
         signals:
 
@@ -23,7 +25,7 @@ namespace KIPIPhotoFramesEditor
 
         protected slots:
 
-            void patternChanged(int index);
+            void emitPatternChanged(int index);
 
     };
 }

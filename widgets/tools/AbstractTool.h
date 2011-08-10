@@ -29,12 +29,22 @@ namespace KIPIPhotoFramesEditor
 
             void setScene(Scene * scene)
             {
+                if (m_scene == scene)
+                    return;
+                this->sceneChange();
                 this->m_scene = scene;
                 if (scene)
                     this->setEnabled(true);
                 else
                     this->setEnabled(false);
+                this->sceneChanged();
             }
+
+            virtual void sceneChange()
+            {}
+
+            virtual void sceneChanged()
+            {}
 
         friend class ToolsDockWidget;
     };

@@ -749,6 +749,7 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 void Scene::drawBackground(QPainter * painter, const QRectF & rect)
 {
     QGraphicsScene::drawBackground(painter, rect.intersect(this->sceneRect()));
+    //painter->fillRect(rect, Qt::red);
 }
 
 //#####################################################################################################
@@ -1026,6 +1027,13 @@ QDomNode Scene::toSvg(QDomDocument & document)
     result.setAttribute("xmlns","http://www.w3.org/2000/svg");
     result.setAttribute("width",QString::number(this->width()));
     result.setAttribute("height",QString::number(this->height()));
+    result.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+    result.setAttribute("version", "1.2");
+    result.setAttribute("baseProfile", "tiny");
+    QDomElement background = document.createElement("g");
+    background.setAttribute("class", "background");
+    background.appendChild(d->m_background->toSvg(document));
+    result.appendChild(background);
     QList<QGraphicsItem*> itemsList = this->items(Qt::AscendingOrder);
     foreach (QGraphicsItem * item, itemsList)
     {
@@ -1063,6 +1071,13 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
             item = PhotoItem::fromSvg(element);
         else if (itemClass == "TextItem")
             item = TextItem::fromSvg(element);
+        else if (itemClass == "background")
+        {
+            if (!result->d->m_background->fromSvg(element))
+                KMessageBox::error(0,
+                                   i18n("Unable to read image background!"));
+            continue;
+        }
         else
             item = 0;
 

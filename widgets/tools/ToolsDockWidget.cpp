@@ -8,6 +8,7 @@
 #include <QButtonGroup>
 #include <QGridLayout>
 #include <QPropertyAnimation>
+#include <QScrollArea>
 
 #include <kicon.h>
 #include <klocalizedstring.h>
@@ -53,9 +54,14 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     layout->addLayout(formLayout);
 
     // stacked widget (with tools widgets)
+    QScrollArea * sa = new QScrollArea(widget);
+    sa->setWidgetResizable(true);
+    QWidget * wsa = new QWidget(sa);
     m_tool_widget_layout = new MyStackedLayout();
-    m_tool_widget_layout->addWidget(new QWidget(widget));
-    layout->addLayout(m_tool_widget_layout,1);
+    m_tool_widget_layout->addWidget(new QWidget(wsa));
+    wsa->setLayout(m_tool_widget_layout);
+    sa->setWidget(wsa);
+    layout->addWidget(sa,1);
 
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,0);
     formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,0);
@@ -93,7 +99,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_canvas_button->setCheckable(true);
     group->addButton(m_canvas_button);
     formLayout->addWidget(m_canvas_button, 0,3, Qt::AlignCenter);
-    m_canvas_widget = new CanvasEditTool(0, this);
+    m_canvas_widget = new CanvasEditTool(0, wsa);
     m_tool_widget_layout->addWidget(m_canvas_widget);
     connect(m_canvas_button,SIGNAL(toggled(bool)),this,SLOT(setCanvasWidgetVisible(bool)));
 
@@ -106,7 +112,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_text_button->setCheckable(true);
     group->addButton(m_text_button);
     formLayout->addWidget(m_text_button, 0,4, Qt::AlignCenter);
-    m_text_widget = new TextEditorTool(0, this);
+    m_text_widget = new TextEditorTool(0, wsa);
     m_tool_widget_layout->addWidget(m_text_widget);
     connect(m_text_button,SIGNAL(toggled(bool)),this,SLOT(setTextWidgetVisible(bool)));
     connect(m_text_widget, SIGNAL(itemCreated(AbstractPhoto*)), this, SLOT(emitNewItemCreated(AbstractPhoto*)));
@@ -122,6 +128,17 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     formLayout->addWidget(m_rotate_button, 0,5, Qt::AlignCenter);
     connect(m_rotate_button,SIGNAL(toggled(bool)),this,SLOT(setRotateWidgetVisible(bool)));
 
+    // Scale tool
+    m_scale_button = new KPushButton(KGuiItem("", ":tool_scale4.png",
+                                              i18n("Scaling tool"),
+                                              i18n("This tool allows you to scale items on your canvas.")), widget);
+    m_scale_button->setIconSize(QSize(24,24));
+    m_scale_button->setFixedSize(32,32);
+    m_scale_button->setCheckable(true);
+    group->addButton(m_scale_button);
+    formLayout->addWidget(m_scale_button, 0,6, Qt::AlignCenter);
+    connect(m_scale_button,SIGNAL(toggled(bool)),this,SLOT(setScaleWidgetVisible(bool)));
+
     // Photo effects tool
     m_effects_button = new KPushButton(KGuiItem("", ":tool_effects.png",
                                               i18n("Image effects editor"),
@@ -131,7 +148,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_effects_button->setCheckable(true);
     group->addButton(m_effects_button);
     formLayout->addWidget(m_effects_button, 1,1, Qt::AlignCenter);
-    m_effects_widget = new EffectsEditorTool(0, this);
+    m_effects_widget = new EffectsEditorTool(0, wsa);
     m_tool_widget_layout->addWidget(m_effects_widget);
     connect(m_effects_button,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
 
@@ -142,14 +159,14 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_border->setCheckable(true);
     group->addButton(m_tool_border);
     formLayout->addWidget(m_tool_border, 1,2, Qt::AlignCenter);
-    m_border_widget = new BorderEditTool(0, this);
+    m_border_widget = new BorderEditTool(0, wsa);
     m_tool_widget_layout->addWidget(m_border_widget);
     connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(setBordersWidgetVisible(bool)));
 
     // Spacer
-    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,6);
-    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,6);
-    formLayout->setColumnStretch(6,1);
+    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),0,7);
+    formLayout->addItem(new QSpacerItem(24,24,QSizePolicy::Expanding),1,7);
+    formLayout->setColumnStretch(7,1);
     formLayout->setSpacing(0);
     formLayout->setMargin(0);
 
@@ -252,6 +269,18 @@ void ToolsDockWidget::setRotateWidgetVisible(bool isVisible)
         m_tool_widget_layout->setCurrentIndex(0);
         emit requireSingleSelection();
         emit rotateToolSelected();
+        this->adjustSize();
+    }
+}
+
+void ToolsDockWidget::setScaleWidgetVisible(bool isVisible)
+{
+    emit scaleToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        m_tool_widget_layout->setCurrentIndex(0);
+        emit requireSingleSelection();
+        emit scaleToolSelected();
         this->adjustSize();
     }
 }

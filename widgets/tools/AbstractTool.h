@@ -11,11 +11,13 @@ namespace KIPIPhotoFramesEditor
     class ToolsDockWidget;
     class AbstractTool : public QWidget
     {
+            Q_OBJECT
+
             Scene * m_scene;
 
         public:
 
-            AbstractTool(Scene * scene, ToolsDockWidget * parent = 0) :
+            AbstractTool(Scene * scene, QWidget * parent = 0) :
                 QWidget(parent),
                 m_scene(scene)
             {}
@@ -34,7 +36,10 @@ namespace KIPIPhotoFramesEditor
                 this->sceneChange();
                 this->m_scene = scene;
                 if (scene)
+                {
+                    connect(m_scene, SIGNAL(destroyed()), this, SLOT(sceneDestroyed()));
                     this->setEnabled(true);
+                }
                 else
                     this->setEnabled(false);
                 this->sceneChanged();
@@ -45,6 +50,14 @@ namespace KIPIPhotoFramesEditor
 
             virtual void sceneChanged()
             {}
+
+        protected slots:
+
+            void sceneDestroyed()
+            {
+                if (sender() == m_scene)
+                    this->setScene(0);
+            }
 
         friend class ToolsDockWidget;
     };

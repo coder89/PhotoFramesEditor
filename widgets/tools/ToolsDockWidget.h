@@ -25,6 +25,7 @@ namespace KIPIPhotoFramesEditor
             KPushButton * m_effects_button;
             KPushButton * m_text_button;
             KPushButton * m_rotate_button;
+            KPushButton * m_scale_button;
             KPushButton * m_tool_border;
             KPushButton * m_tool_colorize_button;
 
@@ -67,6 +68,9 @@ namespace KIPIPhotoFramesEditor
             // Rotate tool selection signals
             void rotateToolSelectionChanged(bool);
             void rotateToolSelected();
+            // Scale tool selection signals
+            void scaleToolSelectionChanged(bool);
+            void scaleToolSelected();
             // Border tool selection signals
             void borderToolSelectionChanged(bool);
             void borderToolSelected();
@@ -90,6 +94,7 @@ namespace KIPIPhotoFramesEditor
             void setEffectsWidgetVisible(bool isVisible);
             void setTextWidgetVisible(bool isVisible);
             void setRotateWidgetVisible(bool isVisible);
+            void setScaleWidgetVisible(bool isVisible);
             void setBordersWidgetVisible(bool isVisible);
 
             void emitPointerToolSelected(bool isSelected)

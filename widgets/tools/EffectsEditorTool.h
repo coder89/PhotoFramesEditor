@@ -45,7 +45,7 @@ namespace KIPIPhotoFramesEditor
             Q_OBJECT
 
         public:
-            explicit EffectsEditorTool(Scene * scene, ToolsDockWidget * parent = 0);
+            explicit EffectsEditorTool(Scene * scene, QWidget * parent = 0);
             ~EffectsEditorTool();
             virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();

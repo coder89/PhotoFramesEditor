@@ -17,5 +17,6 @@
         <file>hand.png</file>
         <file>tool_rotate.png</file>
         <file>tool_canvas.png</file>
+        <file>tool_scale4.png</file>
     </qresource>
 </RCC>

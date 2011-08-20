@@ -16,14 +16,12 @@ SOURCES += main.cpp\
         plugin/photoframeseditor.cpp \
     widgets/abstract_photo_resizer.cpp \
     widgets/photo_context_menu.cpp \
-    events/canvasmouseevent.cpp \
     widgets/dialogs/CanvasCreationDialog.cpp \
     models/LayersModel.cpp \
     models/LayersModelItem.cpp \
     models/LayersSelectionModel.cpp \
     widgets/canvas/Scene.cpp \
     widgets/canvas/Canvas.cpp \
-    widgets/canvas/QGraphicsRotationItem.cpp \
     widgets/layers/LayersTree.cpp \
     widgets/layers/LayersTreeDelegate.cpp \
     widgets/menus/SceneMenu.cpp \
@@ -57,12 +55,13 @@ SOURCES += main.cpp\
     widgets/tools/CanvasEditTool.cpp \
     widgets/tools/AbstractItemsTool.cpp \
     widgets/tools/AbstractItemsListViewTool.cpp \
-    widgets/extra/PatternsComboBox.cpp
+    widgets/extra/PatternsComboBox.cpp \
+    widgets/canvas/RotationWidgetItem.cpp \
+    widgets/canvas/ScalingWidgetItem.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
     widgets/photo_context_menu.h \
-    events/canvasmouseevent.h \
     plugin/photoframeseditor_p.h \
     utils/global.h \
     widgets/dialogs/CanvasCreationDialog.h \
@@ -71,7 +70,6 @@ HEADERS  += plugin/photoframeseditor.h \
     models/LayersSelectionModel.h \
     widgets/canvas/Scene.h \
     widgets/canvas/Canvas.h \
-    widgets/canvas/QGraphicsRotationItem.h \
     widgets/layers/LayersTree.h \
     widgets/layers/LayersTreeDelegate.h \
     widgets/menus/SceneMenu.h \
@@ -113,7 +111,9 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/tools/AbstractItemsListViewTool_p.h \
     widgets/tools/AbstractTool.h \
     widgets/canvas/MousePressListener.h \
-    widgets/extra/PatternsComboBox.h
+    widgets/extra/PatternsComboBox.h \
+    widgets/canvas/RotationWidgetItem.h \
+    widgets/canvas/ScalingWidgetItem.h
 
 LIBS += \
     -L/usr \

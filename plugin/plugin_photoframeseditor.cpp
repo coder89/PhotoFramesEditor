@@ -15,7 +15,7 @@ using namespace KIPIPhotoFramesEditor;
 K_PLUGIN_FACTORY ( PhotoFrmesEditorFactory, registerPlugin<Plugin_PhotoFramesEditor>(); )
 K_EXPORT_PLUGIN  ( PhotoFrmesEditorFactory("kipiplugin_photoframeseditor") )
 
-Plugin_PhotoFramesEditor::Plugin_PhotoFramesEditor(QObject* parent, const QVariantList& args) :
+Plugin_PhotoFramesEditor::Plugin_PhotoFramesEditor(QObject * parent, const QVariantList & args) :
     KIPI::Plugin( PhotoFrmesEditorFactory::componentData(), parent, "Photo Frames Editor" )
 {
     m_interface    = 0;

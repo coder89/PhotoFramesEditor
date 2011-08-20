@@ -7,7 +7,7 @@
 namespace KIPIPhotoFramesEditor
 {
     class ScenePrivate;
-    class QGraphicsRotationItem;
+    class RotationWidgetItem;
     class QGraphicsSelectionItem;
 
     class QGraphicsEditionWidget : public QGraphicsWidget
@@ -16,7 +16,7 @@ namespace KIPIPhotoFramesEditor
 
             QPointF m_rot_point;
 
-            QGraphicsRotationItem * m_rot;
+            RotationWidgetItem * m_rot;
             QGraphicsSelectionItem * m_sel;
 
             bool m_rot_visibility;

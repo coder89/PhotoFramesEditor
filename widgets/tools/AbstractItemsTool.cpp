@@ -4,7 +4,7 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-AbstractItemsTool::AbstractItemsTool(Scene * scene, ToolsDockWidget * parent) :
+AbstractItemsTool::AbstractItemsTool(Scene * scene, QWidget * parent) :
     AbstractTool(scene, parent)
 {
 }

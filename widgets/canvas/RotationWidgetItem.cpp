@@ -1,10 +1,10 @@
-#include "QGraphicsRotationItem.h"
+#include "RotationWidgetItem.h"
 
 using namespace KIPIPhotoFramesEditor;
 
-class KIPIPhotoFramesEditor::QGraphicsRotationItemPrivate
+class KIPIPhotoFramesEditor::RotationWidgetItemPrivate
 {
-    QGraphicsRotationItemPrivate(QGraphicsRotationItem * item) :
+    RotationWidgetItemPrivate(RotationWidgetItem * item) :
         item(item)
     {
         handler_path.addRect(-5,-5,10,10);
@@ -14,7 +14,7 @@ class KIPIPhotoFramesEditor::QGraphicsRotationItemPrivate
         path.moveTo(0,0);
         path.lineTo(100,0);
     }
-    QGraphicsRotationItem * item;
+    RotationWidgetItem * item;
 
     QPointF viewportToItemPosition(const QPoint & pos, QWidget * widget)
     {
@@ -52,12 +52,12 @@ class KIPIPhotoFramesEditor::QGraphicsRotationItemPrivate
     qreal rotation_angle;
     bool elipse_pressed;
 
-    friend class QGraphicsRotationItem;
+    friend class RotationWidgetItem;
 };
 
-QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
+RotationWidgetItem::RotationWidgetItem(QGraphicsItem * parent):
     AbstractItemInterface(parent),
-    d(new QGraphicsRotationItemPrivate(this))
+    d(new RotationWidgetItemPrivate(this))
 {
     this->setAcceptHoverEvents(true);
     this->setFlag(QGraphicsItem::ItemIsMovable);
@@ -65,7 +65,7 @@ QGraphicsRotationItem::QGraphicsRotationItem(QGraphicsItem * parent):
     reset();
 }
 
-void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
+void RotationWidgetItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/)
 {
     painter->save();
     painter->setPen(QPen(Qt::red, 2));
@@ -76,22 +76,22 @@ void QGraphicsRotationItem::paint(QPainter * painter, const QStyleOptionGraphics
     painter->restore();
 }
 
-QPainterPath QGraphicsRotationItem::shape() const
+QPainterPath RotationWidgetItem::shape() const
 {
     return d->path + d->rotated_shape;
 }
 
-QPainterPath QGraphicsRotationItem::opaqueArea() const
+QPainterPath RotationWidgetItem::opaqueArea() const
 {
     return shape();
 }
 
-QRectF QGraphicsRotationItem::boundingRect() const
+QRectF RotationWidgetItem::boundingRect() const
 {
     return shape().boundingRect();
 }
 
-void QGraphicsRotationItem::initRotation(const QPainterPath & path, const QPointF & rotationPoint)
+void RotationWidgetItem::initRotation(const QPainterPath & path, const QPointF & rotationPoint)
 {
     d->rotated_shape = path;
     QRectF boundingRect = path.boundingRect();
@@ -103,7 +103,7 @@ void QGraphicsRotationItem::initRotation(const QPainterPath & path, const QPoint
     d->rotation_point_offset = QPointF();
 }
 
-void QGraphicsRotationItem::reset()
+void RotationWidgetItem::reset()
 {
     d->rotated_shape = QPainterPath();
     d->handler_pos = QPointF(100,0);
@@ -112,34 +112,32 @@ void QGraphicsRotationItem::reset()
     d->rotation_angle = 0;
 }
 
-qreal QGraphicsRotationItem::angle() const
+qreal RotationWidgetItem::angle() const
 {
     return d->rotation_angle;
 }
 
-QPointF QGraphicsRotationItem::rotationPoint() const
+QPointF RotationWidgetItem::rotationPoint() const
 {
     return d->rotation_point + d->rotation_point_offset;
 }
 
-bool QGraphicsRotationItem::isRotated() const
+bool RotationWidgetItem::isRotated() const
 {
     return d->rotation_angle != 0;
 }
 
-void QGraphicsRotationItem::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
+void RotationWidgetItem::hoverEnterEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
-    qDebug() << "rot enter";
     this->setCursor(QCursor(Qt::OpenHandCursor));
 }
 
-void QGraphicsRotationItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
+void RotationWidgetItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*event*/)
 {
-    qDebug() << "rot leave";
     this->unsetCursor();
 }
 
-void QGraphicsRotationItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
+void RotationWidgetItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 {
     QPointF buttonDownPos = d->viewportToItemPosition(event->buttonDownScreenPos(Qt::LeftButton), event->widget());
     QRectF buttonDownPosRect(buttonDownPos-QPointF(1,1), QSizeF(2,2));
@@ -153,7 +151,7 @@ void QGraphicsRotationItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     this->setCursor(QCursor(Qt::ClosedHandCursor));
 }
 
-void QGraphicsRotationItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event*/)
+void RotationWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event*/)
 {
     this->setCursor(QCursor(Qt::OpenHandCursor));
     if (d->rotation_angle)
@@ -161,7 +159,7 @@ void QGraphicsRotationItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event
     d->rotation_angle = 0;
 }
 
-void QGraphicsRotationItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
+void RotationWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     if (d->elipse_pressed)
     {

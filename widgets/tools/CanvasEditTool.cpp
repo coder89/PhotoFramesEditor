@@ -18,11 +18,13 @@
 #include <QImageReader>
 #include <QCheckBox>
 #include <QDebug>
+#include <QLabel>
 
 #include <klocalizedstring.h>
 #include <kcolorbutton.h>
 #include <kurlrequester.h>
 #include <kmessagebox.h>
+#include <kfiledialog.h>
 
 #include "SceneBackground.h"
 #include "MousePressListener.h"
@@ -70,6 +72,21 @@ class KIPIPhotoFramesEditor::CanvasEditToolPrivate
         background_image_Valignment_map.insert(Qt::AlignVCenter, i18n("Center"));
         background_image_Valignment_map.insert(Qt::AlignTop, i18n("Top"));
         background_image_Valignment_map.insert(Qt::AlignBottom, i18n("Bottom"));
+
+        background_image_empty_pixmap = QPixmap(150, 100);
+        background_image_empty_pixmap.fill(Qt::transparent);
+        QPainter p(&background_image_empty_pixmap);
+        p.drawText(background_image_empty_pixmap.rect(), Qt::AlignCenter, i18n("Click here to set an image"));
+    }
+
+    void setImageWidgetsEnabled(bool enabled)
+    {
+        background_image_scalling->setEnabled(enabled);
+        background_image_tiled->setEnabled(enabled);
+        background_image_HAlign->setEnabled(enabled);
+        background_image_VAlign->setEnabled(enabled);
+        background_image_width->setEnabled(enabled);
+        background_image_height->setEnabled(enabled);
     }
 
     CanvasEditTool * m_parent;
@@ -86,13 +103,17 @@ class KIPIPhotoFramesEditor::CanvasEditToolPrivate
     QWidget * background_image_widget;
     QFormLayout * backgroundImageFormLayout;
     KUrlRequester * background_image_file;
+    QPixmap background_image_empty_pixmap;
+    QPushButton * background_image_label;
     KComboBox * background_image_scalling;
     QMap<ScallingType, QString> background_image_scalling_map;
     QCheckBox * background_image_tiled;
+    QGroupBox * background_alignBox;
     KComboBox * background_image_HAlign;
     QMap<Qt::Alignment, QString> background_image_Halignment_map;
     KComboBox * background_image_VAlign;
     QMap<Qt::Alignment, QString> background_image_Valignment_map;
+    QGroupBox * background_sizeBox;
     QSpinBox * background_image_width;
     QSpinBox * background_image_height;
     KColorButton * background_image_color;
@@ -109,7 +130,7 @@ class KIPIPhotoFramesEditor::CanvasEditToolPrivate
     friend class CanvasEditTool;
 };
 
-CanvasEditTool::CanvasEditTool(Scene * scene, ToolsDockWidget * parent) :
+CanvasEditTool::CanvasEditTool(Scene * scene, QWidget * parent) :
     AbstractTool(scene, parent),
     d(new CanvasEditToolPrivate(this)),
     hold_update(false)
@@ -147,26 +168,73 @@ void CanvasEditTool::sceneChange()
     Scene * scene = this->scene();
     if (!scene)
         return;
-    disconnect(scene->background(), 0, this, 0);
 }
 
 void CanvasEditTool::sceneChanged()
 {
-    this->prepareSignalsConnections();
-    QWidget * widget = d->background_widgets->currentWidget();
-    if (widget == d->background_color_widget)
-        colorBackgroundSelected();
-    else if (widget == d->background_image_widget)
-        imageBackgroundSelected();
-    else if (widget == d->background_pattern_widget)
-        patternBackgroundSelected();
+    Scene * scene = this->scene();
+    if (!scene)
+        return;
+
+    SceneBackground * background = scene->background();
+
+    if (background->isPattern())
+    {
+        d->background_widgets->setCurrentWidget(d->background_pattern_widget);
+        this->hold_update = true;
+        d->background_pattern_type->setPattern(background->pattern());
+        d->background_pattern_color1->setColor(background->firstColor());
+        d->background_pattern_color2->setColor(background->secondColor());
+        this->hold_update = false;
+        d->background_type_widget->setCurrentItem(d->background_types.key(CanvasEditToolPrivate::PatternFill));
+    }
+    else if (background->isImage())
+    {
+        d->background_widgets->setCurrentWidget(d->background_image_widget);
+
+        this->hold_update = true;
+        d->m_image = background->image();
+        QPixmap tempPX = QPixmap::fromImage(d->m_image.scaled(QSize(150,150), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        d->background_image_label->setIcon(QIcon(tempPX));
+        d->background_image_label->setIconSize(tempPX.size());
+        d->background_image_HAlign->setCurrentItem( d->background_image_Halignment_map.value(background->imageAlignment() & (Qt::AlignHorizontal_Mask)) );
+        d->background_image_VAlign->setCurrentItem( d->background_image_Valignment_map.value(background->imageAlignment() & (Qt::AlignVertical_Mask)) );
+        d->background_image_width->setValue( background->imageSize().width() );
+        d->background_image_height->setValue( background->imageSize().height() );
+        CanvasEditToolPrivate::ScallingType scallingType;
+        switch (background->imageAspectRatio())
+        {
+            case Qt::KeepAspectRatioByExpanding:
+                scallingType = CanvasEditToolPrivate::Expanded;
+                break;
+            case Qt::KeepAspectRatio:
+                scallingType = CanvasEditToolPrivate::Scaled;
+                break;
+            default:
+                scallingType = CanvasEditToolPrivate::Manual;
+        }
+        d->background_image_scalling->setCurrentItem( d->background_image_scalling_map.value(scallingType) );
+        d->background_image_tiled->setChecked( background->imageRepeated() );
+        this->hold_update = false;
+
+        d->background_type_widget->setCurrentItem(d->background_types.key(CanvasEditToolPrivate::ImageFill));
+        d->setImageWidgetsEnabled(!d->m_image.isNull());
+    }
+    else
+    {
+        d->background_widgets->setCurrentWidget(d->background_color_widget);
+        this->hold_update = true;
+        d->background_color->setColor(background->firstColor());
+        this->hold_update = false;
+        d->background_type_widget->setCurrentItem(d->background_types.key(CanvasEditToolPrivate::ColorFill));
+    }
 }
 
 void CanvasEditTool::colorBackgroundSelected()
 {
     d->background_widgets->setCurrentWidget(d->background_color_widget);
     SceneBackground * background = scene()->background();
-    d->background_color->setColor(background->firstColor());
+    background->setSolidColor(d->background_color->color());
 }
 
 void CanvasEditTool::gradientBackgroundSelected()
@@ -175,54 +243,42 @@ void CanvasEditTool::gradientBackgroundSelected()
 void CanvasEditTool::imageBackgroundSelected()
 {
     d->background_widgets->setCurrentWidget(d->background_image_widget);
-    if (d->background_image_file->url().isEmpty())
+    if (d->m_image.isNull())
         return;
-    SceneBackground * background = scene()->background();
-    this->hold_update = true;
-    d->background_image_color->setColor(background->secondColor());
-    d->background_image_HAlign->setCurrentItem( d->background_image_Halignment_map.value(background->imageAlignment() & (Qt::AlignHorizontal_Mask)) );
-    d->background_image_VAlign->setCurrentItem( d->background_image_Valignment_map.value(background->imageAlignment() & (Qt::AlignVertical_Mask)) );
-    d->background_image_width->setValue( background->imageSize().width() );
-    d->background_image_height->setValue( background->imageSize().height() );
-    CanvasEditToolPrivate::ScallingType scallingType;
-    switch (background->imageAspectRatio())
-    {
-        case Qt::KeepAspectRatioByExpanding:
-            scallingType = CanvasEditToolPrivate::Expanded;
-            break;
-        case Qt::KeepAspectRatio:
-            scallingType = CanvasEditToolPrivate::Scaled;
-        default:
-            scallingType = CanvasEditToolPrivate::Manual;
-    }
-    d->background_image_scalling->setCurrentItem( d->background_image_scalling_map.value(scallingType) );
-    d->background_image_tiled->setChecked( background->imageRepeated() );
-    this->hold_update = false;
+    Scene * scene = this->scene();
+    if (!scene)
+        return;
     this->setImageBackground();
 }
 
 void CanvasEditTool::patternBackgroundSelected()
 {
     d->background_widgets->setCurrentWidget(d->background_pattern_widget);
-    SceneBackground * background = scene()->background();
-    this->hold_update = true;
-    d->background_pattern_color1->setColor(background->firstColor());
-    d->background_pattern_color2->setColor(background->secondColor());
-    d->background_pattern_type->setPattern(background->pattern());
-    this->hold_update = false;
     this->setPatternBackground();
 }
 
-void CanvasEditTool::colorChanged(const QColor & color)
+void CanvasEditTool::solidColorChanged(const QColor & color)
 {
     Scene * scene = this->scene();
     if (!scene)
         return;
-    scene->background()->setFirstColor(color);
+    scene->background()->setSolidColor(color);
+}
+
+void CanvasEditTool::imageBackgroundColorChanged(const QColor & color)
+{
+    if (this->hold_update)
+        return;
+    Scene * scene = this->scene();
+    if (!scene)
+        return;
+    scene->background()->setSecondColor(color);
 }
 
 void CanvasEditTool::patternFirstColorChanged(const QColor & /*color*/)
 {
+    if (this->hold_update)
+        return;
     Scene * scene = this->scene();
     if (!scene)
         return;
@@ -231,6 +287,8 @@ void CanvasEditTool::patternFirstColorChanged(const QColor & /*color*/)
 
 void CanvasEditTool::patternSecondColorChanged(const QColor & /*color*/)
 {
+    if (this->hold_update)
+        return;
     Scene * scene = this->scene();
     if (!scene)
         return;
@@ -239,20 +297,33 @@ void CanvasEditTool::patternSecondColorChanged(const QColor & /*color*/)
 
 void CanvasEditTool::patternStyleChanged(Qt::BrushStyle /*patternStyle*/)
 {
+    if (this->hold_update)
+        return;
     Scene * scene = this->scene();
     if (!scene)
         return;
     this->setPatternBackground();
 }
 
-void CanvasEditTool::imageUrlChanged(const KUrl & fileUrl)
+void CanvasEditTool::imageUrlRequest()
 {
+    static KUrl startUrl("~");
+    KFileDialog fd(startUrl, "", 0);
+    fd.setOperationMode(KFileDialog::Opening);
+    fd.setMode(KFile::File);
+    if (fd.exec() != KFileDialog::Accepted)
+        return;
+
     bool valid = false;
-    QImageReader ir(fileUrl.toLocalFile());
+    QImageReader ir(fd.selectedFile());
     if (ir.canRead())
     {
         if (ir.read(&d->m_image))
         {
+            QPixmap tempPX = QPixmap::fromImage(d->m_image.scaled(QSize(150,150), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            d->background_image_label->setIcon(QIcon(tempPX));
+            d->background_image_label->setIconSize(tempPX.size());
+
             this->hold_update = true;
             QSizeF sceneSize = scene()->sceneRect().size();
             QSize  imageSize = d->m_image.size();
@@ -278,24 +349,18 @@ void CanvasEditTool::imageUrlChanged(const KUrl & fileUrl)
     {
         KMessageBox::error(0,
                            i18n("Invalid or unsupported image file!"));
-        d->background_image_file->clear();
+        d->background_image_label->setIcon(QIcon(d->background_image_empty_pixmap));
+        d->background_image_label->setIconSize(d->background_image_empty_pixmap.size());
     }
-    d->background_image_scalling->setEnabled(valid);
-    d->background_image_tiled->setEnabled(valid);
-    d->background_image_HAlign->setEnabled(valid);
-    d->background_image_VAlign->setEnabled(valid);
-    d->background_image_width->setEnabled(valid);
-    d->background_image_height->setEnabled(valid);
-    return;
+    d->setImageWidgetsEnabled(valid);
+
+    startUrl = fd.baseUrl();
 }
 
 void CanvasEditTool::imageScallingChanged(const QString & scallingName)
 {
     CanvasEditToolPrivate::ScallingType st = d->background_image_scalling_map.key(scallingName);
-    d->background_image_width->setVisible(st == CanvasEditToolPrivate::Manual);
-    d->backgroundImageFormLayout->labelForField(d->background_image_width)->setVisible(st == CanvasEditToolPrivate::Manual);
-    d->background_image_height->setVisible(st == CanvasEditToolPrivate::Manual);
-    d->backgroundImageFormLayout->labelForField(d->background_image_height)->setVisible(st == CanvasEditToolPrivate::Manual);
+    d->background_sizeBox->setVisible(st == CanvasEditToolPrivate::Manual);
     this->setImageBackground();
 }
 
@@ -343,7 +408,7 @@ void CanvasEditTool::setImageBackground()
     {
         QSize size(d->background_image_width->value(),
                    d->background_image_height->value());
-        background->setImage(d->m_image, alignment, size, tiled);
+        background->setImage(d->m_image, d->background_image_color->color(), alignment, size, tiled);
     }
     else
     {
@@ -356,14 +421,12 @@ void CanvasEditTool::setImageBackground()
             default:
                 aspectRatio = Qt::KeepAspectRatio;
         }
-        background->setImage(d->m_image, alignment, aspectRatio, tiled);
+        background->setImage(d->m_image, d->background_image_color->color(), alignment, aspectRatio, tiled);
     }
 }
 
 void CanvasEditTool::setPatternBackground()
 {
-    if (this->hold_update)
-        return;
     Scene * scene = this->scene();
     scene->background()->setPattern(d->background_pattern_color1->color(),
                                     d->background_pattern_color2->color(),
@@ -394,7 +457,9 @@ void CanvasEditTool::setupGUI()
         QFormLayout * colorFormLayout = new QFormLayout();
         d->background_color_widget->setLayout(colorFormLayout);
         d->background_widgets->addWidget(d->background_color_widget);
-        d->background_color = new KColorButton(Qt::white, d->background_color_widget);
+        d->background_color = new KColorButton(Qt::transparent, d->background_color_widget);
+        d->background_color->setAlphaChannelEnabled(true);
+        d->background_color->setColor(Qt::transparent);
         colorFormLayout->addRow(i18n("Color"), d->background_color);
 
         // Image type widget
@@ -403,9 +468,12 @@ void CanvasEditTool::setupGUI()
         d->background_image_widget->setLayout(d->backgroundImageFormLayout);
         d->background_widgets->addWidget(d->background_image_widget);
 
-        d->background_image_file = new KUrlRequester(d->background_image_widget);
-        d->background_image_file->setMode(KFile::File);
-        d->backgroundImageFormLayout->addRow(i18n("Image"), d->background_image_file);
+        d->background_image_label = new QPushButton(d->background_image_widget);
+        d->backgroundImageFormLayout->addRow(d->background_image_label);
+        d->background_image_label->setFlat(true);
+        d->background_image_label->setFocusPolicy(Qt::NoFocus);
+        d->background_image_label->setIcon(QIcon(d->background_image_empty_pixmap));
+        d->background_image_label->setIconSize(d->background_image_empty_pixmap.size());
 
         d->background_image_scalling = new KComboBox(d->background_image_widget);
         d->background_image_scalling->addItems(d->background_image_scalling_map.values());
@@ -417,29 +485,36 @@ void CanvasEditTool::setupGUI()
         d->background_image_tiled->setEnabled(false);
         d->backgroundImageFormLayout->addRow(i18n("Tiled"), d->background_image_tiled);
 
-        d->background_image_HAlign = new KComboBox(d->background_image_widget);
-        d->background_image_HAlign->addItems(d->background_image_Halignment_map.values());
-        d->background_image_HAlign->setEnabled(false);
-        d->backgroundImageFormLayout->addRow(i18n("Horizontal alignment"), d->background_image_HAlign);
+        d->background_alignBox = new QGroupBox(i18n("Alignment"));
+        QFormLayout * alignForm = new QFormLayout();
+        d->background_alignBox->setLayout(alignForm);
+            d->background_image_HAlign = new KComboBox(d->background_image_widget);
+            d->background_image_HAlign->addItems(d->background_image_Halignment_map.values());
+            d->background_image_HAlign->setEnabled(false);
+            alignForm->addRow(i18n("Horizontal"), d->background_image_HAlign);
+            d->background_image_VAlign = new KComboBox(d->background_image_widget);
+            d->background_image_VAlign->addItems(d->background_image_Valignment_map.values());
+            d->background_image_VAlign->setEnabled(false);
+            alignForm->addRow(i18n("Vertical"), d->background_image_VAlign);
+        d->backgroundImageFormLayout->addRow(d->background_alignBox);
 
-        d->background_image_VAlign = new KComboBox(d->background_image_widget);
-        d->background_image_VAlign->addItems(d->background_image_Valignment_map.values());
-        d->background_image_VAlign->setEnabled(false);
-        d->backgroundImageFormLayout->addRow(i18n("Vertical alignment"), d->background_image_VAlign);
+        d->background_sizeBox = new QGroupBox(i18n("Size"));
+        QFormLayout * sizeForm = new QFormLayout();
+        d->background_sizeBox->setLayout(sizeForm);
+            d->background_image_width = new QSpinBox(d->background_image_widget);
+            d->background_image_width->setEnabled(false);
+            d->background_image_width->setMinimum(1);
+            d->background_image_width->setMaximum(99999);
+            sizeForm->addRow(i18n("Width"), d->background_image_width);
+            d->background_image_height = new QSpinBox(d->background_image_widget);
+            d->background_image_height->setEnabled(false);
+            d->background_image_height->setMinimum(1);
+            d->background_image_height->setMaximum(99999);
+            sizeForm->addRow(i18n("Height"), d->background_image_height);
+        d->backgroundImageFormLayout->addRow(d->background_sizeBox);
 
-        d->background_image_width = new QSpinBox(d->background_image_widget);
-        d->background_image_width->setEnabled(false);
-        d->background_image_width->setMinimum(1);
-        d->background_image_width->setMaximum(99999);
-        d->backgroundImageFormLayout->addRow(i18n("Width"), d->background_image_width);
-
-        d->background_image_height = new QSpinBox(d->background_image_widget);
-        d->background_image_height->setEnabled(false);
-        d->background_image_height->setMinimum(1);
-        d->background_image_height->setMaximum(99999);
-        d->backgroundImageFormLayout->addRow(i18n("Height"), d->background_image_height);
-
-        d->background_image_color = new KColorButton(d->background_image_widget);
+        d->background_image_color = new KColorButton(Qt::transparent, d->background_image_widget);
+        d->background_image_color->setAlphaChannelEnabled(true);
         d->backgroundImageFormLayout->addRow(i18n("Color"), d->background_image_color);
 
         // Pattern type widget
@@ -447,30 +522,30 @@ void CanvasEditTool::setupGUI()
         QFormLayout * patternFormLayout = new QFormLayout();
         d->background_pattern_widget->setLayout(patternFormLayout);
         d->background_widgets->addWidget(d->background_pattern_widget);
-        d->background_pattern_color1 = new KColorButton(Qt::white, d->background_pattern_widget);
+        d->background_pattern_color1 = new KColorButton(Qt::transparent, d->background_pattern_widget);
+        d->background_pattern_color1->setAlphaChannelEnabled(true);
         patternFormLayout->addRow(i18n("Color 1"), d->background_pattern_color1);
-        d->background_pattern_color2 = new KColorButton(Qt::white, d->background_pattern_widget);
+        d->background_pattern_color2 = new KColorButton(Qt::transparent, d->background_pattern_widget);
+        d->background_pattern_color2->setAlphaChannelEnabled(true);
         patternFormLayout->addRow(i18n("Color 2"), d->background_pattern_color2);
         d->background_pattern_type = new PatternsComboBox(d->background_pattern_widget);
         patternFormLayout->addRow(i18n("Pattern"), d->background_pattern_type);
     }
 
     connect(d->background_type_widget, SIGNAL(currentIndexChanged(QString)), this, SLOT(backgroundTypeChanged(QString)));
-    connect(d->background_color, SIGNAL(changed(QColor)), this, SLOT(colorChanged(QColor)));
-    connect(d->background_image_file, SIGNAL(urlSelected(KUrl)), this, SLOT(imageUrlChanged(KUrl)));
+    connect(d->background_color, SIGNAL(changed(QColor)), this, SLOT(solidColorChanged(QColor)));
+    connect(d->background_image_label, SIGNAL(clicked()), this, SLOT(imageUrlRequest()));
     connect(d->background_image_scalling, SIGNAL(currentIndexChanged(QString)), this, SLOT(imageScallingChanged(QString)));
     connect(d->background_image_tiled, SIGNAL(stateChanged(int)), this, SLOT(imageTiledChanged(int)));
     connect(d->background_image_HAlign, SIGNAL(currentIndexChanged(int)), this, SLOT(imageHorizontalAlignmentChanged(int)));
     connect(d->background_image_VAlign, SIGNAL(currentIndexChanged(int)), this, SLOT(imageVerticalAlignmentChanged(int)));
     connect(d->background_image_width, SIGNAL(editingFinished()), this, SLOT(imageWidthChanged()));
     connect(d->background_image_height, SIGNAL(editingFinished()), this, SLOT(imageHeightChanged()));
-    connect(d->background_image_color, SIGNAL(changed(QColor)), this, SLOT(colorChanged(QColor)));
+    connect(d->background_image_color, SIGNAL(changed(QColor)), this, SLOT(imageBackgroundColorChanged(QColor)));
     connect(d->background_pattern_color1, SIGNAL(changed(QColor)), this, SLOT(patternFirstColorChanged(QColor)));
     connect(d->background_pattern_color2, SIGNAL(changed(QColor)), this, SLOT(patternSecondColorChanged(QColor)));
     connect(d->background_pattern_type, SIGNAL(currentPatternChanged(Qt::BrushStyle)), this, SLOT(patternStyleChanged(Qt::BrushStyle)));
     connect(&(d->mouse_listener), SIGNAL(mousePressed(QPointF)), this, SLOT(readMousePosition(QPointF)));
-
-    this->prepareSignalsConnections();
 
     if (scene())
     {
@@ -485,17 +560,6 @@ void CanvasEditTool::setupGUI()
         else if (background->isPattern())
             this->patternBackgroundSelected();
     }
-}
-
-void CanvasEditTool::prepareSignalsConnections()
-{
-    Scene * scene = this->scene();
-    if (!scene)
-        return;
-    SceneBackground * background = scene->background();
-    connect(background, SIGNAL(firstColorChanged(QColor)), this, SLOT(colorChanged(QColor)));
-    connect(background, SIGNAL(firstColorChanged(QColor)), this, SLOT(patternFirstColorChanged(QColor)));
-    connect(background, SIGNAL(patternChanged(Qt::BrushStyle)), this, SLOT(patternStyleChanged(Qt::BrushStyle)));
 }
 
 void CanvasEditTool::readMousePosition(const QPointF & scenePos)

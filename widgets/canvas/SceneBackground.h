@@ -10,6 +10,7 @@ namespace KIPIPhotoFramesEditor
     class SceneBackground : public QObject, public QGraphicsItem
     {
             Q_OBJECT
+            Q_INTERFACES(QGraphicsItem)
 
             QRectF m_rect;
             QBrush m_first_brush;
@@ -29,17 +30,21 @@ namespace KIPIPhotoFramesEditor
             class BackgroundSecondColorChangedCommand;
             class BackgroundPatternChangedCommand;
             class BackgroundImageChangedCommand;
+            class BackgroundImageAlignmentCommand;
+            class BackgroundImageTileCommand;
+            class BackgroundImageSizeCommand;
+            class BackgroundImageAspectRatioCommand;
 
         public:
 
             SceneBackground(QGraphicsScene * scene = 0);
             virtual QRectF boundingRect() const;
 
-            void setFirstColor(const QColor & firstColor);
-            void setSecondColor(const QColor & firstColor);
+            void setSecondColor(const QColor & color);
+            void setSolidColor(const QColor & color);
             void setPattern(const QColor & firstColor, const QColor & secondColor, Qt::BrushStyle patternStyle);
-            void setImage(const QImage & image, Qt::Alignment align, Qt::AspectRatioMode aspectRatio, bool repeat);
-            void setImage(const QImage & image, Qt::Alignment align, const QSize & fixedSize, bool repeat);
+            void setImage(const QImage & image, const QColor & backgroundColor, Qt::Alignment align, Qt::AspectRatioMode aspectRatio, bool repeat);
+            void setImage(const QImage & image, const QColor & backgroundColor, Qt::Alignment align, const QSize & fixedSize, bool repeat);
 
             bool isColor() const;
             bool isGradient() const;
@@ -92,6 +97,10 @@ namespace KIPIPhotoFramesEditor
         friend class BackgroundSecondColorChangedCommand;
         friend class BackgroundPatternChangedCommand;
         friend class BackgroundImageChangedCommand;
+        friend class BackgroundImageAlignmentCommand;
+        friend class BackgroundImageTileCommand;
+        friend class BackgroundImageSizeCommand;
+        friend class BackgroundImageAspectRatioCommand;
     };
 }
 

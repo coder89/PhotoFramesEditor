@@ -16,7 +16,7 @@ namespace KIPIPhotoFramesEditor
             Q_OBJECT
 
         public:
-            explicit AbstractItemsListViewTool(const QString & toolsName, Scene * scene, ToolsDockWidget * parent = 0);
+            explicit AbstractItemsListViewTool(const QString & toolsName, Scene * scene, QWidget * parent = 0);
             ~AbstractItemsListViewTool();
             virtual void currentItemAboutToBeChanged();
             virtual void currentItemChanged();

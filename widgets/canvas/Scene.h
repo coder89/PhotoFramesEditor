@@ -11,8 +11,6 @@
 // Local
 #include "PhotoItem.h"
 #include "TextItem.h"
-#include "polygon_widget.h"
-#include "canvasmouseevent.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -45,6 +43,7 @@ namespace KIPIPhotoFramesEditor
                 MouseTracking = 4,
                 OneclickFocusItems = 8,
                 Rotating = 16,
+                Scaling = 32,
             };
 
             enum SelectionMode
@@ -75,6 +74,7 @@ namespace KIPIPhotoFramesEditor
             void addSelectingFilter(const QMetaObject & classMeta);
             void clearSelectingFilters();
             void setRotationWidgetVisible(bool isVisible);
+            void setScalingWidgetVisible(bool isVisible);
             qreal gridHorizontalDistance() const;
             qreal gridVerticalDistance() const;
             const QGraphicsScene * toGraphicsScene() const

@@ -60,7 +60,7 @@ class KIPIPhotoFramesEditor::EffectsEditorToolPrivate
     friend class EffectsEditorTool;
 };
 
-EffectsEditorTool::EffectsEditorTool(Scene * scene, ToolsDockWidget * parent) :
+EffectsEditorTool::EffectsEditorTool(Scene * scene, QWidget * parent) :
     AbstractItemsTool(scene, parent),
     d(new EffectsEditorToolPrivate)
 {

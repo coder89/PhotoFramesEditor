@@ -1,7 +1,8 @@
 #include "Scene.h"
 #include "QGraphicsEditionWidget.h"
 #include "global.h"
-#include "QGraphicsRotationItem.h"
+#include "RotationWidgetItem.h"
+#include "ScalingWidgetItem.h"
 #include "SceneBackground.h"
 #include "MousePressListener.h"
 
@@ -49,6 +50,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
         m_selected_items_all_movable(true),
         m_selection_visible(true),
         m_rot_item(0),
+        m_scale_item(0),
         m_readSceneMousePress_listener(0),
         m_readSceneMousePress_enabled(false)
     {
@@ -190,8 +192,10 @@ class KIPIPhotoFramesEditor::ScenePrivate
     QList<const char *> m_selection_filters;
 
     // Used for rotating items
-    QGraphicsRotationItem * m_rot_item;
+    RotationWidgetItem * m_rot_item;
 
+    // Used for scaling item
+    ScalingWidgetItem * m_scale_item;
 
     // For reading mouse press
     MousePressListener * m_readSceneMousePress_listener;
@@ -948,6 +952,7 @@ void Scene::setInteractionMode(int mode)
 {
     m_interaction_mode = mode;
     setRotationWidgetVisible(mode & Rotating);
+    setScalingWidgetVisible(mode & Scaling);
 }
 
 //#####################################################################################################
@@ -995,16 +1000,43 @@ void Scene::setRotationWidgetVisible(bool isVisible)
     {
         if (!d->m_rot_item)
         {
-            d->m_rot_item = new QGraphicsRotationItem();
+            d->m_rot_item = new RotationWidgetItem();
             connect(d->m_rot_item, SIGNAL(rotationChanged(QPointF,qreal)), this, SLOT(rotateSelectedItems(QPointF,qreal)));
             connect(d->m_rot_item, SIGNAL(rotationFinished(QPointF,qreal)), this, SLOT(rotationCommand(QPointF,qreal)));
         }
         d->m_rot_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_rot_item);
-        if (d->m_selected_items.count())
+        if (d->m_selected_items.count() == 1)
             d->m_rot_item->setPos(d->m_selected_items_path.boundingRect().center());
         else
             d->m_rot_item->hide();
+    }
+}
+
+//#####################################################################################################
+void Scene::setScalingWidgetVisible(bool isVisible)
+{
+    if (d->m_scale_item)
+    {
+        this->QGraphicsScene::removeItem(d->m_scale_item);
+        d->m_scale_item->deleteLater();
+        d->m_scale_item = 0;
+    }
+
+    if (isVisible)
+    {
+        if (!d->m_scale_item)
+        {
+            d->m_scale_item = new ScalingWidgetItem();
+            connect(d->m_scale_item, SIGNAL(rotationChanged(QPointF,qreal)), this, SLOT(rotateSelectedItems(QPointF,qreal)));
+            connect(d->m_scale_item, SIGNAL(rotationFinished(QPointF,qreal)), this, SLOT(rotationCommand(QPointF,qreal)));
+        }
+        d->m_scale_item->setZValue(1.0/0.0);
+        this->QGraphicsScene::addItem(d->m_scale_item);
+        if (d->m_selected_items.count() == 1)
+            ;//d->m_scale_item->setPos(d->m_selected_items_path.boundingRect().center());
+        else
+            d->m_scale_item->hide();
     }
 }
 

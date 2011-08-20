@@ -13,16 +13,16 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class QGraphicsRotationItemPrivate;
-    class QGraphicsRotationItem : public AbstractItemInterface
+    class RotationWidgetItemPrivate;
+    class RotationWidgetItem : public AbstractItemInterface
     {
             Q_OBJECT
 
-            QGraphicsRotationItemPrivate * d;
+            RotationWidgetItemPrivate * d;
 
         public:
 
-            QGraphicsRotationItem(QGraphicsItem * parent = 0);
+            RotationWidgetItem(QGraphicsItem * parent = 0);
             virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
             virtual QPainterPath shape() const;
             virtual QPainterPath opaqueArea() const;

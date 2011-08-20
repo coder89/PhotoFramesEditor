@@ -20,7 +20,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit TextEditorTool(Scene * scene, ToolsDockWidget * parent = 0);
+            explicit TextEditorTool(Scene * scene, QWidget * parent = 0);
 
         signals:
 

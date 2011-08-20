@@ -275,7 +275,9 @@ void PhotoItem::refreshItem()
 }
 
 QtAbstractPropertyBrowser * PhotoItem::propertyBrowser()
-{}
+{
+    return 0; /// TODO
+}
 
 void PhotoItem::setupItem(const QPixmap & photo)
 {

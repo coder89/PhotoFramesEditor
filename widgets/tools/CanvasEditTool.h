@@ -19,7 +19,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit CanvasEditTool(Scene * scene, ToolsDockWidget * parent = 0);
+            explicit CanvasEditTool(Scene * scene, QWidget * parent = 0);
             virtual ~CanvasEditTool();
 
         signals:
@@ -42,7 +42,8 @@ namespace KIPIPhotoFramesEditor
             void patternBackgroundSelected();
 
             // Solid background
-            void colorChanged(const QColor & color);
+            void solidColorChanged(const QColor & color);
+            void imageBackgroundColorChanged(const QColor & color);
 
             // Pattern background
             void patternFirstColorChanged(const QColor & color);
@@ -50,7 +51,7 @@ namespace KIPIPhotoFramesEditor
             void patternStyleChanged(Qt::BrushStyle patternStyle);
 
             // Image background
-            void imageUrlChanged(const KUrl & fileUrl);
+            void imageUrlRequest();
             void imageScallingChanged(const QString & scallingName);
             void imageTiledChanged(int state);
             void imageHorizontalAlignmentChanged(int index);
@@ -66,7 +67,6 @@ namespace KIPIPhotoFramesEditor
             void setImageBackground();
             void setPatternBackground();
             void setupGUI();
-            void prepareSignalsConnections();
     };
 }
 

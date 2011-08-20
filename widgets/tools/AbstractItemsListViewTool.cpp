@@ -136,7 +136,7 @@ class KIPIPhotoFramesEditor::AbstractItemsListViewToolPrivate
     friend class AbstractItemsListViewTool;
 };
 
-AbstractItemsListViewTool::AbstractItemsListViewTool(const QString & toolName, Scene * scene, ToolsDockWidget * parent) :
+AbstractItemsListViewTool::AbstractItemsListViewTool(const QString & toolName, Scene * scene, QWidget * parent) :
     AbstractItemsTool(scene, parent),
     d(new AbstractItemsListViewToolPrivate)
 {

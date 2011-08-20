@@ -59,6 +59,7 @@ void Canvas::setupGUI()
     this->setAcceptDrops(true);
     this->setAutoFillBackground(true);
     this->viewport()->setAutoFillBackground(true);
+    this->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     this->setCacheMode(QGraphicsView::CacheNone);
     /*this->setRenderHint(QPainter::Antialiasing);*/                                /// It causes worst quality!
     /*this->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);*/  /// It causes worst quality!
@@ -484,6 +485,17 @@ void Canvas::enableTextEditingMode()
 void Canvas::enableRotateEditingMode()
 {
     m_scene->setInteractionMode(Scene::Selecting | Scene::Rotating);
+    setSelectionMode(SingleSelcting);
+    this->setCursor(Qt::ArrowCursor);
+    m_scene->clearSelectingFilters();
+}
+
+/** ###########################################################################################################################
+ * Sets scaling mode
+ #############################################################################################################################*/
+void Canvas::enableScaleEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting | Scene::Scaling);
     setSelectionMode(SingleSelcting);
     this->setCursor(Qt::ArrowCursor);
     m_scene->clearSelectingFilters();

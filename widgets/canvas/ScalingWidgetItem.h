@@ -33,6 +33,7 @@ namespace KIPIPhotoFramesEditor
         signals:
 
             void scalingChanged(qreal xFactor, qreal yFactor);
+            void scalingChanged(const QTransform & scale);
             void scalingFinished(qreal xFactor, qreal yFactor);
 
         friend class ScalingWidgetItemPrivate;

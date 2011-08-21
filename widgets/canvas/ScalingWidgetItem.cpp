@@ -162,9 +162,11 @@ void ScalingWidgetItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
     d->pressedHandler = -1;
     if (event->button() == Qt::LeftButton)
     {
+        QGraphicsView * view = qobject_cast<QGraphicsView*>(event->widget()->parentWidget());
+        QPointF handledPoint = view->transform().map(event->buttonDownPos(Qt::LeftButton));
         for (int i = ScalingWidgetItemPrivate::TopLeft; i <= ScalingWidgetItemPrivate::BottomRight; ++i)
         {
-            if (d->m_handlers[i].contains(event->buttonDownPos(Qt::LeftButton)))
+            if (d->m_handlers[i].contains(handledPoint))
             {
                 d->pressedHandler = i;
                 break;
@@ -175,34 +177,57 @@ void ScalingWidgetItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
 
 void ScalingWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
-    QPointF dif = event->scenePos() - event->lastScenePos();
+    QGraphicsView * view = qobject_cast<QGraphicsView*>(event->widget()->parentWidget());
+    QPointF dif = view->transform().map(event->scenePos()) - view->transform().map(event->lastScenePos());
     qreal xFactor = 1;
     qreal yFactor = 1;
+    qreal x = 0;
+    qreal y = 0;
     switch (d->pressedHandler)
     {
         case ScalingWidgetItemPrivate::TopLeft:
+            yFactor = (d->m_rect.height() - dif.y()) / d->m_rect.height();
+            xFactor = (d->m_rect.width() - dif.x()) / d->m_rect.width();
+            y = dif.y();
+            x = dif.x();
             break;
         case ScalingWidgetItemPrivate::Top:
+            yFactor = (d->m_rect.height() - dif.y()) / d->m_rect.height();
+            y = dif.y();
             break;
         case ScalingWidgetItemPrivate::TopRight:
+            yFactor = (d->m_rect.height() - dif.y()) / d->m_rect.height();
+            xFactor = (d->m_rect.width() + dif.x()) / d->m_rect.width();
+            y = dif.y();
             break;
         case ScalingWidgetItemPrivate::Left:
+            xFactor = (d->m_rect.width() - dif.x()) / d->m_rect.width();
+            x = dif.x();
             break;
         case ScalingWidgetItemPrivate::Right:
+            xFactor = (d->m_rect.width() + dif.x()) / d->m_rect.width();
             break;
         case ScalingWidgetItemPrivate::BottomLeft:
+            yFactor = (d->m_rect.height() + dif.y()) / d->m_rect.height();
+            xFactor = (d->m_rect.width() - dif.x()) / d->m_rect.width();
+            x = dif.x();
             break;
         case ScalingWidgetItemPrivate::Bottom:
-            yFactor = (d->m_rect.bottom() + dif.y()) / d->m_rect.bottom();
+            yFactor = (d->m_rect.height() + dif.y()) / d->m_rect.height();
             break;
         case ScalingWidgetItemPrivate::BottomRight:
+            yFactor = (d->m_rect.height() + dif.y()) / d->m_rect.height();
+            xFactor = (d->m_rect.width() + dif.x()) / d->m_rect.width();
             break;
     }
-    QTransform tr;
-    tr.scale(xFactor, yFactor);
+    QTransform tr(xFactor,                       0,                             0,
+                  0,                             yFactor,                       0,
+                  x + d->m_rect.x()*(1-xFactor), y + d->m_rect.y()*(1-yFactor), 1);
     d->m_rect = tr.mapRect(d->m_rect);
+    d->m_scaled_shape = tr.map(d->m_scaled_shape);
     d->calculateDrawings();
     this->update();
+    emit scalingChanged(tr);
 }
 
 void ScalingWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
@@ -215,6 +240,9 @@ void ScalingWidgetItem::setScaleShape(const QPainterPath & shape)
 {
     d->m_scaled_shape = shape;
     d->m_rect = d->m_scaled_shape.boundingRect();
+    this->setPos( d->m_rect.topLeft() );
+    d->m_scaled_shape.translate( -d->m_rect.topLeft() );
+    d->m_rect.translate( -d->m_rect.topLeft() );
     d->recalculate = true;
     d->calculateDrawings();
     if (!d->m_rect.isValid())

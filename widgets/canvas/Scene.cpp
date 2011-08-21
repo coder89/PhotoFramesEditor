@@ -761,13 +761,6 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
 void Scene::drawBackground(QPainter * painter, const QRectF & rect)
 {
     QGraphicsScene::drawBackground(painter, rect.intersect(this->sceneRect()));
-    //painter->fillRect(rect, Qt::red);
-}
-
-//#####################################################################################################
-void Scene::drawForeground(QPainter * painter, const QRectF & rect)
-{
-    QGraphicsScene::drawForeground(painter, rect.intersect(this->sceneRect()));
 
     // Fill scene outside sceneRect with semi-transparent window color
     QPainterPath p;
@@ -775,6 +768,12 @@ void Scene::drawForeground(QPainter * painter, const QRectF & rect)
     QPainterPath s;
     s.addRect(this->sceneRect());
     painter->fillPath(p.subtracted(s), OUTSIDE_SCENE_COLOR);
+}
+
+//#####################################################################################################
+void Scene::drawForeground(QPainter * painter, const QRectF & rect)
+{
+    QGraphicsScene::drawForeground(painter, rect.intersect(this->sceneRect()));
 
     // Draw selected items shape
     if (isSelectionVisible())
@@ -1036,7 +1035,7 @@ void Scene::setScalingWidgetVisible(bool isVisible)
         if (!d->m_scale_item)
         {
             d->m_scale_item = new ScalingWidgetItem();
-            connect(d->m_scale_item, SIGNAL(scalingChanged(qreal,qreal)), this, SLOT(scaleSelectedItems(qreal,qreal)));
+            connect(d->m_scale_item, SIGNAL(scalingChanged(QTransform)), this, SLOT(scaleSelectedItems(QTransform)));
             connect(d->m_scale_item, SIGNAL(scalingFinished(qreal,qreal)), this, SLOT(scalingCommand(qreal,qreal)));
         }
         d->m_scale_item->setZValue(1.0/0.0);
@@ -1283,10 +1282,10 @@ void Scene::rotationCommand(const QPointF & rotationPoint, qreal angle)
 }
 
 //#####################################################################################################
-void Scene::scaleSelectedItems(qreal xFactor, qreal yFactor)
+void Scene::scaleSelectedItems(const QTransform & scale)
 {
     foreach (AbstractItemInterface * item, d->m_selected_items.keys())
-        item->setTransform(item->transform().scale(xFactor, yFactor));
+        item->setTransform(item->transform() * scale);
 }
 
 //#####################################################################################################

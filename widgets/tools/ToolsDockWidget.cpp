@@ -55,10 +55,14 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
 
     // stacked widget (with tools widgets)
     QScrollArea * sa = new QScrollArea(widget);
+    sa->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+    sa->setFrameShape(QFrame::NoFrame);
     sa->setWidgetResizable(true);
     QWidget * wsa = new QWidget(sa);
     m_tool_widget_layout = new MyStackedLayout();
-    m_tool_widget_layout->addWidget(new QWidget(wsa));
+    QWidget * emptyWidget = new QWidget(wsa);
+    emptyWidget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+    m_tool_widget_layout->addWidget(emptyWidget);
     wsa->setLayout(m_tool_widget_layout);
     sa->setWidget(wsa);
     layout->addWidget(sa,1);

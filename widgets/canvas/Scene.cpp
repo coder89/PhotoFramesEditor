@@ -139,7 +139,8 @@ class KIPIPhotoFramesEditor::ScenePrivate
     bool selectPressed()
     {
         if (m_pressed_item &&
-            m_pressed_item != m_rot_item)
+            m_pressed_item != m_rot_item &&
+            m_pressed_item != m_scale_item)
         {
             // Select if not selested
             if (!m_pressed_item->isSelected())
@@ -613,6 +614,13 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
                 return;
             }
 
+            // If it is scaling widget
+            if ((m_interaction_mode & Scaling) && d->m_pressed_item == d->m_scale_item)
+            {
+                d->sendPressEventToItem(d->m_pressed_item, event);
+                return;
+            }
+
             // Test if this is a photo/text item
             d->m_pressed_item = dynamic_cast<AbstractPhoto*>(d->m_pressed_item);
 
@@ -1028,13 +1036,13 @@ void Scene::setScalingWidgetVisible(bool isVisible)
         if (!d->m_scale_item)
         {
             d->m_scale_item = new ScalingWidgetItem();
-            connect(d->m_scale_item, SIGNAL(rotationChanged(QPointF,qreal)), this, SLOT(rotateSelectedItems(QPointF,qreal)));
-            connect(d->m_scale_item, SIGNAL(rotationFinished(QPointF,qreal)), this, SLOT(rotationCommand(QPointF,qreal)));
+            connect(d->m_scale_item, SIGNAL(scalingChanged(qreal,qreal)), this, SLOT(scaleSelectedItems(qreal,qreal)));
+            connect(d->m_scale_item, SIGNAL(scalingFinished(qreal,qreal)), this, SLOT(scalingCommand(qreal,qreal)));
         }
         d->m_scale_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_scale_item);
         if (d->m_selected_items.count() == 1)
-            ;//d->m_scale_item->setPos(d->m_selected_items_path.boundingRect().center());
+            d->m_scale_item->setScaleShape(d->m_selected_items_path);
         else
             d->m_scale_item->hide();
     }
@@ -1139,13 +1147,17 @@ void Scene::render(QPainter * painter, const QRectF & target, const QRectF & sou
 {
     if (d->m_rot_item)
         d->m_rot_item->hide();
+    if (d->m_scale_item)
+        d->m_scale_item->hide();
     d->m_selection_visible = false;
 
     QGraphicsScene::render(painter, target, source, aspectRatioMode);
 
     d->m_selection_visible = true;
     if (d->m_rot_item)
-        d->m_rot_item->hide();
+        d->m_rot_item->show();
+    if (d->m_scale_item)
+        d->m_scale_item->show();
 }
 
 //#####################################################################################################
@@ -1220,6 +1232,18 @@ void Scene::updateSelection()
         else
             d->m_rot_item->hide();
     }
+
+    if (m_interaction_mode & Scaling)
+    {
+        if (d->m_selected_items.count() == 1)
+        {
+            AbstractItemInterface * item = d->m_selected_items.keys().first();
+            d->m_scale_item->setScaleShape(d->m_selected_items_path);
+            d->m_scale_item->show();
+        }
+        else
+            d->m_scale_item->hide();
+    }
 }
 
 //#####################################################################################################
@@ -1257,6 +1281,17 @@ void Scene::rotationCommand(const QPointF & rotationPoint, qreal angle)
                                                     angle);
     PFE_PostUndoCommand(command);
 }
+
+//#####################################################################################################
+void Scene::scaleSelectedItems(qreal xFactor, qreal yFactor)
+{
+    foreach (AbstractItemInterface * item, d->m_selected_items.keys())
+        item->setTransform(item->transform().scale(xFactor, yFactor));
+}
+
+//#####################################################################################################
+void Scene::scalingCommand(qreal xFactor, qreal yFactor)
+{}
 
 //#####################################################################################################
 bool Scene::askAboutRemoving(int count)

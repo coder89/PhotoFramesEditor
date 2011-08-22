@@ -134,7 +134,7 @@ QPainterPath ScalingWidgetItem::shape() const
     return d->m_shape;
 }
 
-void ScalingWidgetItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+void ScalingWidgetItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * widget)
 {
     // Get the view
     QGraphicsView * view = qobject_cast<QGraphicsView*>(widget->parentWidget());
@@ -179,30 +179,31 @@ void ScalingWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 {
     QGraphicsView * view = qobject_cast<QGraphicsView*>(event->widget()->parentWidget());
     QPointF dif = view->transform().map(event->scenePos()) - view->transform().map(event->lastScenePos());
+    QPointF sceneDif = event->scenePos() - event->lastScenePos();
     qreal xFactor = 1;
     qreal yFactor = 1;
-    qreal x = 0;
-    qreal y = 0;
+    qreal x = 0;    qreal xr = 0;
+    qreal y = 0;    qreal yr = 0;
     switch (d->pressedHandler)
     {
         case ScalingWidgetItemPrivate::TopLeft:
             yFactor = (d->m_rect.height() - dif.y()) / d->m_rect.height();
             xFactor = (d->m_rect.width() - dif.x()) / d->m_rect.width();
-            y = dif.y();
-            x = dif.x();
+            y = sceneDif.y();   yr = dif.y();
+            x = sceneDif.x();   xr = dif.x();
             break;
         case ScalingWidgetItemPrivate::Top:
             yFactor = (d->m_rect.height() - dif.y()) / d->m_rect.height();
-            y = dif.y();
+            y = sceneDif.y();   yr = dif.y();
             break;
         case ScalingWidgetItemPrivate::TopRight:
             yFactor = (d->m_rect.height() - dif.y()) / d->m_rect.height();
             xFactor = (d->m_rect.width() + dif.x()) / d->m_rect.width();
-            y = dif.y();
+            y = sceneDif.y();   yr = dif.y();
             break;
         case ScalingWidgetItemPrivate::Left:
             xFactor = (d->m_rect.width() - dif.x()) / d->m_rect.width();
-            x = dif.x();
+            x = sceneDif.x();   xr = dif.x();
             break;
         case ScalingWidgetItemPrivate::Right:
             xFactor = (d->m_rect.width() + dif.x()) / d->m_rect.width();
@@ -210,7 +211,7 @@ void ScalingWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
         case ScalingWidgetItemPrivate::BottomLeft:
             yFactor = (d->m_rect.height() + dif.y()) / d->m_rect.height();
             xFactor = (d->m_rect.width() - dif.x()) / d->m_rect.width();
-            x = dif.x();
+            x = sceneDif.x();   xr = dif.x();
             break;
         case ScalingWidgetItemPrivate::Bottom:
             yFactor = (d->m_rect.height() + dif.y()) / d->m_rect.height();
@@ -220,20 +221,31 @@ void ScalingWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
             xFactor = (d->m_rect.width() + dif.x()) / d->m_rect.width();
             break;
     }
+
     QTransform tr(xFactor,                       0,                             0,
                   0,                             yFactor,                       0,
-                  x + d->m_rect.x()*(1-xFactor), y + d->m_rect.y()*(1-yFactor), 1);
+                  xr + d->m_rect.x()*(1-xFactor), yr + d->m_rect.y()*(1-yFactor), 1);
+    QPointF p = view->transform().inverted().map(d->m_rect.bottomRight());
     d->m_rect = tr.mapRect(d->m_rect);
     d->m_scaled_shape = tr.map(d->m_scaled_shape);
+
     d->calculateDrawings();
     this->update();
-    emit scalingChanged(tr);
+
+    QTransform sc;
+    //sc.translate(p.x(), p.y());
+    sc.scale(xFactor, yFactor);
+    //sc.translate(-p.x(), -p.y());
+    qDebug() << tr;
+    qDebug() << sc;
+    qDebug() << "--------------";
+    emit scalingChanged(sc);
 }
 
-void ScalingWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+void ScalingWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event*/)
 {}
 
-void ScalingWidgetItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+void ScalingWidgetItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * /*event*/)
 {}
 
 void ScalingWidgetItem::setScaleShape(const QPainterPath & shape)

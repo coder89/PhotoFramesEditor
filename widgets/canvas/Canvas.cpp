@@ -708,8 +708,6 @@ void Canvas::isSavedChanged(bool isStackClean)
     emit savedStateChanged();
 }
 
-#include <QtSvg/QSvgGenerator>
-
 /** ###########################################################################################################################
  * Draws canvas content onto the QPaintDevice
  #############################################################################################################################*/
@@ -720,12 +718,6 @@ void Canvas::renderCanvas(QPaintDevice * device)
         scene()->setSelectionVisible(false);
         bool isGridVisible = scene()->isGridVisible();
         scene()->setGridVisible(false);
-
-        QSvgGenerator gen;
-        gen.setFileName("/home/coder89/Desktop/dupa.svg");
-        gen.setViewBox(scene()->sceneRect());
-        QPainter p2(&gen);
-        scene()->render(&p2, scene()->sceneRect(), scene()->sceneRect());
 
         scene()->setSelectionVisible(false);
         QPainter p(device);

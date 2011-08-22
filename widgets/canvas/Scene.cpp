@@ -1269,6 +1269,7 @@ void Scene::rotateSelectedItems(const QPointF & rotationPoint, qreal angle)
         updateRect = updateRect.united( item->mapRectToScene( item->boundingRect() ) );
         if (item->scene())
             item->scene()->invalidate(updateRect);
+        qDebug() << item->transform();
     }
 }
 
@@ -1279,13 +1280,22 @@ void Scene::rotationCommand(const QPointF & rotationPoint, qreal angle)
                                                     rotationPoint,
                                                     angle);
     PFE_PostUndoCommand(command);
+    AbstractItemInterface * item = d->m_selected_items.keys().at(0);
+    QTransform t;
+    t.scale(0.5, 1.0);
+    item->setTransform( item->transform() * t);
+
+    qDebug() << item->transform();
+    qDebug() << "------------------";
 }
 
 //#####################################################################################################
 void Scene::scaleSelectedItems(const QTransform & scale)
 {
     foreach (AbstractItemInterface * item, d->m_selected_items.keys())
+    {
         item->setTransform(item->transform() * scale);
+    }
 }
 
 //#####################################################################################################

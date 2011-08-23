@@ -143,6 +143,17 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     formLayout->addWidget(m_scale_button, 0,6, Qt::AlignCenter);
     connect(m_scale_button,SIGNAL(toggled(bool)),this,SLOT(setScaleWidgetVisible(bool)));
 
+    // Crop tool
+    m_crop_button = new KPushButton(KGuiItem("", ":tool_cropt.png",
+                                              i18n("Crop tool"),
+                                              i18n("This tool allows you to crop items.")), widget);
+    m_crop_button->setIconSize(QSize(24,24));
+    m_crop_button->setFixedSize(32,32);
+    m_crop_button->setCheckable(true);
+    group->addButton(m_crop_button);
+    formLayout->addWidget(m_crop_button, 1,1, Qt::AlignCenter);
+    connect(m_crop_button,SIGNAL(toggled(bool)),this,SLOT(setCropWidgetVisible(bool)));
+
     // Photo effects tool
     m_effects_button = new KPushButton(KGuiItem("", ":tool_effects.png",
                                               i18n("Image effects editor"),
@@ -151,7 +162,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_effects_button->setFixedSize(32,32);
     m_effects_button->setCheckable(true);
     group->addButton(m_effects_button);
-    formLayout->addWidget(m_effects_button, 1,1, Qt::AlignCenter);
+    formLayout->addWidget(m_effects_button, 1,2, Qt::AlignCenter);
     m_effects_widget = new EffectsEditorTool(0, wsa);
     m_tool_widget_layout->addWidget(m_effects_widget);
     connect(m_effects_button,SIGNAL(toggled(bool)),this,SLOT(setEffectsWidgetVisible(bool)));
@@ -162,7 +173,7 @@ ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     m_tool_border->setFixedSize(32,32);
     m_tool_border->setCheckable(true);
     group->addButton(m_tool_border);
-    formLayout->addWidget(m_tool_border, 1,2, Qt::AlignCenter);
+    formLayout->addWidget(m_tool_border, 1,3, Qt::AlignCenter);
     m_border_widget = new BorderEditTool(0, wsa);
     m_tool_widget_layout->addWidget(m_border_widget);
     connect(m_tool_border,SIGNAL(toggled(bool)),this,SLOT(setBordersWidgetVisible(bool)));
@@ -285,6 +296,18 @@ void ToolsDockWidget::setScaleWidgetVisible(bool isVisible)
         m_tool_widget_layout->setCurrentIndex(0);
         emit requireSingleSelection();
         emit scaleToolSelected();
+        this->adjustSize();
+    }
+}
+
+void ToolsDockWidget::setCropWidgetVisible(bool isVisible)
+{
+    emit cropToolSelectionChanged(isVisible);
+    if (isVisible)
+    {
+        m_tool_widget_layout->setCurrentIndex(0);
+        emit requireSingleSelection();
+        emit cropToolSelected();
         this->adjustSize();
     }
 }

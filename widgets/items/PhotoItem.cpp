@@ -30,6 +30,8 @@ class KIPIPhotoFramesEditor::PhotoItemPrivate
 
     PhotoItem * m_item;
 
+    QPainterPath m_crop_shape;
+
     friend class PhotoItem;
 };
 
@@ -256,8 +258,10 @@ void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * optio
 {
     if (!m_pixmap.isNull())
     {
-        painter->drawPixmap(m_pixmap.rect(),
-                            m_pixmap);
+        painter->save();
+        QBrush b(this->m_pixmap);
+        painter->fillPath(itemOpaqueArea(), b);
+        painter->restore();
     }
     AbstractPhoto::paint(painter, option, widget);
 }
@@ -266,7 +270,7 @@ void PhotoItem::refreshItem()
 {
     if (m_pixmap_original.isNull())
         return;
-    this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->itemShape().boundingRect().size().toSize(),
+    this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->m_image_path.boundingRect().size().toSize(),
                                                                      Qt::IgnoreAspectRatio,
                                                                      Qt::SmoothTransformation));
     this->updateIcon();

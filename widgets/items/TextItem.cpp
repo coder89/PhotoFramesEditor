@@ -405,12 +405,23 @@ void TextItem::setText(const QString & text)
 
 QPainterPath TextItem::itemShape() const
 {
-    return m_complete_path;
+    if (cropShape().isEmpty())
+        return m_complete_path;
+    else
+        return m_complete_path & this->cropShape();
 }
 
 QPainterPath TextItem::itemOpaqueArea() const
 {
-    return m_text_path;
+    if (cropShape().isEmpty())
+        return m_text_path;
+    else
+        return m_text_path & this->cropShape();
+}
+
+QPainterPath TextItem::itemDrawArea() const
+{
+    return m_complete_path;
 }
 
 void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
@@ -419,7 +430,10 @@ void TextItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option
     {
         painter->save();
         painter->setRenderHint(QPainter::Antialiasing);
-        painter->fillPath(m_text_path, m_color);
+        if (this->cropShape().isEmpty())
+            painter->fillPath(m_text_path, m_color);
+        else
+            painter->fillPath(m_text_path & this->cropShape(), m_color);
         painter->restore();
     }
 

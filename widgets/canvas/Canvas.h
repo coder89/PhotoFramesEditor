@@ -170,6 +170,9 @@ namespace KIPIPhotoFramesEditor
             /// Sets scaling mode
             void enableScaleEditingMode();
 
+            /// Sets cropping mode
+            void enableCropEditingMode();
+
             /// Sets borders editing mode
             void enableBordersEditingMode();
 

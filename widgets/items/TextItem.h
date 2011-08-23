@@ -53,6 +53,7 @@ namespace KIPIPhotoFramesEditor
 
             virtual QPainterPath itemShape() const;
             virtual QPainterPath itemOpaqueArea() const;
+            virtual QPainterPath itemDrawArea() const;
 
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 

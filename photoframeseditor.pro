@@ -57,7 +57,8 @@ SOURCES += main.cpp\
     widgets/tools/AbstractItemsListViewTool.cpp \
     widgets/extra/PatternsComboBox.cpp \
     widgets/canvas/RotationWidgetItem.cpp \
-    widgets/canvas/ScalingWidgetItem.cpp
+    widgets/canvas/ScalingWidgetItem.cpp \
+    widgets/canvas/CropWidgetItem.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/abstract_photo_resizer.h \
@@ -113,7 +114,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/canvas/MousePressListener.h \
     widgets/extra/PatternsComboBox.h \
     widgets/canvas/RotationWidgetItem.h \
-    widgets/canvas/ScalingWidgetItem.h
+    widgets/canvas/ScalingWidgetItem.h \
+    widgets/canvas/CropWidgetItem.h
 
 LIBS += \
     -L/usr \

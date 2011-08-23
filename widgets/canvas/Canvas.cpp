@@ -502,6 +502,17 @@ void Canvas::enableScaleEditingMode()
 }
 
 /** ###########################################################################################################################
+ * Sets cropping mode
+ #############################################################################################################################*/
+void Canvas::enableCropEditingMode()
+{
+    m_scene->setInteractionMode(Scene::Selecting | Scene::Cropping);
+    setSelectionMode(SingleSelcting);
+    this->setCursor(Qt::ArrowCursor);
+    m_scene->clearSelectingFilters();
+}
+
+/** ###########################################################################################################################
  * Sets borders editing mode
  #############################################################################################################################*/
 void Canvas::enableBordersEditingMode()

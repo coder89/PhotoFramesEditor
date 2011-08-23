@@ -28,6 +28,7 @@ namespace KIPIPhotoFramesEditor
     class MoveItemsCommand;
     class RemoveItemsCommand;
     class RotateItemsCommand;
+    class CropItemsCommand;
 
     class Scene : public QGraphicsScene
     {
@@ -44,6 +45,7 @@ namespace KIPIPhotoFramesEditor
                 OneclickFocusItems = 8,
                 Rotating = 16,
                 Scaling = 32,
+                Cropping = 64,
             };
 
             enum SelectionMode
@@ -75,6 +77,7 @@ namespace KIPIPhotoFramesEditor
             void clearSelectingFilters();
             void setRotationWidgetVisible(bool isVisible);
             void setScalingWidgetVisible(bool isVisible);
+            void setCropWidgetVisible(bool isVisible);
             qreal gridHorizontalDistance() const;
             qreal gridVerticalDistance() const;
             const QGraphicsScene * toGraphicsScene() const
@@ -128,6 +131,7 @@ namespace KIPIPhotoFramesEditor
             void rotationCommand(const QPointF & rotationPoint, qreal angle);
             void scaleSelectedItems(const QTransform & scale);
             void scalingCommand(qreal xFactor, qreal yFactor);
+            void cropSelectedItems(const QPainterPath & shape);
 
         private:
 

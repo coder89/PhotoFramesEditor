@@ -18,5 +18,6 @@
         <file>tool_rotate.png</file>
         <file>tool_canvas.png</file>
         <file>tool_scale4.png</file>
+        <file>tool_cropt.png</file>
     </qresource>
 </RCC>

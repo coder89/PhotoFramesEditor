@@ -72,6 +72,10 @@ namespace KIPIPhotoFramesEditor
               * This is done automaticaly by AbstractPhoto class.
               */
             virtual QPainterPath itemOpaqueArea() const = 0;
+            /** Returns item's draw area.
+              * \note This area is uncropped using cropShape()
+              */
+            virtual QPainterPath itemDrawArea() const = 0;
 
             /** Converts item data into SVG format
               * Each derived class should has its own implementation of this method to save its specific data.
@@ -137,6 +141,11 @@ namespace KIPIPhotoFramesEditor
                 this->refreshItem();
                 emit changed();
             }
+
+            /// Crops item to shape passed in method's argument
+            Q_PROPERTY(QPainterPath m_crop_shape READ cropShape WRITE setCropShape)
+            void setCropShape(const QPainterPath & cropShape);
+            QPainterPath cropShape() const;
 
             /// Returns item's property browser
             virtual QtAbstractPropertyBrowser * propertyBrowser() = 0;
@@ -213,6 +222,9 @@ namespace KIPIPhotoFramesEditor
 
             // Icon object
             QIcon m_icon;
+
+            // Item's crop shape
+            QPainterPath m_crop_shape;
 
             static const QColor SELECTED_ITEM_COLOR;
 

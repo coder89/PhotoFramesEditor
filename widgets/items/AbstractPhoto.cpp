@@ -73,6 +73,8 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     itemSVG.setAttribute("transform", translate + " " + matrix);
     itemSVG.setAttribute("id", this->id());
     itemSVG.setAttribute("name", this->name());
+    if (!this->isVisible())
+        itemSVG.setAttribute("visibility", "hide");
 
     // 'defs' tag
     QDomElement defs = document.createElement("defs");
@@ -88,6 +90,11 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     appNS.setPrefix(KIPIPhotoFramesEditor::name());
     defs.appendChild(appNS);
     appNS.appendChild(m_effects_group->toSvg(document));
+
+    // 'defs'->'pfe:data'->'crop_path'
+    QDomElement cropPath = document.createElement("crop_path");
+    cropPath.appendChild( KIPIPhotoFramesEditor::pathToSvg(this->cropShape(), document) );
+    appNS.appendChild(cropPath);
 
     // Convert visible area to SVG path's 'd' attribute
     QPainterPath visibleArea = this->shape();
@@ -131,6 +138,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
       *         </g>
       *         <pfe:data>
       *             .........     // Effects applied to the item
+      *             .........     // Crop path
       *             .........     // Other data from the AbstractPhoto class.
       *         </pfe:data>
       *     </defs>
@@ -148,6 +156,9 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
 {
     if (element.tagName() != "g")
         return false;
+
+    if (element.attribute("visibility") == "hide")
+        this->setVisible(false);
 
     // Position & transformation
     this->setPos(0,0);
@@ -199,6 +210,10 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
         QDomElement itemDataElement = children.at(i).toElement();
         if (itemDataElement.attribute("id") != "data_"+m_id)
             continue;
+
+        QDomElement cropPath = itemDataElement.firstChildElement("crop_path");
+        if (!cropPath.isNull())
+            this->setCropShape( KIPIPhotoFramesEditor::pathFromSvg( cropPath.firstChildElement("path") ) );
 
         // Borders
         if (m_borders_group)
@@ -292,4 +307,15 @@ QString AbstractPhoto::id() const
     if (m_id.isEmpty())
         m_id = QString::number((long long)this, 16);
     return m_id;
+}
+
+void AbstractPhoto::setCropShape(const QPainterPath & cropShape)
+{
+    m_crop_shape = cropShape;
+    this->refresh();
+}
+
+QPainterPath AbstractPhoto::cropShape() const
+{
+    return m_crop_shape;
 }

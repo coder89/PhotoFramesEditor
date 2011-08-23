@@ -39,14 +39,26 @@ namespace KIPIPhotoFramesEditor
                 return m_complete_path.contains(point);
             }
 
-            /// Reimplemented from QGraphicsItem
+            /// Reimplemented from AbstractPhoto
             virtual QPainterPath itemShape() const
             {
-                return m_image_path;
+                if (this->cropShape().isEmpty())
+                    return m_image_path;
+                else
+                    return m_image_path & this->cropShape();
             }
 
-            /// Reimplemented from QGraphicsItem
+            /// Reimplemented from AbstractPhoto
             virtual QPainterPath itemOpaqueArea() const
+            {
+                if (this->cropShape().isEmpty())
+                    return m_image_path;
+                else
+                    return m_image_path & this->cropShape();
+            }
+
+            /// Reimplemented from AbstractPhoto
+            virtual QPainterPath itemDrawArea() const
             {
                 return m_image_path;
             }

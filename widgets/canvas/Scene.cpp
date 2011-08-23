@@ -3,6 +3,7 @@
 #include "global.h"
 #include "RotationWidgetItem.h"
 #include "ScalingWidgetItem.h"
+#include "CropWidgetItem.h"
 #include "SceneBackground.h"
 #include "MousePressListener.h"
 
@@ -51,6 +52,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
         m_selection_visible(true),
         m_rot_item(0),
         m_scale_item(0),
+        m_crop_item(0),
         m_readSceneMousePress_listener(0),
         m_readSceneMousePress_enabled(false)
     {
@@ -80,6 +82,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void sendPressEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
+        if (!item)
+            return;
+
         // Send mousepressevent to the pressed item
         event->setPos(item->mapFromScene(event->scenePos()));
         event->setButtonDownPos(event->button(),
@@ -89,6 +94,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void sendMoveEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
+        if (!item)
+            return;
+
         // Send mousepressevent to the pressed item
         event->setPos(item->mapFromScene(event->scenePos()));
         event->setButtonDownPos(event->button(),
@@ -98,6 +106,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void sendReleaseEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
+        if (!item)
+            return;
+
         // Send mousepressevent to the pressed item
         event->setPos(item->mapFromScene(event->scenePos()));
         event->setButtonDownPos(event->button(),
@@ -107,6 +118,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void sendDoubleClickEventToItem(AbstractItemInterface * item, QGraphicsSceneMouseEvent * event)
     {
+        if (!item)
+            return;
+
         // Send mousepressevent to the pressed item
         event->setPos(item->mapFromScene(event->scenePos()));
         event->setButtonDownPos(event->button(),
@@ -140,12 +154,16 @@ class KIPIPhotoFramesEditor::ScenePrivate
     {
         if (m_pressed_item &&
             m_pressed_item != m_rot_item &&
-            m_pressed_item != m_scale_item)
+            m_pressed_item != m_scale_item &&
+            m_pressed_item != m_crop_item)
         {
             // Select if not selested
             if (!m_pressed_item->isSelected())
             {
-                m_selected_items.insert(m_pressed_item, m_pressed_item->pos());
+                AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(m_pressed_item);
+                if (!photo)
+                    return false;
+                m_selected_items.insert(photo, m_pressed_item->pos());
                 m_selected_items_path = m_selected_items_path.united(m_pressed_item->mapToScene(m_pressed_item->shape()));
                 m_selected_items_all_movable &= m_pressed_item->flags() & QGraphicsItem::ItemIsMovable;
                 m_pressed_item->setSelected(true);
@@ -165,7 +183,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     void setSelectionInitialPosition()
     {
-        QMap<AbstractItemInterface*,QPointF>::iterator it = m_selected_items.begin();
+        QMap<AbstractPhoto*,QPointF>::iterator it = m_selected_items.begin();
         while (it != m_selected_items.end())
         {
             it.value() = it.key()->pos();
@@ -175,7 +193,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
     }
     bool wasMoved()
     {
-        QMap<AbstractItemInterface*,QPointF>::iterator it = m_selected_items.begin();
+        QMap<AbstractPhoto*,QPointF>::iterator it = m_selected_items.begin();
         while (it != m_selected_items.end())
         {
             if (it.value() != it.key()->pos())
@@ -184,7 +202,7 @@ class KIPIPhotoFramesEditor::ScenePrivate
         }
         return false;
     }
-    QMap<AbstractItemInterface*,QPointF> m_selected_items;
+    QMap<AbstractPhoto*,QPointF> m_selected_items;
     AbstractItemInterface * m_pressed_item;
     QPainterPath m_selected_items_path;
     QPointF m_selected_items_path_initial_pos;
@@ -197,6 +215,10 @@ class KIPIPhotoFramesEditor::ScenePrivate
 
     // Used for scaling item
     ScalingWidgetItem * m_scale_item;
+
+    // Used for cropping items
+    CropWidgetItem * m_crop_item;
+    bool m_blend_active;
 
     // For reading mouse press
     MousePressListener * m_readSceneMousePress_listener;
@@ -260,11 +282,11 @@ class KIPIPhotoFramesEditor::AddItemsCommand : public QUndoCommand
 };
 class KIPIPhotoFramesEditor::MoveItemsCommand : public QUndoCommand
 {
-        QMap<AbstractItemInterface*,QPointF> m_items;
+        QMap<AbstractPhoto*,QPointF> m_items;
         Scene * m_scene;
         bool done;
     public:
-        MoveItemsCommand(QMap<AbstractItemInterface*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
+        MoveItemsCommand(QMap<AbstractPhoto*,QPointF> items, Scene * scene, QUndoCommand * parent = 0) :
             QUndoCommand(i18n("Move items"), parent),
             m_items(items),
             m_scene(scene),
@@ -274,7 +296,7 @@ class KIPIPhotoFramesEditor::MoveItemsCommand : public QUndoCommand
         {
             if (!done)
             {
-                QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
+                QMap<AbstractPhoto*,QPointF>::iterator it = m_items.begin();
                 while(it != m_items.end())
                 {
                     QPointF temp = it.key()->pos();
@@ -290,7 +312,7 @@ class KIPIPhotoFramesEditor::MoveItemsCommand : public QUndoCommand
         {
             if (done)
             {
-                QMap<AbstractItemInterface*,QPointF>::iterator it = m_items.begin();
+                QMap<AbstractPhoto*,QPointF>::iterator it = m_items.begin();
                 while(it != m_items.end())
                 {
                     QPointF temp = it.key()->pos();
@@ -401,13 +423,13 @@ class KIPIPhotoFramesEditor::RemoveItemsCommand : public QUndoCommand
 };
 class KIPIPhotoFramesEditor::RotateItemsCommand : public QUndoCommand
 {
-    QList<AbstractItemInterface*> items;
+    QList<AbstractPhoto*> items;
     QTransform transform;
     QPointF rotationPoint;
     qreal angle;
     bool done;
 public:
-    RotateItemsCommand(const QList<AbstractItemInterface*> & items, const QPointF & rotationPoint, qreal angle, QUndoCommand * parent = 0) :
+    RotateItemsCommand(const QList<AbstractPhoto*> & items, const QPointF & rotationPoint, qreal angle, QUndoCommand * parent = 0) :
         QUndoCommand(parent),
         items(items),
         rotationPoint(rotationPoint),
@@ -452,6 +474,35 @@ public:
         }
         items.first()->scene()->clearSelection();
         done = false;
+    }
+};
+class KIPIPhotoFramesEditor::CropItemsCommand : public QUndoCommand
+{
+    QMap<AbstractPhoto*,QPainterPath> data;
+public:
+    CropItemsCommand(const QPainterPath & path, const QList<AbstractPhoto*> & items, QUndoCommand * parent = 0) :
+        QUndoCommand(parent)
+    {
+        foreach (AbstractPhoto * item, items)
+            data.insert(item, item->mapFromScene(path));
+    }
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+private:
+    void run()
+    {
+        for (QMap<AbstractPhoto*,QPainterPath>::iterator it = data.begin(); it != data.end(); ++it)
+        {
+            QPainterPath temp = it.key()->cropShape();
+            it.key()->setCropShape( it.value() );
+            it.value() = temp;
+        }
     }
 };
 
@@ -558,9 +609,8 @@ void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 //#####################################################################################################
 void Scene::keyPressEvent(QKeyEvent * event)
 {
-    if (d->m_selected_items.count() == 1 && (d->m_selected_items.begin().key()->hasFocus()))
+    if (this->focusItem())
     {
-        this->setFocusItem(d->m_selected_items.begin().key());
         QGraphicsScene::keyPressEvent(event);
         event->setAccepted(true);
         return;
@@ -621,11 +671,18 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
                 return;
             }
 
+            // If it is cropping widget
+            if ((m_interaction_mode & Cropping) && d->m_pressed_item == d->m_crop_item)
+            {
+                d->sendPressEventToItem(d->m_pressed_item, event);
+                return;
+            }
+
             // Test if this is a photo/text item
             d->m_pressed_item = dynamic_cast<AbstractPhoto*>(d->m_pressed_item);
 
             // If event pos is not in current selection shape...
-            if (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(d->m_pressed_item))
+            if (!d->m_selected_items_path.contains(event->scenePos()) || !d->m_selected_items.contains(dynamic_cast<AbstractPhoto*>(d->m_pressed_item)))
             {
                 // Clear focus from focused items
                 if (this->focusItem())
@@ -656,6 +713,10 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             // If listeners should know scene press position
             else if (m_interaction_mode & MouseTracking)
                 emit mousePressedPoint(event->buttonDownScenePos(event->button()));
+
+            setRotationWidgetVisible(m_interaction_mode & Rotating);
+            setScalingWidgetVisible(m_interaction_mode & Scaling);
+            setCropWidgetVisible(m_interaction_mode & Cropping);
         }
         event->setAccepted(d->m_pressed_item);
     }
@@ -960,6 +1021,7 @@ void Scene::setInteractionMode(int mode)
     m_interaction_mode = mode;
     setRotationWidgetVisible(mode & Rotating);
     setScalingWidgetVisible(mode & Scaling);
+    setCropWidgetVisible(mode & Cropping);
 }
 
 //#####################################################################################################
@@ -1014,7 +1076,12 @@ void Scene::setRotationWidgetVisible(bool isVisible)
         d->m_rot_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_rot_item);
         if (d->m_selected_items.count() == 1)
+        {
+            AbstractItemInterface * item = d->m_selected_items.keys().first();
+            d->m_rot_item->initRotation(d->m_selected_items_path, item->boundingRect().center() * item->transform());
             d->m_rot_item->setPos(d->m_selected_items_path.boundingRect().center());
+            d->m_rot_item->show();
+        }
         else
             d->m_rot_item->hide();
     }
@@ -1044,6 +1111,32 @@ void Scene::setScalingWidgetVisible(bool isVisible)
             d->m_scale_item->setScaleShape(d->m_selected_items_path);
         else
             d->m_scale_item->hide();
+    }
+}
+
+//#####################################################################################################
+void Scene::setCropWidgetVisible(bool isVisible)
+{
+    if (d->m_crop_item)
+    {
+        this->QGraphicsScene::removeItem(d->m_crop_item);
+        d->m_crop_item->deleteLater();
+        d->m_crop_item = 0;
+    }
+
+    if (isVisible)
+    {
+        if (!d->m_crop_item)
+        {
+            d->m_crop_item = new CropWidgetItem();
+            connect(d->m_crop_item, SIGNAL(cropShapeSelected(QPainterPath)), this, SLOT(cropSelectedItems(QPainterPath)));
+        }
+        d->m_crop_item->setZValue(1.0/0.0);
+        this->QGraphicsScene::addItem(d->m_crop_item);
+        if (d->m_selected_items.count() == 1)
+            d->m_crop_item->setItems(d->m_selected_items.keys());
+        else
+            d->m_crop_item->hide();
     }
 }
 
@@ -1207,7 +1300,7 @@ QList<AbstractPhoto*> Scene::selectedItems() const
 //#####################################################################################################
 void Scene::updateSelection()
 {
-    foreach (AbstractItemInterface * item, d->m_selected_items.keys())
+    foreach (AbstractPhoto * item, d->m_selected_items.keys())
         if (!item->isSelected())
             d->m_selected_items.remove(item);
 
@@ -1220,29 +1313,9 @@ void Scene::updateSelection()
         d->m_selected_items_path = d->m_selected_items_path.united(item->mapToScene(item->shape()));
     }
 
-    if (m_interaction_mode & Rotating)
-    {
-        if (d->m_selected_items.count() == 1)
-        {
-            AbstractItemInterface * item = d->m_selected_items.keys().first();
-            d->m_rot_item->initRotation(d->m_selected_items_path, item->boundingRect().center() * item->transform());
-            d->m_rot_item->show();
-        }
-        else
-            d->m_rot_item->hide();
-    }
-
-    if (m_interaction_mode & Scaling)
-    {
-        if (d->m_selected_items.count() == 1)
-        {
-            AbstractItemInterface * item = d->m_selected_items.keys().first();
-            d->m_scale_item->setScaleShape(d->m_selected_items_path);
-            d->m_scale_item->show();
-        }
-        else
-            d->m_scale_item->hide();
-    }
+    this->setRotationWidgetVisible(m_interaction_mode & Rotating);
+    this->setScalingWidgetVisible(m_interaction_mode & Scaling);
+    this->setCropWidgetVisible(m_interaction_mode & Cropping);
 }
 
 //#####################################################################################################
@@ -1269,7 +1342,6 @@ void Scene::rotateSelectedItems(const QPointF & rotationPoint, qreal angle)
         updateRect = updateRect.united( item->mapRectToScene( item->boundingRect() ) );
         if (item->scene())
             item->scene()->invalidate(updateRect);
-        qDebug() << item->transform();
     }
 }
 
@@ -1280,13 +1352,6 @@ void Scene::rotationCommand(const QPointF & rotationPoint, qreal angle)
                                                     rotationPoint,
                                                     angle);
     PFE_PostUndoCommand(command);
-    AbstractItemInterface * item = d->m_selected_items.keys().at(0);
-    QTransform t;
-    t.scale(0.5, 1.0);
-    item->setTransform( item->transform() * t);
-
-    qDebug() << item->transform();
-    qDebug() << "------------------";
 }
 
 //#####################################################################################################
@@ -1294,13 +1359,38 @@ void Scene::scaleSelectedItems(const QTransform & scale)
 {
     foreach (AbstractItemInterface * item, d->m_selected_items.keys())
     {
-        item->setTransform(item->transform() * scale);
+        QTransform tr = item->transform();
+        qreal x = item->transform().m31();
+        qreal y = item->transform().m32();
+        QPointF bef = tr.map(item->pos());
+        tr = tr * scale;
+        //tr.setMatrix(tr.m11(), tr.m12(), tr.m13(),
+        //             tr.m21(), tr.m22(), tr.m23(),
+        //             x,        y,        tr.m33());
+        item->setTransform(tr);
+        QPointF aft = tr.map(item->pos());
+        QPointF dif = aft-bef;
+        tr.translate(dif.x(), dif.y());
+        tr.setMatrix(tr.m11(), tr.m12(), tr.m13(),
+                     tr.m21(), tr.m22(), tr.m23(),
+                     tr.m31()+dif.x(), tr.m32()+dif.y(),        tr.m33());
+        item->setTransform(tr);
+        qDebug() << item->scenePos();
+        qDebug() << dif << item->transform() << item->mapToScene(item->pos()) << tr.map(item->pos()) << x << y;
     }
 }
 
 //#####################################################################################################
 void Scene::scalingCommand(qreal xFactor, qreal yFactor)
 {}
+
+//#####################################################################################################
+void Scene::cropSelectedItems(const QPainterPath & shape)
+{
+    CropItemsCommand * command = new CropItemsCommand(shape, d->m_selected_items.keys());
+    PFE_PostUndoCommand(command);
+    setCropWidgetVisible(false);
+}
 
 //#####################################################################################################
 bool Scene::askAboutRemoving(int count)

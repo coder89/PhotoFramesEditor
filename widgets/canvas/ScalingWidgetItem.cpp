@@ -236,10 +236,9 @@ void ScalingWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     //sc.translate(p.x(), p.y());
     sc.scale(xFactor, yFactor);
     //sc.translate(-p.x(), -p.y());
-    qDebug() << tr;
-    qDebug() << sc;
-    qDebug() << "--------------";
+    qDebug() << this->scenePos();
     emit scalingChanged(sc);
+    qDebug() << "--------------";
 }
 
 void ScalingWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event*/)

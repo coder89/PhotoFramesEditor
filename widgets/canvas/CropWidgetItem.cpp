@@ -72,7 +72,6 @@ void CropWidgetItemPrivate::transformDrawings(const QTransform & viewTransform)
 
     recalculate = false;
     currentViewTransform = viewTransform;
-    qDebug() << "changed" << viewTransform;
 }
 
 void CropWidgetItemPrivate::calculateDrawings()
@@ -191,9 +190,10 @@ void CropWidgetItem::keyPressEvent(QKeyEvent * event)
     {
         QPainterPath p;
         p.addRect( d->m_rect );
-        qDebug() << "send shape:" << d->currentViewTransform.inverted().map(p).boundingRect();
         emit cropShapeSelected( this->mapToScene( d->currentViewTransform.inverted().map(p) ) );
     }
+    else if (event->key() == Qt::Key_Escape)
+        emit cancelCrop();
 }
 
 void CropWidgetItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
@@ -327,19 +327,9 @@ void CropWidgetItem::setItems(const QList<AbstractPhoto*> & items)
     foreach (AbstractPhoto * item, items)
         d->m_crop_shape += item->mapToScene(item->itemDrawArea());
 
-    d->m_rect = QRectF();
-    foreach (AbstractPhoto * item, items)
-    {
-        QRectF t = item->mapRectToScene( item->cropShape().boundingRect() );
-        //qDebug() << item->mapRectToScene( item->cropShape().boundingRect() ) << item->cropShape().boundingRect();
-        if (!t.isValid())
-            t = item->mapToScene(item->itemDrawArea()).boundingRect();
-        t.translate( -t.topLeft() );
-        d->m_rect = d->m_rect.united( t );
-    }
-
     this->setPos( d->m_crop_shape.boundingRect().topLeft() );
     d->m_crop_shape.translate( -d->m_crop_shape.boundingRect().topLeft() );
+    d->m_rect = d->m_crop_shape.boundingRect();
     d->recalculate = true;
     d->calculateDrawings();
     if (!d->m_rect.isValid())
@@ -349,5 +339,4 @@ void CropWidgetItem::setItems(const QList<AbstractPhoto*> & items)
     }
     this->update();
     this->show();
-    qDebug() << this->scenePos() << d->m_rect.topLeft();
 }

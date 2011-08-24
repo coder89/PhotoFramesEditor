@@ -436,7 +436,6 @@ public:
         angle(angle),
         done(true)
     {
-        qDebug() << "create rot command";
         transform.translate(this->rotationPoint.rx(), this->rotationPoint.ry());
         transform.rotate(angle);
         transform.translate(-this->rotationPoint.rx(), -this->rotationPoint.ry());
@@ -445,7 +444,6 @@ public:
     {
         if (done)
             return;
-        qDebug() << "redo rot";
         foreach (AbstractItemInterface * item, items)
         {
             QRectF updateRect = item->mapRectToScene(item->boundingRect());
@@ -462,7 +460,6 @@ public:
     {
         if (!done)
             return;
-        qDebug() << "undo rot";
         foreach (AbstractItemInterface * item, items)
         {
             QRectF updateRect = item->mapRectToScene(item->boundingRect());
@@ -925,6 +922,21 @@ void Scene::dropEvent(QGraphicsSceneDragDropEvent * event)
         ds4 >> imageIDs;
         qDebug() << imageIDs;
     }
+    else if (mimeData->hasFormat("text/uri-list"))
+    {
+        QList<QUrl> urls = mimeData->urls();
+        foreach (QUrl url, urls)
+        {
+            QImageReader ir(url.toLocalFile());
+            QImage img;
+            if (ir.read(&img))
+            {
+                PhotoItem * item = new PhotoItem(img);
+                item->setPos(event->scenePos());
+                this->addItem(item);
+            }
+        }
+    }
 }
 
 //#####################################################################################################
@@ -1131,14 +1143,26 @@ void Scene::setCropWidgetVisible(bool isVisible)
         {
             d->m_crop_item = new CropWidgetItem();
             connect(d->m_crop_item, SIGNAL(cropShapeSelected(QPainterPath)), this, SLOT(cropSelectedItems(QPainterPath)));
+            connect(d->m_crop_item, SIGNAL(cancelCrop()), this, SLOT(closeCropWidget()));
         }
         d->m_crop_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_crop_item);
         if (d->m_selected_items.count() == 1)
+        {
             d->m_crop_item->setItems(d->m_selected_items.keys());
+            d->m_crop_item->setFocus(Qt::MouseFocusReason);
+        }
         else
             d->m_crop_item->hide();
     }
+    else if (m_interaction_mode & Cropping)
+        this->clearSelection();
+}
+
+//#####################################################################################################
+void Scene::closeCropWidget()
+{
+    this->setCropWidgetVisible(false);
 }
 
 //#####################################################################################################

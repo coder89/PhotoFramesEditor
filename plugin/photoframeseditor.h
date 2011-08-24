@@ -15,6 +15,7 @@
 // Local
 #include "CanvasWidget.h"
 #include "UndoCommandEvent.h"
+#include "global.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -45,9 +46,10 @@ namespace KIPIPhotoFramesEditor
             void print();
             bool closeDocument();
             void setGridVisible(bool isVisible);
-            void createCanvas(const QSizeF & dimension);
+            void createCanvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits);
             void createCanvas(const KUrl & fileUrl);
             void setupGrid();
+            void changeCanvasSize();
 
         protected Q_SLOTS:
 

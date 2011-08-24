@@ -69,6 +69,7 @@ PhotoItem::PhotoItem(const QImage & photo) :
     d(new PhotoItemPrivate(this))
 {
     this->setupItem(QPixmap::fromImage(photo));
+    this->setName(i18n("New image"));
 }
 
 PhotoItem::~PhotoItem()
@@ -100,15 +101,15 @@ QDomElement PhotoItem::toSvg(QDomDocument & document) const
         appNS.appendChild(path);
     }
 
-    QDomElement image = document.createElement("image");
+    QDomElement image = document.createElementNS(KIPIPhotoFramesEditor::uri(), "image");
+    appNS.appendChild(image);
     // Saving image data
     if (PFESettings::embedImagesData() && !m_pixmap_original.isNull())
     {
         QByteArray byteArray;
         QBuffer buffer(&byteArray);
         m_pixmap_original.save(&buffer, "PNG");
-        QString data(byteArray);
-        image.setAttribute("data", data);
+        image.appendChild( document.createTextNode( QString(byteArray.toBase64()) ) );
     }
 
     if (PhotoFramesEditor::instance()->hasInterface())
@@ -118,7 +119,7 @@ QDomElement PhotoItem::toSvg(QDomDocument & document) const
 
     // Saving image path
     if (!m_file_path.isEmpty())
-        image.setAttribute("xlink:href", m_file_path);
+        image.setAttribute("src", m_file_path);
 
     return result;
 }
@@ -167,16 +168,10 @@ PhotoItem * PhotoItem::fromSvg(QDomElement & element)
             /// TODO : load using KIPI::Interface
         }
         // Fullsize image is embedded in SVG file!
-        else if (!(imageAttribute = image.attribute("data")).isEmpty())
+        else if (!(imageAttribute = image.text()).isEmpty())
         {
-            QByteArray array = imageAttribute.toAscii();
-            QBuffer buf(&array);
-            QImageReader reader(&buf);
-            reader.setAutoDetectImageFormat(true);
-            if (!reader.canRead())
-                goto _delete;
-            img = QImage(reader.size(), QImage::Format_ARGB32_Premultiplied);
-            if (!reader.read(&img))
+            img = QImage::fromData( QByteArray::fromBase64(imageAttribute.toAscii()) );
+            if (img.isNull())
                 goto _delete;
         }
         else

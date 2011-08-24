@@ -35,6 +35,7 @@ namespace KIPIPhotoFramesEditor
         signals:
 
             void cropShapeSelected(const QPainterPath & shape);
+            void cancelCrop();
 
         friend class CropWidgetItemPrivate;
     };

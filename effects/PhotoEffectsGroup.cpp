@@ -150,14 +150,15 @@ QDomElement PhotoEffectsGroup::toSvg(QDomDocument & document) const
     return effectsGroup;
 }
 
-PhotoEffectsGroup * PhotoEffectsGroup::fromSvg(QDomElement & element, AbstractPhoto * graphicsItem)
+PhotoEffectsGroup * PhotoEffectsGroup::fromSvg(const QDomElement & element, AbstractPhoto * graphicsItem)
 {
-    if (element.tagName() != "effects")
-        element = element.firstChildElement("effects");
-    if (element.isNull())
+    QDomElement temp = element;
+    if (temp.tagName() != "effects")
+        temp = temp.firstChildElement("effects");
+    if (temp.isNull())
         return 0;
     PhotoEffectsGroup * group = new PhotoEffectsGroup(0);
-    QDomNodeList effectsList = element.childNodes();
+    QDomNodeList effectsList = temp.childNodes();
     for (int i = 0; i < effectsList.count(); ++i)
     {
         QDomElement effect = effectsList.at(i).toElement();

@@ -1,6 +1,8 @@
 #ifndef DOCUMENT_H
 #define DOCUMENT_H
 
+#include "global.h"
+
 // Qt
 #include <QObject>
 #include <QSizeF>
@@ -24,11 +26,13 @@ namespace KIPIPhotoFramesEditor
     class LayersModel;
     class LayersSelectionModel;
     class AbstractPhoto;
-    class NewItemUndoCommand;
+    class CanvasPrivate;
 
     class Canvas : public QGraphicsView
     {
             Q_OBJECT
+
+            CanvasPrivate * d;
 
         public:
 
@@ -39,8 +43,7 @@ namespace KIPIPhotoFramesEditor
                 SingleSelcting = 4,
             };
 
-            explicit Canvas(const QSizeF & dimension, QWidget * parent = 0);
-            explicit Canvas(Scene * scene, QWidget * parent = 0);
+            explicit Canvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits, QWidget * parent = 0);
 
             virtual void wheelEvent(QWheelEvent *event);
 
@@ -77,6 +80,14 @@ namespace KIPIPhotoFramesEditor
             {
                 return m_undo_stack;
             }
+
+            QSizeF paperSize() const;
+            SizeUnits sizeUnits() const;
+            QSizeF resolution() const;
+            QString resolutionUnits() const;
+            void setCanvasSize(const QSize & dimension);
+            void setPageSize(const QSizeF & paperSize, SizeUnits units);
+            void setCanvasResolution(const QSizeF & resolution, ResolutionUnits units);
 
             operator Scene*()
             {
@@ -196,6 +207,8 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
+            explicit Canvas(Scene * scene, QWidget * parent = 0);
+
             void init();
             void setupGUI();
             void prepareSignalsConnection();
@@ -210,7 +223,7 @@ namespace KIPIPhotoFramesEditor
 
             SelectionMode m_selection_mode;
 
-        friend class NewItemUndoCommand;
+        friend class CanvasPrivate;
     };
 }
 

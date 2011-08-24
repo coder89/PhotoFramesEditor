@@ -28,10 +28,15 @@
          <Separator/>
         </Menu>
 
-        <Menu name="View" >
-         <text>&amp;View</text>
-           <Action name="grid_lines" />
+        <Menu name="Canvas" >
+         <text>&amp;Canvas</text>
+           <Menu name="grid_lines">
+             <text>&amp;Grid lines</text>
+             <Action name="grid_toggle" />
+             <Action name="grid_config" />
+           </Menu>
          <Separator/>
+           <Action name="canvas_size" />
         </Menu>
 
     </MenuBar>

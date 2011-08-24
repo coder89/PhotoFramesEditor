@@ -22,8 +22,6 @@
 #include "BorderEditTool.h"
 #include "ColorizeTool.h"
 
-#define Q_DELETE(ptr)   if (ptr) delete ptr;
-
 namespace KIPIPhotoFramesEditor
 {
     class PhotoFramesEditor::PhotoFramesEditorPriv
@@ -44,9 +42,9 @@ namespace KIPIPhotoFramesEditor
                 quitAction(0),
                 undoAction(0),
                 redoAction(0),
-                gridActionMenu(0),
                 showGridToggleAction(0),
                 gridConfigAction(0),
+                changeCanvasSizeAction(0),
                 fileDialog(0),
                 tree(0),
                 treeWidget(0),
@@ -78,9 +76,9 @@ namespace KIPIPhotoFramesEditor
                 Q_DELETE(redoAction)
 
                 // View menu
-                Q_DELETE(gridActionMenu)
                 Q_DELETE(showGridToggleAction)
                 Q_DELETE(gridConfigAction)
+                Q_DELETE(changeCanvasSizeAction)
 
                 // Other
                 Q_DELETE(fileDialog)
@@ -116,10 +114,10 @@ namespace KIPIPhotoFramesEditor
             KAction *   undoAction;
             KAction *   redoAction;
 
-            // View menu
-            KActionMenu * gridActionMenu;
+            // Canvas menu
             KToggleAction * showGridToggleAction;
             KAction *   gridConfigAction;
+            KAction *   changeCanvasSizeAction;
 
             // File dialog
             KFileDialog * fileDialog;

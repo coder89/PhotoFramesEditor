@@ -10,6 +10,7 @@
 #include "AbstractPhotoEffectFactory.h"
 #include "ImageFileDialog.h"
 #include "GridSetupDialog.h"
+#include "global.h"
 
 #include "BorderDrawerInterface.h"
 #include "BorderDrawersLoader.h"
@@ -31,6 +32,8 @@
 #include <QFile>
 #include <QPrintPreviewDialog>
 #include <QImageWriter>
+#include <QPrinter>
+#include <QPrintDialog>
 
 // KDE
 #include <kmenubar.h>
@@ -41,6 +44,7 @@
 #include <kaboutdata.h>
 #include <kmessagebox.h>
 #include <kapplication.h>
+#include <kprintpreview.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -115,68 +119,66 @@ bool PhotoFramesEditor::hasInterface() const
 
 void PhotoFramesEditor::setupActions()
 {
-    d->openNewFileAction = KStandardAction::openNew(this, SLOT(open()), this);
+    d->openNewFileAction = KStandardAction::openNew(this, SLOT(open()), actionCollection());
     d->openNewFileAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_N));
     actionCollection()->addAction("open_new", d->openNewFileAction);
     //------------------------------------------------------------------------
-    d->openFileAction = KStandardAction::open(this, SLOT(openDialog()), this);
+    d->openFileAction = KStandardAction::open(this, SLOT(openDialog()), actionCollection());
     d->openFileAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_O));
     actionCollection()->addAction("open", d->openFileAction);
     //------------------------------------------------------------------------
-    d->openRecentFilesMenu = KStandardAction::openRecent(this, SLOT(open(const KUrl &)), this);
+    d->openRecentFilesMenu = KStandardAction::openRecent(this, SLOT(open(const KUrl &)), actionCollection());
     actionCollection()->addAction("open_recent", d->openRecentFilesMenu);
     //------------------------------------------------------------------------
-    d->saveAction = KStandardAction::save(this, SLOT(save()), this);
+    d->saveAction = KStandardAction::save(this, SLOT(save()), actionCollection());
     d->saveAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_S));
     actionCollection()->addAction("save", d->saveAction);
     //------------------------------------------------------------------------
-    d->saveAsAction = KStandardAction::saveAs(this, SLOT(saveAs()), this);
+    d->saveAsAction = KStandardAction::saveAs(this, SLOT(saveAs()), actionCollection());
     d->saveAsAction->setShortcut(KShortcut(Qt::SHIFT + Qt::CTRL + Qt::Key_S));
     actionCollection()->addAction("save_as", d->saveAsAction);
     //------------------------------------------------------------------------
-    d->exportFileAction = new KAction(i18nc("Export current frame layout to image file", "Export"), this);
+    d->exportFileAction = new KAction(i18nc("Export current frame layout to image file", "Export"), actionCollection());
     d->exportFileAction->setShortcut(KShortcut(Qt::SHIFT + Qt::CTRL + Qt::Key_E));
     connect(d->exportFileAction, SIGNAL(triggered()), this, SLOT(exportFile()));
     actionCollection()->addAction("export", d->exportFileAction);
     //------------------------------------------------------------------------
-    d->printPreviewAction = KStandardAction::printPreview(this, SLOT(printPreview()), this);
+    d->printPreviewAction = KStandardAction::printPreview(this, SLOT(printPreview()), actionCollection());
     d->printPreviewAction->setShortcut(KShortcut(Qt::SHIFT + Qt::CTRL + Qt::Key_P));
     actionCollection()->addAction("print_preview", d->printPreviewAction);
     //------------------------------------------------------------------------
-    d->printAction = KStandardAction::print(this, SLOT(print()), this);
+    d->printAction = KStandardAction::print(this, SLOT(print()), actionCollection());
     d->printAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_P));
     actionCollection()->addAction("print", d->printAction);
     //------------------------------------------------------------------------
-    d->closeAction = KStandardAction::close(this, SLOT(closeDocument()), this);
+    d->closeAction = KStandardAction::close(this, SLOT(closeDocument()), actionCollection());
     d->closeAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_Q));
     actionCollection()->addAction("close", d->closeAction);
     //------------------------------------------------------------------------
-    d->quitAction = KStandardAction::quit(this, SLOT(close()), this);
+    d->quitAction = KStandardAction::quit(this, SLOT(close()), actionCollection());
     d->quitAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_Q));
     actionCollection()->addAction("quit", d->quitAction);
     //------------------------------------------------------------------------
-    d->undoAction = KStandardAction::undo(0, 0, this);
+    d->undoAction = KStandardAction::undo(0, 0, actionCollection());
     d->undoAction->setShortcut(KShortcut(Qt::CTRL + Qt::Key_Z));
     actionCollection()->addAction("undo", d->undoAction);
     //------------------------------------------------------------------------
-    d->redoAction = KStandardAction::redo(0, 0, this);
+    d->redoAction = KStandardAction::redo(0, 0, actionCollection());
     d->redoAction->setShortcut(KShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Z));
     actionCollection()->addAction("redo", d->redoAction);
     //------------------------------------------------------------------------
-    d->gridActionMenu = new KActionMenu(i18nc("Grid lines", "Grid lines"), this);
-    d->gridActionMenu->setDelayed(false);
-    actionCollection()->addAction("grid_lines", d->gridActionMenu);
-
-    d->showGridToggleAction = new KToggleAction(i18nc("View grid lines", "Show"), this);
+    d->showGridToggleAction = new KToggleAction(i18nc("View grid lines", "Show"), actionCollection());
     d->showGridToggleAction->setShortcut(KShortcut(Qt::SHIFT + Qt::CTRL + Qt::Key_G));
     connect(d->showGridToggleAction, SIGNAL(triggered(bool)), this, SLOT(setGridVisible(bool)));
     actionCollection()->addAction("grid_toggle", d->showGridToggleAction);
-    d->gridActionMenu->addAction(d->showGridToggleAction);
-
-    d->gridConfigAction = new KAction(i18nc("Configure grid lines visibility", "Setup grid"), this);
+    //------------------------------------------------------------------------
+    d->gridConfigAction = new KAction(i18nc("Configure grid lines visibility", "Setup grid"), actionCollection());
     connect(d->gridConfigAction, SIGNAL(triggered()), this, SLOT(setupGrid()));
     actionCollection()->addAction("grid_config", d->gridConfigAction);
-    d->gridActionMenu->addAction(d->gridConfigAction);
+    //------------------------------------------------------------------------
+    d->changeCanvasSizeAction = new KAction(i18nc("Configure canvas size", "Change canvas size"), actionCollection());
+    connect(d->changeCanvasSizeAction, SIGNAL(triggered()), this, SLOT(changeCanvasSize()));
+    actionCollection()->addAction("canvas_size", d->changeCanvasSizeAction);
 
     createGUI(xmlFile());
 }
@@ -196,7 +198,9 @@ void PhotoFramesEditor::refreshActions()
     d->printPreviewAction->setEnabled(isEnabledForCanvas);
     d->printAction->setEnabled(isEnabledForCanvas);
     d->closeAction->setEnabled(isEnabledForCanvas);
-    d->gridActionMenu->setEnabled(isEnabledForCanvas);
+    d->showGridToggleAction->setEnabled(isEnabledForCanvas);
+    d->gridConfigAction->setEnabled(isEnabledForCanvas);
+    d->changeCanvasSizeAction->setEnabled(isEnabledForCanvas);
     d->treeWidget->setEnabled(isEnabledForCanvas);
     d->toolsWidget->setEnabled(isEnabledForCanvas);
 }
@@ -229,17 +233,17 @@ void PhotoFramesEditor::createWidgets()
     d->centralWidget->layout()->setMargin(0);
     this->setCentralWidget(d->centralWidget);
 
-    createCanvas(QSizeF(800,800));                               /// TODO : REMOVE WHEN FINISH
+    this->open(KUrl("/home/coder89/Desktop/first.pfe"));   /// TODO : REMOVE WHEN FINISH
 }
 
-void PhotoFramesEditor::createCanvas(const QSizeF & dimension)
+void PhotoFramesEditor::createCanvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits)
 {
     if (m_canvas)
     {
         d->centralWidget->layout()->removeWidget(m_canvas);
         m_canvas->deleteLater();
     }
-    m_canvas = new Canvas(dimension, d->centralWidget);
+    m_canvas = new Canvas(dimension, paperSize, sizeUnits, d->centralWidget);
     this->prepareSignalsConnections();
 }
 
@@ -315,7 +319,9 @@ void PhotoFramesEditor::open()
 
     if (result == KDialog::Accepted)
     {
-        createCanvas(QSizeF(newCanvas->canvasSize()));
+        createCanvas(newCanvas->canvasSize(),
+                     newCanvas->paperSize(),
+                     newCanvas->sizeUnits());
     }
 
     refreshActions();
@@ -424,11 +430,43 @@ void PhotoFramesEditor::exportFile()
 
 void PhotoFramesEditor::printPreview()
 {
-     QImage img;
-     QPainter p(&img);
      if (m_canvas && m_canvas->scene())
      {
-         QPrintPreviewDialog dialog(this);
+         QPrinter printer;
+         printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+         SizeUnits su = m_canvas->sizeUnits();
+         QSizeF cs = m_canvas->paperSize();
+         switch (su)
+         {
+         case Pixels:
+             printer.setPaperSize(cs, QPrinter::DevicePixel);
+             break;
+         case Meters:
+             cs *= 100;
+         case Centimeters:
+             cs *= 10;
+         case Milimeters:
+             printer.setPaperSize(cs, QPrinter::Millimeter);
+             break;
+         case Yards:
+             cs *= 3;
+         case Feet:
+             cs *= 12;
+         case Inches:
+             printer.setPaperSize(cs, QPrinter::Inch);
+             break;
+         case Points:
+             printer.setPaperSize(cs, QPrinter::Point);
+             break;
+         case Picas:
+             printer.setPaperSize(cs, QPrinter::Pica);
+             break;
+         default:
+#ifdef QT_DEBUG
+             qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__;
+#endif
+         }
+         QPrintPreviewDialog dialog(&printer, this);
          connect(&dialog, SIGNAL(paintRequested(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
          dialog.exec();
      }
@@ -436,7 +474,9 @@ void PhotoFramesEditor::printPreview()
 
 void PhotoFramesEditor::print()
 {
-    // TODO : print dialog
+    QPrintDialog dialog(this);
+    connect(&dialog, SIGNAL(accepted(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
+    dialog.exec();
 }
 
 bool PhotoFramesEditor::closeDocument()
@@ -488,6 +528,20 @@ void PhotoFramesEditor::setupGrid()
         dialog.exec();
         m_canvas->scene()->setGrid(dialog.horizontalDistance(),
                                    dialog.verticalDistance());
+    }
+}
+
+void PhotoFramesEditor::changeCanvasSize()
+{
+    if (!m_canvas)
+        return;
+    CanvasCreationDialog ccd(m_canvas->paperSize(), m_canvas->sizeUnits(), m_canvas->resolution(), m_canvas->resolutionUnits(), this);
+    int result = ccd.exec();
+    if (result == KDialog::Accepted)
+    {
+        m_canvas->setCanvasSize(ccd.canvasSize());
+        m_canvas->setPageSize(ccd.paperSize(), ccd.sizeUnits());
+        m_canvas->setCanvasResolution(ccd.paperResolution(), ccd.resolutionUnits());
     }
 }
 

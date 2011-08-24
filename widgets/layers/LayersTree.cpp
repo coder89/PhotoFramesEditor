@@ -60,6 +60,8 @@ void LayersTree::setModel(QAbstractItemModel * model)
 
     for (int i = model->columnCount()-1; i >= 0; --i)
         this->resizeColumnToContents(i);
+
+    this->hideColumn(0); /// TODO: Remove when tree representation needed instead of list
 }
 
 void LayersTree::setSingleSelection()
@@ -71,7 +73,6 @@ void LayersTree::setSingleSelection()
 
 void LayersTree::setMultiSelection()
 {
-    //this->setSelection(this->rect(), QItemSelectionModel::Clear);
     this->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 

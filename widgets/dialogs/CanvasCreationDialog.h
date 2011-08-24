@@ -1,6 +1,8 @@
 #ifndef CANVASCREATIONDIALOG_H
 #define CANVASCREATIONDIALOG_H
 
+#include "global.h"
+
 // KDE
 #include <kdialog.h>
 
@@ -15,9 +17,24 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            explicit CanvasCreationDialog(QWidget *parent = 0);
+            explicit CanvasCreationDialog(QWidget * parent = 0);
+            explicit CanvasCreationDialog(const QSizeF & size, SizeUnits sizeUnits, const QSizeF & resolution, const QString & resolutionUnits, QWidget * parent = 0);
             ~CanvasCreationDialog();
-            QSize canvasSize();
+
+            Q_PROPERTY(QSize canvas_size READ canvasSize)
+            QSize canvasSize() const;
+
+            Q_PROPERTY(QSizeF paper_size READ paperSize)
+            QSizeF paperSize() const;
+
+            Q_PROPERTY(QSizeF paper_resolution READ paperResolution)
+            QSizeF paperResolution() const;
+
+            Q_PROPERTY(SizeUnits size_units READ sizeUnits)
+            SizeUnits sizeUnits() const;
+
+            Q_PROPERTY(ResolutionUnits resolution_units READ resolutionUnits)
+            ResolutionUnits resolutionUnits() const;
 
         protected Q_SLOTS:
 
@@ -33,7 +50,8 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            void setupDialog();
+            void setupDialog(const QSizeF & size, const QString & sizeUnits, const QSizeF & resolution, const QString & resolutionUnits);
+            void prepareSignalsConnections();
 
             class CanvasCreationDialogPriv;
             CanvasCreationDialogPriv * d;

@@ -27,7 +27,7 @@ namespace KIPIPhotoFramesEditor
 
             explicit PhotoEffectsGroup(AbstractPhoto * photo, QObject * parent = 0);
             QDomElement toSvg(QDomDocument & document) const;
-            static PhotoEffectsGroup * fromSvg(QDomElement & element, AbstractPhoto * graphicsItem);
+            static PhotoEffectsGroup * fromSvg(const QDomElement & element, AbstractPhoto * graphicsItem);
             AbstractPhoto * photo() const;
             virtual QObject * item(const QModelIndex & index) const;
             virtual void setItem(QObject * graphicsItem, const QModelIndex & index);

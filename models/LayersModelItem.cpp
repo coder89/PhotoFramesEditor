@@ -143,7 +143,7 @@ AbstractPhoto * LayersModelItem::photo() const
 QVariant LayersModelItem::data(int column) const
 {
     if (column == LayersModelItem::NameString)
-        return itemPhoto ? itemPhoto->name() : "Name";
+        return itemPhoto ? itemPhoto->name() : "Empty layer";
     else if (column == LayersModelItem::Thumbnail)
         return itemPhoto ? itemPhoto->icon() : QIcon();
     else

@@ -18,7 +18,7 @@ PFESettings::PFESettings(QObject *parent) :
     if (!groups.contains(SAVING))
     {
         beginGroup(SAVING);
-        setValue(SAVING_EMBED_IMG, false);
+        setValue(SAVING_EMBED_IMG, true);
         endGroup();
     }
     this->sync();
@@ -38,11 +38,16 @@ PFESettings * PFESettings::instance(QObject * parent)
 
 bool PFESettings::embedImagesData()
 {
-    return m_instance->value(SAVING + SLASH + SAVING_EMBED_IMG, false).toBool();
+    m_instance->beginGroup(SAVING);
+    bool result = m_instance->value(SAVING_EMBED_IMG, true).toBool();
+    m_instance->endGroup();
+    return result;
 }
 
 void PFESettings::setEmbedImagesData(bool embed)
 {
-    m_instance->setValue(SAVING + SLASH + SAVING_EMBED_IMG, embed);
+    m_instance->beginGroup(SAVING);
+    m_instance->setValue(SAVING_EMBED_IMG, embed);
+    m_instance->endGroup();
     m_instance->sync();
 }

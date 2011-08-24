@@ -264,11 +264,21 @@ void CanvasCreationDialog::CanvasCreationDialogPriv::setPaper(QPrinter::PageSize
     ySize->setValue(result.height());
 }
 
-CanvasCreationDialog::CanvasCreationDialog(QWidget *parent) :
+CanvasCreationDialog::CanvasCreationDialog(QWidget * parent) :
     KDialog(parent),
     d(new CanvasCreationDialogPriv)
 {
-    setupDialog();
+    setupDialog(QSize(d->WIDTH, d->HEIGHT), d->currentSizeUnit, QSize(d->WIDTH_RES, d->HEIGHT_RES), d->currentResolutionUnit);
+}
+
+CanvasCreationDialog::CanvasCreationDialog(const QSizeF & size, SizeUnits sizeUnits, const QSizeF & resolution, const QString & resolutionUnits, QWidget * parent) :
+    KDialog(parent),
+    d(new CanvasCreationDialogPriv)
+{
+    setupDialog(size,
+                KIPIPhotoFramesEditor::sizeUnitsNames().value(sizeUnits),
+                resolution,
+                resolutionUnits);
 }
 
 CanvasCreationDialog::~CanvasCreationDialog()
@@ -276,7 +286,7 @@ CanvasCreationDialog::~CanvasCreationDialog()
     delete d;
 }
 
-void CanvasCreationDialog::setupDialog()
+void CanvasCreationDialog::setupDialog(const QSizeF & size, const QString & sizeUnits, const QSizeF & resolution, const QString & resolutionUnits)
 {
     QWidget * main = new QWidget(this);
     setMainWidget(main);
@@ -291,7 +301,6 @@ void CanvasCreationDialog::setupDialog()
     d->paperSize->insertSeparator(1);
     d->paperSize->addItems(d->paperSizes.keys());
     d->paperSize->setCurrentIndex(0);
-    connect(d->paperSize, SIGNAL(activated(QString)), this, SLOT(recalculatePaperSize(const QString&)));
     gridLayout->addWidget(new QLabel("Template:", main),0,0);
     gridLayout->addWidget(d->paperSize,0,1);
     vLayout->addLayout(gridLayout);
@@ -307,8 +316,7 @@ void CanvasCreationDialog::setupDialog()
     d->xSize = new QDoubleSpinBox(d->sizeWidget);
     d->xSize->setMinimum(0.00001);
     d->xSize->setMaximum(999999);
-    d->xSize->setValue(d->WIDTH);
-    connect(d->xSize,SIGNAL(valueChanged(double)),this,SLOT(widthChanged(double)));
+    d->xSize->setValue(size.width());
     gridLayout->addWidget(new QLabel("Width:", d->sizeWidget),0,0);
     gridLayout->addWidget(d->xSize,0,1);
 
@@ -316,16 +324,14 @@ void CanvasCreationDialog::setupDialog()
     d->ySize = new QDoubleSpinBox(d->sizeWidget);
     d->ySize->setMinimum(0.00001);
     d->ySize->setMaximum(999999);
-    d->ySize->setValue(d->HEIGHT);
-    connect(d->ySize,SIGNAL(valueChanged(double)),this,SLOT(heightChanged(double)));
+    d->ySize->setValue(size.height());
     gridLayout->addWidget(new QLabel("Height:", d->sizeWidget),1,0);
     gridLayout->addWidget(d->ySize,1,1);
 
     // Unit widget
     d->sizeUnitsWidget = new KComboBox(d->sizeWidget);
     d->sizeUnitsWidget->addItems(KIPIPhotoFramesEditor::sizeUnitsNames().values());
-    d->sizeUnitsWidget->setCurrentItem( d->currentSizeUnit );
-    connect(d->sizeUnitsWidget, SIGNAL(activated(QString)), this, SLOT(sizeUnitsChanged(QString)));
+    d->sizeUnitsWidget->setCurrentItem(sizeUnits);
     gridLayout->addWidget(d->sizeUnitsWidget,1,2);
 
     // Orientation buttons
@@ -333,12 +339,10 @@ void CanvasCreationDialog::setupDialog()
     d->horizontalButton->setCheckable(true);
     d->horizontalButton->setFlat(true);
     d->horizontalButton->setIconSize(QSize(24,24));
-    connect(d->horizontalButton, SIGNAL(toggled(bool)), this, SLOT(setHorizontal(bool)));
     d->verticalButton = new KPushButton(KIcon(":vertical_orientation.png"),"",d->sizeWidget);
     d->verticalButton->setCheckable(true);
     d->verticalButton->setFlat(true);
     d->verticalButton->setIconSize(QSize(24,24));
-    connect(d->verticalButton, SIGNAL(toggled(bool)), this, SLOT(setVertical(bool)));
     QHBoxLayout * hLayout = new QHBoxLayout();
     hLayout->addWidget(d->horizontalButton);
     hLayout->addWidget(d->verticalButton);
@@ -357,9 +361,8 @@ void CanvasCreationDialog::setupDialog()
     d->xResolution = new QDoubleSpinBox(d->advancedWidget);
     d->xResolution->setMinimum(0);
     d->xResolution->setMaximum(999999);
-    d->xResolution->setValue(d->WIDTH_RES);
+    d->xResolution->setValue(resolution.width());
     d->xResolution->setDecimals(3);
-    connect(d->xResolution, SIGNAL(valueChanged(double)), this, SLOT(xResolutionChanged(double)));
     gridLayout->addWidget(new QLabel("Resolution X:", d->advancedWidget),0,0);
     gridLayout->addWidget(d->xResolution,0,1);
 
@@ -367,25 +370,58 @@ void CanvasCreationDialog::setupDialog()
     d->yResolution = new QDoubleSpinBox(d->advancedWidget);
     d->yResolution->setMinimum(0);
     d->yResolution->setMaximum(999999);
-    d->yResolution->setValue(d->HEIGHT_RES);
+    d->yResolution->setValue(resolution.height());
     d->yResolution->setDecimals(3);
-    connect(d->yResolution, SIGNAL(valueChanged(double)), this, SLOT(yResolutionChanged(double)));
     gridLayout->addWidget(new QLabel("Resolution Y:", d->advancedWidget),1,0);
     gridLayout->addWidget(d->yResolution,1,1);
 
     // Unit widget
     d->resolutionUnitsWidget = new KComboBox(d->sizeWidget);
     d->resolutionUnitsWidget->addItems(KIPIPhotoFramesEditor::resolutionUnitsNames().values());
-    d->resolutionUnitsWidget->setCurrentItem( d->currentResolutionUnit );
-    connect(d->resolutionUnitsWidget, SIGNAL(currentIndexChanged(QString)), this, SLOT(resolutionUnitsChanged(QString)));
+    d->resolutionUnitsWidget->setCurrentItem(resolutionUnits);
     gridLayout->addWidget(d->resolutionUnitsWidget,1,2);
+
+    this->prepareSignalsConnections();
 
     d->updateSizeLabel();
 }
 
-QSize CanvasCreationDialog::canvasSize()
+void CanvasCreationDialog::prepareSignalsConnections()
+{
+    connect(d->paperSize, SIGNAL(activated(QString)), this, SLOT(recalculatePaperSize(const QString&)));
+    connect(d->xSize,SIGNAL(valueChanged(double)),this,SLOT(widthChanged(double)));
+    connect(d->ySize,SIGNAL(valueChanged(double)),this,SLOT(heightChanged(double)));
+    connect(d->sizeUnitsWidget, SIGNAL(activated(QString)), this, SLOT(sizeUnitsChanged(QString)));
+    connect(d->horizontalButton, SIGNAL(toggled(bool)), this, SLOT(setHorizontal(bool)));
+    connect(d->verticalButton, SIGNAL(toggled(bool)), this, SLOT(setVertical(bool)));
+    connect(d->xResolution, SIGNAL(valueChanged(double)), this, SLOT(xResolutionChanged(double)));
+    connect(d->yResolution, SIGNAL(valueChanged(double)), this, SLOT(yResolutionChanged(double)));
+    connect(d->resolutionUnitsWidget, SIGNAL(currentIndexChanged(QString)), this, SLOT(resolutionUnitsChanged(QString)));
+}
+
+QSize CanvasCreationDialog::canvasSize() const
 {
     return QSize(d->WIDTH, d->HEIGHT);
+}
+
+QSizeF CanvasCreationDialog::paperSize() const
+{
+    return QSizeF(d->xSize->value(), d->ySize->value());
+}
+
+QSizeF CanvasCreationDialog::paperResolution() const
+{
+    return QSizeF(d->xResolution->value(), d->yResolution->value());
+}
+
+SizeUnits CanvasCreationDialog::sizeUnits() const
+{
+    return KIPIPhotoFramesEditor::sizeUnitsNames().key(d->sizeUnitsWidget->currentText());
+}
+
+ResolutionUnits CanvasCreationDialog::resolutionUnits() const
+{
+    return KIPIPhotoFramesEditor::resolutionUnitsNames().key(d->resolutionUnitsWidget->currentText());
 }
 
 void CanvasCreationDialog::recalculatePaperSize(const QString & paperSize)

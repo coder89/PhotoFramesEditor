@@ -245,7 +245,7 @@ TextItem::TextItem(const QString & text) :
 {
     this->setFlag(QGraphicsItem::ItemIsFocusable);
     if (text.isEmpty())
-        this->setName(i18n("New text item"));
+        this->setName(i18n("New text"));
     else
         this->setName(text);
     this->refresh();

@@ -109,6 +109,7 @@ namespace KIPIPhotoFramesEditor
             bool isGridVisible();
             void updateSelection();
             void setSelectionVisible(bool isVisible);
+            void closeCropWidget();
 
         protected:
 

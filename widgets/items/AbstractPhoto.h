@@ -27,6 +27,7 @@ namespace KIPIPhotoFramesEditor
             Q_OBJECT
 
             QString m_name;
+            int m_name_number;
             mutable QString m_id;
 
         public:
@@ -91,20 +92,10 @@ namespace KIPIPhotoFramesEditor
 
             /// Name of item property
             Q_PROPERTY(QString name READ name WRITE setName)
-            void setName(const QString & name)
-            {
-                if (name.isEmpty())
-                    return;
-                m_name = name.simplified();
-                if (m_name.length() > 20)
-                {
-                    m_name = m_name.left(20);
-                    m_name.append("...");
-                }
-            }
+            void setName(const QString & name);
             QString name() const
             {
-                return m_name;
+                return m_name + (m_name_number > 1 ? " " + QString::number(m_name_number) : "");
             }
 
             /// Icon of the item [50px x 50px]
@@ -175,6 +166,9 @@ namespace KIPIPhotoFramesEditor
 
             // Draws abstract item presentation
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+            // React on item changes
+            virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
             // Mouse events
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);

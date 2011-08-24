@@ -13,9 +13,9 @@
 #include <QPainter>
 #include <QVariant>
 #include <qmath.h>
-
 #include <QDebug>
-#include <QTime>
+
+#include <klocalizedstring.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -23,7 +23,8 @@ const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
 AbstractPhoto::AbstractPhoto() :
     AbstractItemInterface(0,0),
-    m_name("New layer"),
+    m_name(i18n("New layer")),
+    m_name_number(1),
     m_border_width(0)
 {
     this->setupItem();
@@ -72,7 +73,7 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     QDomElement itemSVG = document.createElement("g");
     itemSVG.setAttribute("transform", translate + " " + matrix);
     itemSVG.setAttribute("id", this->id());
-    itemSVG.setAttribute("name", this->name());
+    itemSVG.setAttribute("name", QString(this->name().toUtf8()));
     if (!this->isVisible())
         itemSVG.setAttribute("visibility", "hide");
 
@@ -86,15 +87,15 @@ QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
     defs.appendChild(clipPath);
 
     // 'defs'->'pfe:data'
-    QDomElement appNS = document.createElementNS(KIPIPhotoFramesEditor::uri(), "data");
-    appNS.setPrefix(KIPIPhotoFramesEditor::name());
-    defs.appendChild(appNS);
-    appNS.appendChild(m_effects_group->toSvg(document));
+    QDomElement appNSData = document.createElementNS(KIPIPhotoFramesEditor::uri(), "data");
+    appNSData.setPrefix(KIPIPhotoFramesEditor::name());
+    defs.appendChild(appNSData);
+    appNSData.appendChild(m_effects_group->toSvg(document));
 
     // 'defs'->'pfe:data'->'crop_path'
     QDomElement cropPath = document.createElement("crop_path");
     cropPath.appendChild( KIPIPhotoFramesEditor::pathToSvg(this->cropShape(), document) );
-    appNS.appendChild(cropPath);
+    appNSData.appendChild(cropPath);
 
     // Convert visible area to SVG path's 'd' attribute
     QPainterPath visibleArea = this->shape();
@@ -211,10 +212,6 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
         if (itemDataElement.attribute("id") != "data_"+m_id)
             continue;
 
-        QDomElement cropPath = itemDataElement.firstChildElement("crop_path");
-        if (!cropPath.isNull())
-            this->setCropShape( KIPIPhotoFramesEditor::pathFromSvg( cropPath.firstChildElement("path") ) );
-
         // Borders
         if (m_borders_group)
             delete m_borders_group;
@@ -243,12 +240,55 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     if (!m_effects_group)
         return false;
 
+    // Crop path
+    QDomElement cropPath = appNS.firstChildElement("crop_path");
+    if (!cropPath.isNull())
+        this->setCropShape( KIPIPhotoFramesEditor::pathFromSvg( cropPath.firstChildElement("path") ) );
+    else
+        return false;
+
     return true;
+}
+
+void AbstractPhoto::setName(const QString & name)
+{
+    if (name.isEmpty())
+        return;
+    m_name = name.simplified();
+    if (m_name.length() > 20)
+    {
+        m_name = m_name.left(20);
+        m_name.append("...");
+    }
+    m_name_number = 0;
+    Scene * scene = qobject_cast<Scene*>(this->scene());
+    if (!scene)
+        return;
+    QList<QGraphicsItem*> items = scene->items();
+    foreach (QGraphicsItem * item, items)
+    {
+        AbstractPhoto * myItem = dynamic_cast<AbstractPhoto*>(item);
+        if (!myItem || myItem == this || myItem->m_name.isEmpty())
+            continue;
+        while (myItem->name() == this->name())
+            m_name_number += 1;
+    }
 }
 
 void AbstractPhoto::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
 {
     bordersGroup()->paint(painter, option);
+}
+
+QVariant AbstractPhoto::itemChange(GraphicsItemChange change, const QVariant & value)
+{
+    switch (change)
+    {
+        case QGraphicsItem::ItemSceneHasChanged:
+            this->setName(m_name);
+        default:
+            return AbstractItemInterface::itemChange(change, value);
+    }
 }
 
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)

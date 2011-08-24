@@ -18,15 +18,29 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-Canvas::Canvas(const QSizeF & dimension, QWidget * parent) :
-    QGraphicsView(parent)
+class KIPIPhotoFramesEditor::CanvasPrivate
 {
+    QSizeF m_size;
+    QSizeF m_resolution;
+    SizeUnits m_size_units;
+    QString m_resolution_units;
+
+    friend class Canvas;
+};
+
+Canvas::Canvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits, /*const QSizeF & resolution, const QString & resolutionUnits, */QWidget * parent) :
+    QGraphicsView(parent),
+    d(new CanvasPrivate)
+{
+    d->m_size = paperSize;
+    d->m_size_units = sizeUnits;
     m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
     this->init();
 }
 
 Canvas::Canvas(Scene * scene, QWidget * parent) :
-    QGraphicsView(parent)
+    QGraphicsView(parent),
+    d(new CanvasPrivate)
 {
     Q_ASSERT(scene != 0);
     m_scene = scene;
@@ -77,12 +91,12 @@ void Canvas::setupGUI()
 
     this->setScene(m_scene);
 
-    QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
-    img.setText("File","routing.jpg");
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addImage(img);                                /// TODO : Remove after finish
-    this->addText(QString::fromUtf8("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
-    this->addText(QString::fromUtf8("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
+    //QImage img("/home/coder89/Desktop/routing.jpg");        /// TODO : Remove after finish
+    //img.setText("File","routing.jpg");
+    //this->addImage(img);                                /// TODO : Remove after finish
+    //this->addImage(img);                                /// TODO : Remove after finish
+    //this->addText(QString::fromUtf8("\tJakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
+    //this->addText(QString::fromUtf8("Jakiś tam sobie tekst \n asoiufhasuhf iusd hggwsvbizuds \n iasgfgauu\nasiuf"));
 }
 
 /** ###########################################################################################################################
@@ -146,13 +160,70 @@ LayersSelectionModel * Canvas::selectionModel() const
 }
 
 /** ###########################################################################################################################
+ * Canvas size
+ #############################################################################################################################*/
+QSizeF Canvas::paperSize() const
+{
+    return d->m_size;
+}
+
+/** ###########################################################################################################################
+ * Canvas size units
+ #############################################################################################################################*/
+SizeUnits Canvas::sizeUnits() const
+{
+    return d->m_size_units;
+}
+
+/** ###########################################################################################################################
+ * Canvas resolution
+ #############################################################################################################################*/
+QSizeF Canvas::resolution() const
+{
+    return d->m_resolution;
+}
+
+/** ###########################################################################################################################
+ * Canvas rersolution units
+ #############################################################################################################################*/
+QString Canvas::resolutionUnits() const
+{
+    return d->m_resolution_units;
+}
+
+/** ###########################################################################################################################
+ * Sets canvas size
+ #############################################################################################################################*/
+void Canvas::setCanvasSize(const QSize & dimension)
+{
+    m_scene->setSceneRect(QRectF(QPointF(0, 0), dimension));
+}
+
+/** ###########################################################################################################################
+ * Sets canvas paper size (for printing purpose)
+ #############################################################################################################################*/
+void Canvas::setPageSize(const QSizeF & paperSize, SizeUnits units)
+{
+    d->m_size = paperSize;
+    d->m_size_units = units;
+}
+
+/** ###########################################################################################################################
+ * Sets canvas resolution size (for printing purpose)
+ #############################################################################################################################*/
+void Canvas::setCanvasResolution(const QSizeF & resolution, ResolutionUnits units)
+{
+    d->m_resolution = resolution;
+    d->m_resolution_units = units;
+}
+
+/** ###########################################################################################################################
  * Add new image from QImage object
  #############################################################################################################################*/
 void Canvas::addImage(const QImage & image)
 {
     // Create & setup item
     PhotoItem * it = new PhotoItem(image);
-    it->setName(image.text("File").append(QString::number(model()->rowCount())));
 
     // Add item to scene & model
     m_scene->addItem(it);

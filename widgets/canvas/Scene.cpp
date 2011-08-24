@@ -483,6 +483,7 @@ public:
     CropItemsCommand(const QPainterPath & path, const QList<AbstractPhoto*> & items, QUndoCommand * parent = 0) :
         QUndoCommand(parent)
     {
+        qDebug() << "scene crop shape" << path.boundingRect();
         foreach (AbstractPhoto * item, items)
             data.insert(item, item->mapFromScene(path));
     }

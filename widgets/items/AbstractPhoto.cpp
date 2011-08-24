@@ -312,6 +312,7 @@ QString AbstractPhoto::id() const
 void AbstractPhoto::setCropShape(const QPainterPath & cropShape)
 {
     m_crop_shape = cropShape;
+    qDebug () << "crop shape:" << m_crop_shape.boundingRect();
     this->refresh();
 }
 

@@ -26,6 +26,7 @@ class KIPIPhotoFramesEditor::CropWidgetItemPrivate
     };
 
     CropWidgetItemPrivate() :
+        currentViewTransform(0, 0, 0,    0, 0, 0,   0, 0, 0),
         recalculate(true),
         pressedVHandler(-1),
         pressedHHandler(-1)
@@ -38,7 +39,7 @@ class KIPIPhotoFramesEditor::CropWidgetItemPrivate
         m_handlers[Bottom][Left] = QRectF(0, 0, 20, 20);
         m_handlers[Bottom][HCenter] = QRectF(0, 0, 20, 20);
         m_handlers[Bottom][Right] = QRectF(0, 0, 20, 20);
-        m_elipse.addEllipse(QPointF(0,0), 20, 20);
+        m_elipse.addEllipse(QPointF(0,0), 10, 10);
     }
 
     QTransform currentViewTransform;
@@ -71,6 +72,7 @@ void CropWidgetItemPrivate::transformDrawings(const QTransform & viewTransform)
 
     recalculate = false;
     currentViewTransform = viewTransform;
+    qDebug() << "changed" << viewTransform;
 }
 
 void CropWidgetItemPrivate::calculateDrawings()
@@ -78,6 +80,7 @@ void CropWidgetItemPrivate::calculateDrawings()
     // Scale height of handlers
     qreal h = m_rect.height() - 60;
     h = (h < 0 ? h / 3.0 : 0);
+    h = (h < -10 ? -10 : h);
     m_handlers[Top][Left].setHeight(20+h);
     m_handlers[Top][HCenter].setHeight(20+h);
     m_handlers[Top][Right].setHeight(20+h);
@@ -90,6 +93,7 @@ void CropWidgetItemPrivate::calculateDrawings()
     // Scale width of handlers
     qreal w = m_rect.width() - 60;
     w = (w < 0 ? w / 3.0 : 0);
+    w = (w < -10 ? -10 : w);
     m_handlers[Top][Left].setWidth(20+w);
     m_handlers[Top][HCenter].setWidth(20+w);
     m_handlers[Top][Right].setWidth(20+w);
@@ -109,8 +113,7 @@ void CropWidgetItemPrivate::calculateDrawings()
     m_handlers[Bottom][Right].moveCenter(m_rect.bottomRight());
 
     m_elipse = QPainterPath();
-    m_elipse.addEllipse(m_rect.center(), 20, 20);
-    m_elipse = currentViewTransform.map(m_elipse);
+    m_elipse.addEllipse(m_rect.center(), 10, 10);
 
     m_shape = QPainterPath();
     m_shape.setFillRule(Qt::WindingFill);
@@ -188,6 +191,7 @@ void CropWidgetItem::keyPressEvent(QKeyEvent * event)
     {
         QPainterPath p;
         p.addRect( d->m_rect );
+        qDebug() << "send shape:" << d->currentViewTransform.inverted().map(p).boundingRect();
         emit cropShapeSelected( this->mapToScene( d->currentViewTransform.inverted().map(p) ) );
     }
 }
@@ -214,6 +218,11 @@ void CropWidgetItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
                 }
             }
         }
+        if (d->m_elipse.contains(handledPoint))
+        {
+            d->pressedVHandler = CropWidgetItemPrivate::VCenter;
+            d->pressedHHandler = CropWidgetItemPrivate::HCenter;
+        }
         return;
         found:
             d->handlerOffset = d->m_handlers[d->pressedVHandler][d->pressedHHandler].center() - handledPoint;
@@ -231,51 +240,72 @@ void CropWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
     QRectF temp = d->m_rect;
 
-    if (d->pressedVHandler == CropWidgetItemPrivate::Top)
+    // Position change
+    if (d->pressedVHandler == CropWidgetItemPrivate::VCenter &&
+        d->pressedHHandler == CropWidgetItemPrivate::HCenter)
     {
-        temp.setTop( point.y() + d->handlerOffset.y() );
-        if (temp.top() < maxRect.top())
-            temp.setTop( maxRect.top() );
+        QPointF dif = view->transform().map(event->scenePos()) - view->transform().map(event->lastScenePos());
+        temp.translate(dif);
     }
-    else if (d->pressedVHandler == CropWidgetItemPrivate::Bottom)
+    // Size change
+    else
     {
-        temp.setBottom( point.y() + d->handlerOffset.y() );
-        if (temp.bottom() > maxRect.bottom())
-            temp.setBottom( maxRect.bottom() );
+        // Vertical size change
+        if (d->pressedVHandler == CropWidgetItemPrivate::Top)
+            temp.setTop( point.y() + d->handlerOffset.y() );
+        else if (d->pressedVHandler == CropWidgetItemPrivate::Bottom)
+            temp.setBottom( point.y() + d->handlerOffset.y() );
+
+        // Horizontal size change
+        if (d->pressedHHandler == CropWidgetItemPrivate::Right)
+            temp.setRight( point.x() + d->handlerOffset.x() );
+        else if (d->pressedHHandler == CropWidgetItemPrivate::Left)
+            temp.setLeft( point.x() + d->handlerOffset.x() );
+
+        // Keeps aspect ratio
+        if (event->modifiers() & Qt::ShiftModifier)
+        {
+            qreal xFactor = temp.width()  / d->m_rect.width();
+            qreal yFactor = temp.height() / d->m_rect.height();
+            if (xFactor > yFactor || d->pressedHHandler == CropWidgetItemPrivate::HCenter)
+            {
+                qreal dif = d->m_rect.width() - d->m_rect.width() * yFactor;
+                if (d->pressedHHandler == CropWidgetItemPrivate::Right)
+                    temp.setRight( d->m_rect.right() - dif );
+                else if (d->pressedHHandler == CropWidgetItemPrivate::Left)
+                    temp.setLeft( d->m_rect.left() + dif );
+                else
+                {
+                    temp.setRight( d->m_rect.right() - dif / 2.0 );
+                    temp.setLeft( d->m_rect.left() + dif / 2.0 );
+                }
+            }
+            else if (xFactor < yFactor || d->pressedVHandler == CropWidgetItemPrivate::VCenter)
+            {
+                qreal dif = d->m_rect.height() - d->m_rect.height() * xFactor;
+                if (d->pressedVHandler == CropWidgetItemPrivate::Top)
+                    temp.setTop( d->m_rect.top() + dif );
+                else if (d->pressedVHandler == CropWidgetItemPrivate::Bottom)
+                    temp.setBottom( d->m_rect.bottom() - dif );
+                else
+                {
+                    temp.setTop( d->m_rect.top() + dif / 2.0 );
+                    temp.setBottom( d->m_rect.bottom() - dif / 2.0 );
+                }
+            }
+        }
     }
 
-    if (d->pressedHHandler == CropWidgetItemPrivate::Right)
-    {
-        temp.setRight( point.x() + d->handlerOffset.x() );
-        if (temp.right() > maxRect.right())
-            temp.setRight( maxRect.right() );
-    }
-    else if (d->pressedHHandler == CropWidgetItemPrivate::Left)
-    {
-        temp.setLeft( point.x() + d->handlerOffset.x() );
-        if (temp.left() < maxRect.left())
-            temp.setLeft( maxRect.left() );
-    }
+    temp.setBottom( qMin(temp.bottom() , maxRect.bottom()) );
+    temp.setTop( qMax(temp.top() , maxRect.top()) );
+    temp.setLeft( qMax(temp.left() , maxRect.left()) );
+    temp.setRight( qMin(temp.right() , maxRect.right()) );
 
-    if (event->modifiers() & Qt::ShiftModifier)
-    {
-        qreal xFactor = temp.width()  / d->m_rect.width();
-        qreal yFactor = temp.height() / d->m_rect.height();
-        if (xFactor < yFactor)
-        {
-            if (d->pressedHHandler == CropWidgetItemPrivate::Right)
-            {}
-            else if (d->pressedHHandler == CropWidgetItemPrivate::Left)
-            {}
-        }
-        else if (xFactor > yFactor)
-        {
-            if (d->pressedVHandler == CropWidgetItemPrivate::Top)
-            {}
-            else if (d->pressedVHandler == CropWidgetItemPrivate::Bottom)
-            {}
-        }
-    }
+    // Rect inverse
+    if (temp.height() < 0)
+        d->pressedVHandler = (d->pressedVHandler == CropWidgetItemPrivate::Top ? CropWidgetItemPrivate::Bottom :CropWidgetItemPrivate::Top);
+    if (temp.width() < 0)
+        d->pressedHHandler = (d->pressedHHandler == CropWidgetItemPrivate::Left ? CropWidgetItemPrivate::Right :CropWidgetItemPrivate::Left);
 
     d->m_rect = temp;
 
@@ -299,7 +329,14 @@ void CropWidgetItem::setItems(const QList<AbstractPhoto*> & items)
 
     d->m_rect = QRectF();
     foreach (AbstractPhoto * item, items)
-        d->m_rect = d->m_rect.united( item->boundingRect() );
+    {
+        QRectF t = item->mapRectToScene( item->cropShape().boundingRect() );
+        //qDebug() << item->mapRectToScene( item->cropShape().boundingRect() ) << item->cropShape().boundingRect();
+        if (!t.isValid())
+            t = item->mapToScene(item->itemDrawArea()).boundingRect();
+        t.translate( -t.topLeft() );
+        d->m_rect = d->m_rect.united( t );
+    }
 
     this->setPos( d->m_crop_shape.boundingRect().topLeft() );
     d->m_crop_shape.translate( -d->m_crop_shape.boundingRect().topLeft() );
@@ -312,4 +349,5 @@ void CropWidgetItem::setItems(const QList<AbstractPhoto*> & items)
     }
     this->update();
     this->show();
+    qDebug() << this->scenePos() << d->m_rect.topLeft();
 }

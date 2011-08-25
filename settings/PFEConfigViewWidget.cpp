@@ -4,6 +4,7 @@
 #include <QFormLayout>
 #include <QDoubleSpinBox>
 #include <QLabel>
+#include <QGroupBox>
 
 #include <klocalizedstring.h>
 
@@ -32,14 +33,24 @@ PFEConfigViewWidget::~PFEConfigViewWidget()
 
 void PFEConfigViewWidget::setupGUI()
 {
-    QFormLayout * layout = new QFormLayout();
+    QVBoxLayout * layout = new QVBoxLayout();
     this->setLayout(layout);
 
     PFEConfigSkeleton * skeleton = PFEConfigSkeleton::self();
-    d->xGrid = new QDoubleSpinBox(this);
+    QGroupBox * gridBox = new QGroupBox(i18n("Grid"), this);
+    layout->addWidget(gridBox);
+    QFormLayout * gridLayout = new QFormLayout();
+    gridBox->setLayout(gridLayout);
+    d->xGrid = new QDoubleSpinBox(gridBox);
     d->xGrid->setMinimum(1);
     d->xGrid->setMaximum(9999);
     d->xGrid->setSingleStep(1.0);
     d->xGrid->setValue(skeleton->horizontalGrid());
-    layout->addRow(i18n("Horizontal grid distance"), d->xGrid);
+    gridLayout->addRow(i18n("Horizontal distance"), d->xGrid);
+    d->yGrid = new QDoubleSpinBox(gridBox);
+    d->yGrid->setMinimum(1);
+    d->yGrid->setMaximum(9999);
+    d->yGrid->setSingleStep(1.0);
+    d->yGrid->setValue(skeleton->verticalGrid());
+    gridLayout->addRow(i18n("Vertical distance"), d->yGrid);
 }

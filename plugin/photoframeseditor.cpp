@@ -275,6 +275,7 @@ void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
         KMessageBox::error(this,
                            i18n("Can't read image file."));
     }
+    m_canvas->undoStack()->clear();
 }
 
 void PhotoFramesEditor::prepareSignalsConnections()
@@ -524,8 +525,8 @@ void PhotoFramesEditor::settings()
       return;
 
     KConfigDialog * dialog = new KConfigDialog(this, "settings", PFEConfig::configSkeleton());
-    PFEConfigViewWidget * confWdg = new PFEConfigViewWidget( 0, i18n("Example") );
-    dialog->addPage( confWdg, i18n("Example"), "example" );
+    PFEConfigViewWidget * confWdg = new PFEConfigViewWidget( 0, i18n("View") );
+    dialog->addPage( confWdg, i18n("View"), "view" );
     connect( dialog, SIGNAL(settingsChanged()), this, SLOT(updateConfiguration()) );
     dialog->show();
 }

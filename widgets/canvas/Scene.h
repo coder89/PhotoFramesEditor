@@ -136,7 +136,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            void addItemOnly(AbstractPhoto * photo);
+            void addItem(AbstractPhoto * photo);
             bool askAboutRemoving(int count);
             bool canDecode(const QMimeData * mimeData);
 

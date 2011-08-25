@@ -1240,7 +1240,7 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
 
         if (item)
         {
-            result->addItemOnly(item);
+            result->addItem(item);
             item->setZValue(i+1);
         }
         else
@@ -1313,7 +1313,7 @@ void Scene::addItemCommand(AbstractPhoto * item)
 }
 
 //#####################################################################################################
-void Scene::addItemOnly(AbstractPhoto * photo)
+void Scene::addItem(AbstractPhoto * photo)
 {
     // Prevent multiple addition of the item
     if (photo->scene() == this)

@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     KCmdLineArgs::init(argc,argv,&aboutData);
 
     KApplication a;
-
     QResource::registerResource("resources/icons.qcc");
 
     PhotoFramesEditor * w = PhotoFramesEditor::instance(0);

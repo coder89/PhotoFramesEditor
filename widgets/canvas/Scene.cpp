@@ -933,7 +933,7 @@ void Scene::dropEvent(QGraphicsSceneDragDropEvent * event)
             {
                 PhotoItem * item = new PhotoItem(img);
                 item->setPos(event->scenePos());
-                this->addItem(item);
+                this->addItemCommand(item);
             }
         }
     }
@@ -1240,7 +1240,7 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
 
         if (item)
         {
-            result->addItem(item);
+            result->addItemOnly(item);
             item->setZValue(i+1);
         }
         else
@@ -1289,7 +1289,7 @@ void Scene::readSceneMousePress(MousePressListener * mouseListsner)
 }
 
 //#####################################################################################################
-void Scene::addItem(AbstractPhoto * item)
+void Scene::addItemCommand(AbstractPhoto * item)
 {
     // Prevent multiple addition of the item
     if (item->scene() == this)
@@ -1310,6 +1310,30 @@ void Scene::addItem(AbstractPhoto * item)
 
     QUndoCommand * command = new AddItemsCommand(item, insertionRow, this);
     PFE_PostUndoCommand(command);
+}
+
+//#####################################################################################################
+void Scene::addItemOnly(AbstractPhoto * photo)
+{
+    // Prevent multiple addition of the item
+    if (photo->scene() == this)
+        return;
+
+    QModelIndexList selectedIndexes = d->selection_model->selectedIndexes();
+    unsigned insertionRow = -1;
+    foreach (QModelIndex index, selectedIndexes)
+    {
+        if (index.column() != LayersModelItem::NameString)
+            continue;
+        if (insertionRow > (unsigned)index.row())
+            insertionRow = index.row();
+    }
+
+    if (insertionRow == (unsigned)-1)
+        insertionRow = 0;
+
+    QGraphicsScene::addItem(photo);
+    model()->insertItem(photo, insertionRow);
 }
 
 //#####################################################################################################

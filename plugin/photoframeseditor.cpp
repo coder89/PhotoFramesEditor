@@ -11,6 +11,8 @@
 #include "ImageFileDialog.h"
 #include "GridSetupDialog.h"
 #include "global.h"
+#include "PFEConfigSkeleton.h"
+#include "PFEConfigViewWidget.h"
 
 #include "BorderDrawerInterface.h"
 #include "BorderDrawersLoader.h"
@@ -45,6 +47,7 @@
 #include <kmessagebox.h>
 #include <kapplication.h>
 #include <kprintpreview.h>
+#include <kconfigdialog.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -61,7 +64,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
     setObjectName("Photo Frames Editor");
 
     m_instance = this;
-    d->settings = PFESettings::instance(this);
+    d->settings = PFEConfig::instance(this);
 
     loadEffects();
     loadBorders();
@@ -166,6 +169,9 @@ void PhotoFramesEditor::setupActions()
     d->redoAction = KStandardAction::redo(0, 0, actionCollection());
     d->redoAction->setShortcut(KShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Z));
     actionCollection()->addAction("redo", d->redoAction);
+    //------------------------------------------------------------------------
+    d->settingsAction = KStandardAction::preferences(this, SLOT(settings()), actionCollection());
+    actionCollection()->addAction("settings", d->settingsAction);
     //------------------------------------------------------------------------
     d->showGridToggleAction = new KToggleAction(i18nc("View grid lines", "Show"), actionCollection());
     d->showGridToggleAction->setShortcut(KShortcut(Qt::SHIFT + Qt::CTRL + Qt::Key_G));
@@ -510,6 +516,18 @@ bool PhotoFramesEditor::queryClose()
         return true;
     else
         return false;
+}
+
+void PhotoFramesEditor::settings()
+{
+    if ( KConfigDialog::showDialog( "settings" ) )
+      return;
+
+    KConfigDialog * dialog = new KConfigDialog(this, "settings", PFEConfig::configSkeleton());
+    PFEConfigViewWidget * confWdg = new PFEConfigViewWidget( 0, i18n("Example") );
+    dialog->addPage( confWdg, i18n("Example"), "example" );
+    connect( dialog, SIGNAL(settingsChanged()), this, SLOT(updateConfiguration()) );
+    dialog->show();
 }
 
 void PhotoFramesEditor::setGridVisible(bool isVisible)

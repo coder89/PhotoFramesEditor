@@ -14,13 +14,14 @@
 #include <QDockWidget>
 
 // Local
-#include "PFESettings.h"
+#include "PFEConfig.h"
 #include "LayersTree.h"
 #include "LayersTreeTitleWidget.h"
 #include "ToolsDockWidget.h"
 #include "EffectsEditorTool.h"
 #include "BorderEditTool.h"
 #include "ColorizeTool.h"
+#include "global.h"
 
 namespace KIPIPhotoFramesEditor
 {
@@ -42,6 +43,7 @@ namespace KIPIPhotoFramesEditor
                 quitAction(0),
                 undoAction(0),
                 redoAction(0),
+                settingsAction(0),
                 showGridToggleAction(0),
                 gridConfigAction(0),
                 changeCanvasSizeAction(0),
@@ -74,6 +76,7 @@ namespace KIPIPhotoFramesEditor
                 // Edit menu
                 Q_DELETE(undoAction)
                 Q_DELETE(redoAction)
+                Q_DELETE(settingsAction)
 
                 // View menu
                 Q_DELETE(showGridToggleAction)
@@ -93,7 +96,7 @@ namespace KIPIPhotoFramesEditor
             }
 
             // Settings object
-            PFESettings * settings;
+            PFEConfig * settings;
 
             // Central widget of the window
             QWidget *   centralWidget;
@@ -113,6 +116,7 @@ namespace KIPIPhotoFramesEditor
             // Edit menu
             KAction *   undoAction;
             KAction *   redoAction;
+            KAction *   settingsAction;
 
             // Canvas menu
             KToggleAction * showGridToggleAction;

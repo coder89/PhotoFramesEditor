@@ -14,7 +14,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         plugin/photoframeseditor.cpp \
-    widgets/abstract_photo_resizer.cpp \
     widgets/photo_context_menu.cpp \
     widgets/dialogs/CanvasCreationDialog.cpp \
     models/LayersModel.cpp \
@@ -41,7 +40,6 @@ SOURCES += main.cpp\
     utils/global.cpp \
     widgets/items/TextItem.cpp \
     widgets/dialogs/ImageFileDialog.cpp \
-    utils/PFESettings.cpp \
     widgets/tools/TextEditorTool.cpp \
     listeners/TextColorChangeListener.cpp \
     listeners/TextFontChangeListener.cpp \
@@ -58,10 +56,12 @@ SOURCES += main.cpp\
     widgets/extra/PatternsComboBox.cpp \
     widgets/canvas/RotationWidgetItem.cpp \
     widgets/canvas/ScalingWidgetItem.cpp \
-    widgets/canvas/CropWidgetItem.cpp
+    widgets/canvas/CropWidgetItem.cpp \
+    settings/PFEConfig.cpp \
+    settings/PFEConfigSkeleton.cpp \
+    settings/PFEConfigViewWidget.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
-    widgets/abstract_photo_resizer.h \
     widgets/photo_context_menu.h \
     plugin/photoframeseditor_p.h \
     utils/global.h \
@@ -92,7 +92,6 @@ HEADERS  += plugin/photoframeseditor.h \
     effects/PhotoEffectsLoader.h \
     widgets/items/TextItem.h \
     widgets/dialogs/ImageFileDialog.h \
-    utils/PFESettings.h \
     widgets/tools/TextEditorTool.h \
     listeners/TextColorChangeListener.h \
     listeners/TextFontChangeListener.h \
@@ -115,13 +114,17 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/extra/PatternsComboBox.h \
     widgets/canvas/RotationWidgetItem.h \
     widgets/canvas/ScalingWidgetItem.h \
-    widgets/canvas/CropWidgetItem.h
+    widgets/canvas/CropWidgetItem.h \
+    settings/PFEConfig.h \
+    settings/PFEConfigSkeleton.h \
+    settings/PFEConfigViewWidget.h
 
 LIBS += \
     -L/usr \
     -lkdeui \
     -lkio \
-    -lkipi
+    -lkipi \
+    -lkdecore
 
 INCLUDEPATH += \
     plugin \
@@ -139,10 +142,14 @@ INCLUDEPATH += \
     utils \
     models \
     undo \
-    borders
+    borders \
+    settings
 
 OTHER_FILES += \
-    resources/photoframeseditorui.rc
+    resources/photoframeseditorui.rc \
+    resources/photoframeseditor.kcfg \
+    CMakeLists.txt \
+    resources/PFEConfigSkeleton.kcfgc
 
 RESOURCES += \
     resources/icons.qrc

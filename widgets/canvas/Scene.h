@@ -102,7 +102,7 @@ namespace KIPIPhotoFramesEditor
 
         public Q_SLOTS:
 
-            void addItem(AbstractPhoto * item);
+            void addItemCommand(AbstractPhoto * item);
             void removeSelectedItems();
             void setGrid(qreal x, qreal y);
             void setGridVisible(bool visible);
@@ -136,6 +136,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
+            void addItemOnly(AbstractPhoto * photo);
             bool askAboutRemoving(int count);
             bool canDecode(const QMimeData * mimeData);
 

@@ -22,13 +22,25 @@
    <valuemap key="ProjectExplorer.Target.BuildConfiguration.0" type="QVariantMap">
     <valuemap key="ProjectExplorer.BuildConfiguration.BuildStepList.0" type="QVariantMap">
      <valuemap key="ProjectExplorer.BuildStepList.Step.0" type="QVariantMap">
+      <valuelist key="ProjectExplorer.ProcessStep.Arguments" type="QVariantList">
+       <value type="QString">photoframeseditor.kcfg</value>
+       <value type="QString">PFEConfigSkeleton.kcfgc</value>
+      </valuelist>
+      <value key="ProjectExplorer.ProcessStep.Command" type="QString">kconfig_compiler</value>
+      <value key="ProjectExplorer.ProcessStep.Enabled" type="bool">false</value>
+      <value key="ProjectExplorer.ProcessStep.WorkingDirectory" type="QString">$BUILDDIR</value>
+      <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Własny krok procesu</value>
+      <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
+      <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">ProjectExplorer.ProcessStep</value>
+     </valuemap>
+     <valuemap key="ProjectExplorer.BuildStepList.Step.1" type="QVariantMap">
       <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">qmake</value>
       <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
       <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">QtProjectManager.QMakeBuildStep</value>
       <valuelist key="QtProjectManager.QMakeBuildStep.QMakeArguments" type="QVariantList"/>
       <value key="QtProjectManager.QMakeBuildStep.QMakeForced" type="bool">false</value>
      </valuemap>
-     <valuemap key="ProjectExplorer.BuildStepList.Step.1" type="QVariantMap">
+     <valuemap key="ProjectExplorer.BuildStepList.Step.2" type="QVariantMap">
       <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Make</value>
       <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
       <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">Qt4ProjectManager.MakeStep</value>
@@ -36,7 +48,7 @@
       <valuelist key="Qt4ProjectManager.MakeStep.MakeArguments" type="QVariantList"/>
       <value key="Qt4ProjectManager.MakeStep.MakeCommand" type="QString"></value>
      </valuemap>
-     <valuemap key="ProjectExplorer.BuildStepList.Step.2" type="QVariantMap">
+     <valuemap key="ProjectExplorer.BuildStepList.Step.3" type="QVariantMap">
       <valuelist key="ProjectExplorer.ProcessStep.Arguments" type="QVariantList">
        <value type="QString">-R</value>
        <value type="QString">./resources</value>
@@ -49,7 +61,7 @@
       <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
       <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">ProjectExplorer.ProcessStep</value>
      </valuemap>
-     <value key="ProjectExplorer.BuildStepList.StepsCount" type="int">3</value>
+     <value key="ProjectExplorer.BuildStepList.StepsCount" type="int">4</value>
      <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Budowanie</value>
      <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
      <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">ProjectExplorer.BuildSteps.Build</value>

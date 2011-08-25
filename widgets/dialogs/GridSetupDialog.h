@@ -8,6 +8,8 @@ namespace KIPIPhotoFramesEditor
 {
     class GridSetupDialog : public KDialog
     {
+            Q_OBJECT
+
             QWidget * centralWidget;
             QDoubleSpinBox * x;
             QDoubleSpinBox * y;

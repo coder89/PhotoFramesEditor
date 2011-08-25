@@ -48,6 +48,7 @@ namespace KIPIPhotoFramesEditor
             void setGridVisible(bool isVisible);
             void createCanvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits);
             void createCanvas(const KUrl & fileUrl);
+            void settings();
             void setupGrid();
             void changeCanvasSize();
 

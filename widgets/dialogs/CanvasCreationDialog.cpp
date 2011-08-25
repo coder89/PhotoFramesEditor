@@ -288,6 +288,8 @@ CanvasCreationDialog::~CanvasCreationDialog()
 
 void CanvasCreationDialog::setupDialog(const QSizeF & size, const QString & sizeUnits, const QSizeF & resolution, const QString & resolutionUnits)
 {
+    this->setCaption(i18n("Canvas size"));
+
     QWidget * main = new QWidget(this);
     setMainWidget(main);
     QVBoxLayout * vLayout = new  QVBoxLayout(main);

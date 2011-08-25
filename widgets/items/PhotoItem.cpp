@@ -4,7 +4,7 @@
 #include "ImageFileDialog.h"
 #include "BordersGroup.h"
 #include "global.h"
-#include "PFESettings.h"
+#include "PFEConfig.h"
 #include "photoframeseditor.h"
 
 #include <QBuffer>
@@ -104,7 +104,7 @@ QDomElement PhotoItem::toSvg(QDomDocument & document) const
     QDomElement image = document.createElementNS(KIPIPhotoFramesEditor::uri(), "image");
     appNS.appendChild(image);
     // Saving image data
-    if (PFESettings::embedImagesData() && !m_pixmap_original.isNull())
+    if (PFEConfig::embedImagesData() && !m_pixmap_original.isNull())
     {
         QByteArray byteArray;
         QBuffer buffer(&byteArray);

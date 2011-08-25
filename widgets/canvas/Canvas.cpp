@@ -226,7 +226,7 @@ void Canvas::addImage(const QImage & image)
     PhotoItem * it = new PhotoItem(image);
 
     // Add item to scene & model
-    m_scene->addItem(it);
+    m_scene->addItemCommand(it);
 }
 
 /** ###########################################################################################################################
@@ -238,7 +238,7 @@ void Canvas::addText(const QString & text)
     TextItem * it = new TextItem(text);
 
     // Add item to scene & model
-    m_scene->addItem(it);
+    m_scene->addItemCommand(it);
 }
 
 /** ###########################################################################################################################
@@ -250,7 +250,7 @@ void Canvas::addNewItem(AbstractPhoto * item)
     if (!item)
         return;
 
-    m_scene->addItem(item);
+    m_scene->addItemCommand(item);
 
     m_scene->clearSelection();
     m_scene->clearFocus();

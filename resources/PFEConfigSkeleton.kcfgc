@@ -1,5 +1,0 @@
-File=photoframeseditor.kcfg
-ClassName=PFEConfigSkeleton
-NameSpace=KIPIPhotoFramesEditor
-Singleton=true
-Mutators=true

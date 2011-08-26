@@ -37,11 +37,42 @@ class PFEConfigSkeleton : public KConfigSkeleton
     }
 
     /**
+      Set ShowGrid
+    */
+    static
+    void setShowGrid( bool v )
+    {
+      if (!self()->isImmutable( QString::fromLatin1( "ShowGrid" ) ))
+        self()->mShowGrid = v;
+    }
+
+    /**
+      Get ShowGrid
+    */
+    static
+    bool showGrid()
+    {
+      return self()->mShowGrid;
+    }
+
+    /**
       Set Horizontal distance
     */
     static
     void setHorizontalGrid( double v )
     {
+      if (v < 1.0)
+      {
+        kDebug() << "setHorizontalGrid: value " << v << " is less than the minimum value of 1.0";
+        v = 1.0;
+      }
+
+      if (v > 999)
+      {
+        kDebug() << "setHorizontalGrid: value " << v << " is greater than the maximum value of 999";
+        v = 999;
+      }
+
       if (!self()->isImmutable( QString::fromLatin1( "HorizontalGrid" ) ))
         self()->mHorizontalGrid = v;
     }
@@ -61,6 +92,18 @@ class PFEConfigSkeleton : public KConfigSkeleton
     static
     void setVerticalGrid( double v )
     {
+      if (v < 1.0)
+      {
+        kDebug() << "setVerticalGrid: value " << v << " is less than the minimum value of 1.0";
+        v = 1.0;
+      }
+
+      if (v > 999)
+      {
+        kDebug() << "setVerticalGrid: value " << v << " is greater than the maximum value of 999";
+        v = 999;
+      }
+
       if (!self()->isImmutable( QString::fromLatin1( "VerticalGrid" ) ))
         self()->mVerticalGrid = v;
     }
@@ -83,6 +126,7 @@ class PFEConfigSkeleton : public KConfigSkeleton
     bool mEmbedImages;
 
     // View
+    bool mShowGrid;
     double mHorizontalGrid;
     double mVerticalGrid;
 

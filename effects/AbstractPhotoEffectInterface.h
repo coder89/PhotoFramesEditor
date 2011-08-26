@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QPainter>
 #include <QUndoCommand>
+#include <QDebug>
 
 #include "PhotoEffectsGroup.h"
 
@@ -46,8 +47,10 @@ namespace KIPIPhotoFramesEditor
                 QObject(parent),
                 m_factory(factory)
             {
+#ifdef QT_DEBUG
                 if (!m_factory)
-                    throw "No factory object!";
+                    qDebug() << "No factory object for effect" << this->effectName() << "from:" << __FILE__ << __LINE__;
+#endif
                 AbstractPhotoEffectProperty * strength = new AbstractPhotoEffectProperty(STRENGTH_PROPERTY);
                 strength->value = QVariant(100);
                 strength->data.insert(AbstractPhotoEffectProperty::Minimum,0);

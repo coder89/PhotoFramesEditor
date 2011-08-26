@@ -165,7 +165,9 @@ void CropWidgetItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * 
     painter->save();
 
     QPainterPath p;
+    p.setFillRule(Qt::WindingFill);
     p.addPolygon( viewTransform.map( this->mapFromScene(this->scene()->sceneRect()) ) );
+    p.addPath( viewTransform.map(d->m_crop_shape) );
     QPainterPath p1;
     p1.addRect(d->m_rect);
     p -= p1;

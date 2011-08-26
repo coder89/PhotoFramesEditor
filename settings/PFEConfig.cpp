@@ -14,6 +14,7 @@ QString PFEConfig::SAVING = "saving";
 QString PFEConfig::SAVING_EMBED_IMG = "embed_images_data";
 
 QString PFEConfig::VIEW = "view";
+QString PFEConfig::VIEW_GRID_SHOW = "view_grid_show";
 QString PFEConfig::VIEW_GRID_X = "view_grid_x";
 QString PFEConfig::VIEW_GRID_Y = "view_grid_y";
 
@@ -57,6 +58,20 @@ void PFEConfig::setEmbedImagesData(bool embed)
     instance()->sync();
 }
 
+
+bool PFEConfig::showGrid()
+{
+    KConfigGroup view = instance()->group(VIEW);
+    return view.readEntry<bool>(VIEW_GRID_SHOW, false);
+}
+
+void PFEConfig::setShowGrid(bool isVisible)
+{
+    KConfigGroup view = instance()->group(VIEW);
+    view.writeEntry<bool>(VIEW_GRID_SHOW, isVisible);
+    instance()->sync();
+}
+
 qreal PFEConfig::gridX()
 {
     KConfigGroup view = instance()->group(VIEW);
@@ -68,7 +83,7 @@ void PFEConfig::setGridX(qreal x)
     if (x <= 0)
         return;
     KConfigGroup view = instance()->group(VIEW);
-    view.writeEntry<bool>(VIEW_GRID_X, x);
+    view.writeEntry<qreal>(VIEW_GRID_X, x);
     instance()->sync();
 }
 
@@ -83,7 +98,7 @@ void PFEConfig::setGridY(qreal y)
     if (y <= 0)
         return;
     KConfigGroup view = instance()->group(VIEW);
-    view.writeEntry<bool>(VIEW_GRID_Y, y);
+    view.writeEntry<qreal>(VIEW_GRID_Y, y);
     instance()->sync();
 }
 

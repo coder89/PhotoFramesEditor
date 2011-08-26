@@ -15,6 +15,7 @@ namespace KIPIPhotoFramesEditor
             static QString SAVING;
             static QString SAVING_EMBED_IMG;
             static QString VIEW;
+            static QString VIEW_GRID_SHOW;
             static QString VIEW_GRID_X;
             static QString VIEW_GRID_Y;
 
@@ -27,6 +28,8 @@ namespace KIPIPhotoFramesEditor
             static bool embedImagesData();
             static void setEmbedImagesData(bool embed);
 
+            static bool showGrid();
+            static void setShowGrid(bool isVisible);
             static qreal gridX();
             static void setGridX(qreal x);
             static qreal gridY();

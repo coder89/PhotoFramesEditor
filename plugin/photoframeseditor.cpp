@@ -59,7 +59,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
     m_interface(0),
     d(new PhotoFramesEditorPriv)
 {
-    setXMLFile(QApplication::applicationDirPath()+"/resources/photoframeseditorui.rc");
+    setXMLFile("photoframeseditorui.rc");
 
     setObjectName("Photo Frames Editor");
 
@@ -470,8 +470,9 @@ void PhotoFramesEditor::printPreview()
              break;
          default:
 #ifdef QT_DEBUG
-             qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__;
+             qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__
 #endif
+             ;
          }
          QPrintPreviewDialog dialog(&printer, this);
          connect(&dialog, SIGNAL(paintRequested(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
@@ -526,7 +527,7 @@ void PhotoFramesEditor::settings()
 
     KConfigDialog * dialog = new KConfigDialog(this, "settings", PFEConfig::configSkeleton());
     PFEConfigViewWidget * confWdg = new PFEConfigViewWidget( 0, i18n("View") );
-    dialog->addPage( confWdg, i18n("View"), "view" );
+    dialog->addPage( confWdg, i18n("View") )->setIcon(KIcon(QIcon(":view.png")));
     connect( dialog, SIGNAL(settingsChanged()), this, SLOT(updateConfiguration()) );
     dialog->show();
 }

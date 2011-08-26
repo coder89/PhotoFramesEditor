@@ -1,159 +1,142 @@
-  # set project's name
   PROJECT( photoframeseditor )
 
-  FIND_PACKAGE( KDE4 REQUIRED )
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-  INCLUDE(KDE4Defaults)
+  ADD_SUBDIRECTORY( ./utils/qtpropertybrowser )
+
+  FIND_PACKAGE(Qt4 REQUIRED)
+  FIND_PACKAGE(KDE4 REQUIRED)
+  FIND_PACKAGE(Kipi REQUIRED)
+
+  ADD_DEFINITIONS( -Wall )
+  ADD_DEFINITIONS(${QT_DEFINITIONS})
+
+  SET( CMAKE_PACKAGE_QTGUI TRUE )
+  SET( QT_USE_QTXML TRUE )
+
+  INCLUDE( ${QT_USE_FILE} )
+  INCLUDE( KDE4Defaults )
 
   SET( INCLUDE_DIRS
-      ./
-      ./plugin
-      ./widgets
-      ./widgets/extra
-      ./widgets/canvas
-      ./widgets/dialogs
-      ./widgets/items
-      ./widgets/layers
-      ./widgets/menus
-      ./widgets/tools
-      ./effects
-      ./events
-      ./listeners
-      ./utils
-      ./models
-      ./undo
-      ./borders
+      plugin
+      widgets
+      widgets/extra
+      widgets/canvas
+      widgets/dialogs
+      widgets/items
+      widgets/layers
+      widgets/menus
+      widgets/tools
+      effects
+      events
+      listeners
+      utils
+      utils/qtpropertybrowser/src
+      models
+      undo
+      borders
+      settings
   )
 
-  INCLUDE_DIRECTORIES(${QT_INCLUDE} ${KDE4_INCLUDES} ${INCLUDE_DIRS})
-
-  # sources
-  SET( SAMPLE_SRCS
-      ./main.cpp
-      ./plugin/photoframeseditor.cpp
-      ./widgets/photo_context_menu.cpp
-      ./widgets/dialogs/CanvasCreationDialog.cpp
-      ./models/LayersModel.cpp
-      ./models/LayersModelItem.cpp
-      ./models/LayersSelectionModel.cpp
-      ./widgets/canvas/Scene.cpp
-      ./widgets/canvas/Canvas.cpp
-      ./widgets/layers/LayersTree.cpp
-      ./widgets/layers/LayersTreeDelegate.cpp
-      ./widgets/menus/SceneMenu.cpp
-      ./widgets/menus/GraphicsEditingWidgetMenu.cpp
-      ./widgets/menus/LayersTreeMenu.cpp
-      ./undo/UndoMoveRowsCommand.cpp
-      ./widgets/tools/ToolsDockWidget.cpp
-      ./widgets/tools/BorderEditTool.cpp
-      ./widgets/items/AbstractPhoto.cpp
-      ./widgets/items/PhotoItem.cpp
-      ./widgets/tools/EffectsEditorTool.cpp
-      ./effects/PhotoEffectsGroup.cpp
-      ./utils/KEditFactory.cpp
-      ./events/UndoCommandEvent.cpp
-      ./events/UndoCommandEventFilter.cpp
-      ./effects/PhotoEffectsLoader.cpp
-      ./utils/global.cpp
-      ./widgets/items/TextItem.cpp
-      ./widgets/dialogs/ImageFileDialog.cpp
-      ./utils/PFEConfig.cpp
-      ./widgets/tools/TextEditorTool.cpp
-      ./listeners/TextColorChangeListener.cpp
-      ./listeners/TextFontChangeListener.cpp
-      ./widgets/items/AbstractItemInterface.cpp
-      ./borders/BordersGroup.cpp
-      ./borders/BorderDrawersLoader.cpp
-      ./borders/BorderChangeListener.cpp
-      ./widgets/dialogs/GridSetupDialog.cpp
-      ./plugin/plugin_photoframeseditor.cpp
-      ./widgets/canvas/SceneBackground.cpp
-      ./widgets/tools/CanvasEditTool.cpp
-      ./widgets/tools/AbstractItemsTool.cpp
-      ./widgets/tools/AbstractItemsListViewTool.cpp
-      ./widgets/extra/PatternsComboBox.cpp
-      ./widgets/canvas/RotationWidgetItem.cpp
-      ./widgets/canvas/ScalingWidgetItem.cpp
-      ./widgets/canvas/CropWidgetItem.cpp
+  SET( PhotoFramesEditor_SRCS
+      plugin/photoframeseditor.cpp
+      widgets/photo_context_menu.cpp
+      widgets/dialogs/CanvasCreationDialog.cpp
+      models/LayersModel.cpp
+      models/LayersModelItem.cpp
+      models/LayersSelectionModel.cpp
+      widgets/canvas/Scene.cpp
+      widgets/canvas/Canvas.cpp
+      widgets/layers/LayersTree.cpp
+      widgets/layers/LayersTreeDelegate.cpp
+      widgets/menus/SceneMenu.cpp
+      widgets/menus/GraphicsEditingWidgetMenu.cpp
+      widgets/menus/LayersTreeMenu.cpp
+      undo/UndoMoveRowsCommand.cpp
+      widgets/tools/ToolsDockWidget.cpp
+      widgets/tools/BorderEditTool.cpp
+      widgets/items/AbstractPhoto.cpp
+      widgets/items/PhotoItem.cpp
+      widgets/tools/EffectsEditorTool.cpp
+      effects/PhotoEffectsGroup.cpp
+      utils/KEditFactory.cpp
+      events/UndoCommandEvent.cpp
+      events/UndoCommandEventFilter.cpp
+      effects/PhotoEffectsLoader.cpp
+      utils/global.cpp
+      widgets/items/TextItem.cpp
+      widgets/dialogs/ImageFileDialog.cpp
+      settings/PFEConfig.cpp
+      settings/PFEConfigViewWidget.cpp
+      widgets/tools/TextEditorTool.cpp
+      listeners/TextColorChangeListener.cpp
+      listeners/TextFontChangeListener.cpp
+      widgets/items/AbstractItemInterface.cpp
+      borders/BordersGroup.cpp
+      borders/BorderDrawersLoader.cpp
+      borders/BorderChangeListener.cpp
+      widgets/dialogs/GridSetupDialog.cpp
+      widgets/canvas/SceneBackground.cpp
+      widgets/tools/CanvasEditTool.cpp
+      widgets/tools/AbstractTool.cpp
+      widgets/tools/AbstractItemsTool.cpp
+      widgets/tools/AbstractItemsListViewTool.cpp
+      widgets/extra/PatternsComboBox.cpp
+      widgets/canvas/RotationWidgetItem.cpp
+      widgets/canvas/ScalingWidgetItem.cpp
+      widgets/canvas/CropWidgetItem.cpp
+      widgets/canvas/MousePressListener.cpp
   )
 
-  # moc headers
-  SET( SAMPLE_MOC_HDRS
-      ./plugin/photoframeseditor.h
-      ./widgets/dialogs/CanvasCreationDialog.h
-      ./models/LayersModel.h
-      ./models/LayersModelItem.h
-      ./models/LayersSelectionModel.h
-      ./widgets/canvas/Scene.h
-      ./widgets/canvas/Canvas.h
-      ./widgets/layers/LayersTree.h
-      ./widgets/layers/LayersTreeDelegate.h
-      ./widgets/tools/ToolsDockWidget.h
-      ./widgets/tools/BorderEditTool.h
-      ./widgets/items/AbstractPhoto.h
-      ./widgets/items/PhotoItem.h
-      ./widgets/tools/EffectsEditorTool.h
-      ./effects/PhotoEffectsGroup.h
-      ./utils/KEditFactory.h
-      ./events/UndoCommandEventFilter.h
-      ./effects/PhotoEffectsLoader.h
-      ./widgets/items/TextItem.h
-      ./widgets/dialogs/ImageFileDialog.h
-      ./widgets/tools/TextEditorTool.h
-      ./listeners/TextColorChangeListener.h
-      ./listeners/TextFontChangeListener.h
-      ./borders/BordersGroup.h
-      ./borders/BorderDrawersLoader.h
-      ./borders/BorderChangeListener.h
-      ./widgets/dialogs/GridSetupDialog.h
-      ./plugin/plugin_photoframeseditor.h
-      ./widgets/canvas/SceneBackground.h
-      ./widgets/tools/CanvasEditTool.h
-      ./widgets/tools/AbstractItemsTool.h
-      ./widgets/tools/AbstractItemsListViewTool.h
-      ./widgets/tools/AbstractItemsListViewTool_p.h
-      ./widgets/tools/AbstractTool.h
-      ./widgets/canvas/MousePressListener.h
-      ./widgets/extra/PatternsComboBox.h
-      ./widgets/canvas/RotationWidgetItem.h
-      ./widgets/canvas/ScalingWidgetItem.h
-      ./widgets/canvas/CropWidgetItem.h
+  SET(PhotoFramesEditor_RCS
+      resources/icons.qrc
   )
 
-  # resource file
-  SET( SAMPLE_RCS
-       ./resources/icons.qrc
-  )
+  INCLUDE_DIRECTORIES(${QT_INCLUDE}
+                      ${KDE4_INCLUDES}
+                      ${INCLUDE_DIRS}
+                      ${KIPI_INCLUDE_DIR})
 
-  # enable warnings
-  ADD_DEFINITIONS( -Wall )
+  QT4_ADD_RESOURCES( PhotoFramesEditor_RC_SRCS ${PhotoFramesEditor_RCS} )
 
-  # Qt4 additional modules
-  SET( QT_USE_QTXML TRUE )
-  SET( QT_USE_QTCONSOLE TRUE )
+  KDE4_ADD_KCFG_FILES(PhotoFramesEditor_SRCS GENERATE_MOC ./settings/PFEConfigSkeleton.kcfgc)
+  INSTALL( FILES ./settings/PFEConfigSkeleton.kcfgc DESTINATION ${KCFG_INSTALL_DIR} )
 
-  # Qt library
-  FIND_PACKAGE( Qt4 REQUIRED )
+  # Adjust flag for static lib and 64 bits computers using -fPIC for GCC compiler (B.K.O: #269903)
+  FOREACH(_currentfile ${expoblending_common_SRCS})
+      IF(NOT MSVC)
+          SET_SOURCE_FILES_PROPERTIES(${_currentfile} PROPERTIES COMPILE_FLAGS "-fPIC")
+      ENDIF(NOT MSVC)
+  ENDFOREACH(_currentfile ${expoblending_common_SRCS})
 
-  # add some useful macros and variables
-  # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that contains a path to CMake script)
-  INCLUDE( ${QT_USE_FILE} )
+  KDE4_ADD_LIBRARY( libphotoframeseditor STATIC ${PhotoFramesEditor_SRCS} ${PhotoFramesEditor_RC_SRCS} )
 
-  # this command will generate rules that will run rcc on all files from SAMPLE_RCS
-  # in result SAMPLE_RC_SRCS variable will contain paths to files produced by rcc
-  QT4_ADD_RESOURCES( SAMPLE_RC_SRCS ${SAMPLE_RCS} )
+  TARGET_LINK_LIBRARIES( libphotoframeseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ${KIPI_LIBRARIES} PropertyBrowser )
 
-  # and finally this will run moc:
-  QT4_WRAP_CPP( SAMPLE_MOC_SRCS ${SAMPLE_MOC_HDRS} )
 
-  # here we instruct CMake to build "sample" executable from all of the source files
-  KDE4_ADD_EXECUTABLE( photoframeseditor ${SAMPLE_SRCS} ${SAMPLE_MOC_SRCS} ${SAMPLE_RC_SRCS} )
+# =======================================================
+# PhotoFramesEditor plugin
 
-  # last thing we have to do is to tell CMake what libraries our executable needs,
-  # luckily FIND_PACKAGE prepared QT_LIBRARIES variable for us:
-  TARGET_LINK_LIBRARIES( photoframeseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ./utils/qtpropertybrowser/src/qtpropertybrowser.pri)
+  #SET(kipiplugin_PhotoFramesEditor_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugin_photoframeseditor.cpp)
 
-  KDE4_ADD_KCFG_FILES(photoframeseditor_SRCS ./resources/PFEConfigSkeleton.kcfgc)
-  INSTALL( FILES ./resources/PFEConfigSkeleton.kcfgc DESTINATION ${KCFG_INSTALL_DIR} )
+  #KDE4_ADD_PLUGIN(kipiplugin_photoframeseditor ${kipiplugin_PhotoFramesEditor_PART_SRCS})
 
-  INSTALL( TARGETS photoframeseditor  ${INSTALL_TARGETS_DEFAULT_ARGS} )
+  #TARGET_LINK_LIBRARIES(kipiplugin_photoframeseditor libphotoframeseditor)
+
+  #INSTALL(TARGETS kipiplugin_photoframeseditor DESTINATION ${PLUGIN_INSTALL_DIR})
+  #INSTALL(FILES plugin/kipiplugin_photoframeseditor.desktop DESTINATION ${SERVICES_INSTALL_DIR})
+
+# =======================================================
+# Stand-alone version of PhotoFramesEditor
+
+  SET(PhotoFramesEditor_SRCS main.cpp)
+
+  KDE4_ADD_APP_ICON( PhotoFramesEditor_SRCS "resources/app/hi*-app-photoframeseditor.png" )
+
+  KDE4_ADD_EXECUTABLE( photoframeseditor ${PhotoFramesEditor_SRCS} )
+
+  TARGET_LINK_LIBRARIES( photoframeseditor libphotoframeseditor )
+  INSTALL(TARGETS photoframeseditor  ${INSTALL_TARGETS_DEFAULT_ARGS})
+  INSTALL(PROGRAMS plugin/photoframeseditor.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
+  INSTALL(FILES plugin/photoframeseditorui.rc DESTINATION ${DATA_INSTALL_DIR}/photoframeseditor)
+  #INSTALL(FILES main/photoframeseditor.notifyrc DESTINATION ${DATA_INSTALL_DIR}/photoframeseditor)

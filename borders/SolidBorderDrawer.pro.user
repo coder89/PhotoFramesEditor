@@ -148,11 +148,11 @@
    <valuemap key="ProjectExplorer.Target.RunConfiguration.0" type="QVariantMap">
     <valuelist key="ProjectExplorer.CustomExecutableRunConfiguration.Arguments" type="QVariantList"/>
     <value key="ProjectExplorer.CustomExecutableRunConfiguration.BaseEnvironmentBase" type="int">2</value>
-    <value key="ProjectExplorer.CustomExecutableRunConfiguration.Executable" type="QString"></value>
+    <value key="ProjectExplorer.CustomExecutableRunConfiguration.Executable" type="QString">/home/coder89/KDE/PFE/photoframeseditor/build/photoframeseditor</value>
     <value key="ProjectExplorer.CustomExecutableRunConfiguration.UseTerminal" type="bool">false</value>
     <valuelist key="ProjectExplorer.CustomExecutableRunConfiguration.UserEnvironmentChanges" type="QVariantList"/>
     <value key="ProjectExplorer.CustomExecutableRunConfiguration.WorkingDirectory" type="QString">$BUILDDIR</value>
-    <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Własny plik wykonywalny</value>
+    <value key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName" type="QString">Uruchom /home/coder89/KDE/PFE/photoframeseditor/build/photoframeseditor</value>
     <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString"></value>
     <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">ProjectExplorer.CustomExecutableRunConfiguration</value>
     <value key="RunConfiguration.QmlDebugServerPort" type="uint">3768</value>

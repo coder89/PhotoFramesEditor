@@ -218,6 +218,42 @@ void Canvas::setCanvasResolution(const QSizeF & resolution, ResolutionUnits unit
 }
 
 /** ###########################################################################################################################
+ * Sets QPrinter's paper size, etc.
+ #############################################################################################################################*/
+void Canvas::preparePrinter(QPrinter * printer)
+{
+    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    SizeUnits su = sizeUnits();
+    QSizeF cs = paperSize();
+    switch (su)
+    {
+    case Meters:
+        cs *= 100;
+    case Centimeters:
+        cs *= 10;
+    case Milimeters:
+        printer->setPaperSize(cs, QPrinter::Millimeter);
+        break;
+    case Yards:
+        cs *= 3;
+    case Feet:
+        cs *= 12;
+    case Inches:
+        printer->setPaperSize(cs, QPrinter::Inch);
+        break;
+    case Points:
+        printer->setPaperSize(cs, QPrinter::Point);
+        break;
+    case Picas:
+        printer->setPaperSize(cs, QPrinter::Pica);
+        break;
+    default:
+        printer->setPaperSize(cs, QPrinter::DevicePixel);
+        qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__;
+    }
+}
+
+/** ###########################################################################################################################
  * Add new image from QImage object
  #############################################################################################################################*/
 void Canvas::addImage(const QImage & image)

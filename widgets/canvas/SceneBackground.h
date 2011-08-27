@@ -26,14 +26,9 @@ namespace KIPIPhotoFramesEditor
             // For painting/rendering purpose
             QPixmap m_pixmap;
 
-            class BackgroundFirstColorChangedCommand;
-            class BackgroundSecondColorChangedCommand;
-            class BackgroundPatternChangedCommand;
             class BackgroundImageChangedCommand;
-            class BackgroundImageAlignmentCommand;
-            class BackgroundImageTileCommand;
-            class BackgroundImageSizeCommand;
-            class BackgroundImageAspectRatioCommand;
+            class BackgroundFirstBrushChangeCommand;
+            class BackgroundSecondBrushChangeCommand;
 
         public:
 
@@ -93,14 +88,9 @@ namespace KIPIPhotoFramesEditor
 
             void sceneChanged();
 
-        friend class BackgroundFirstColorChangedCommand;
-        friend class BackgroundSecondColorChangedCommand;
-        friend class BackgroundPatternChangedCommand;
         friend class BackgroundImageChangedCommand;
-        friend class BackgroundImageAlignmentCommand;
-        friend class BackgroundImageTileCommand;
-        friend class BackgroundImageSizeCommand;
-        friend class BackgroundImageAspectRatioCommand;
+        friend class BackgroundFirstBrushChangeCommand;
+        friend class BackgroundSecondBrushChangeCommand;
     };
 }
 

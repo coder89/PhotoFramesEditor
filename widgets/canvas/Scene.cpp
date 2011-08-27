@@ -862,8 +862,15 @@ void Scene::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
 }
 
 //#####################################################################################################
-void Scene::dragMoveEvent(QGraphicsSceneDragDropEvent * /*event*/)
+void Scene::dragMoveEvent(QGraphicsSceneDragDropEvent * event)
 {
+    static PhotoItem * item = 0;
+    PhotoItem * tempItem = dynamic_cast<PhotoItem*>(this->itemAt(event->scenePos()));
+    if (tempItem)
+        tempItem->dragEnterEvent(event);
+    if (item && item != tempItem)
+        item->dragLeaveEvent(event);
+    item = tempItem;
 }
 
 //#####################################################################################################
@@ -925,15 +932,21 @@ void Scene::dropEvent(QGraphicsSceneDragDropEvent * event)
     else if (mimeData->hasFormat("text/uri-list"))
     {
         QList<QUrl> urls = mimeData->urls();
-        foreach (QUrl url, urls)
+        PhotoItem * item = dynamic_cast<PhotoItem*>(this->itemAt(event->scenePos()));
+        if (item && urls.count() == 1)
+            item->dropEvent(event);
+        else
         {
-            QImageReader ir(url.toLocalFile());
-            QImage img;
-            if (ir.read(&img))
+            foreach (QUrl url, urls)
             {
-                PhotoItem * item = new PhotoItem(img);
-                item->setPos(event->scenePos());
-                this->addItemCommand(item);
+                QImageReader ir(url.toLocalFile());
+                QImage img;
+                if (ir.read(&img))
+                {
+                    item = new PhotoItem(img);
+                    item->setPos(event->scenePos());
+                    this->addItemCommand(item);
+                }
             }
         }
     }

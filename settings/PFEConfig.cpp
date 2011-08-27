@@ -18,7 +18,7 @@ QString PFEConfig::VIEW_GRID_SHOW = "view_grid_show";
 QString PFEConfig::VIEW_GRID_X = "view_grid_x";
 QString PFEConfig::VIEW_GRID_Y = "view_grid_y";
 
-PFEConfig::PFEConfig(QObject *parent) :
+PFEConfig::PFEConfig() :
     KConfig(),
     m_skeleton(0)
 {
@@ -38,43 +38,43 @@ PFEConfig::~PFEConfig()
     Q_DELETE(m_skeleton);
 }
 
-PFEConfig * PFEConfig::instance(QObject * parent)
+PFEConfig * PFEConfig::self()
 {
     if (!m_instance)
-        m_instance = new PFEConfig(parent);
+        m_instance = new PFEConfig();
     return m_instance;
 }
 
 bool PFEConfig::embedImagesData()
 {
-    KConfigGroup saving = instance()->group(SAVING);
+    KConfigGroup saving = self()->group(SAVING);
     return saving.readEntry<bool>(SAVING_EMBED_IMG, true);
 }
 
 void PFEConfig::setEmbedImagesData(bool embed)
 {
-    KConfigGroup saving = instance()->group(SAVING);
+    KConfigGroup saving = self()->group(SAVING);
     saving.writeEntry<bool>(SAVING_EMBED_IMG, embed);
-    instance()->sync();
+    self()->sync();
 }
 
 
 bool PFEConfig::showGrid()
 {
-    KConfigGroup view = instance()->group(VIEW);
+    KConfigGroup view = self()->group(VIEW);
     return view.readEntry<bool>(VIEW_GRID_SHOW, false);
 }
 
 void PFEConfig::setShowGrid(bool isVisible)
 {
-    KConfigGroup view = instance()->group(VIEW);
+    KConfigGroup view = self()->group(VIEW);
     view.writeEntry<bool>(VIEW_GRID_SHOW, isVisible);
-    instance()->sync();
+    self()->sync();
 }
 
 qreal PFEConfig::gridX()
 {
-    KConfigGroup view = instance()->group(VIEW);
+    KConfigGroup view = self()->group(VIEW);
     return view.readEntry<qreal>(VIEW_GRID_X, 25.0);
 }
 
@@ -82,14 +82,14 @@ void PFEConfig::setGridX(qreal x)
 {
     if (x <= 0)
         return;
-    KConfigGroup view = instance()->group(VIEW);
+    KConfigGroup view = self()->group(VIEW);
     view.writeEntry<qreal>(VIEW_GRID_X, x);
-    instance()->sync();
+    self()->sync();
 }
 
 qreal PFEConfig::gridY()
 {
-    KConfigGroup view = instance()->group(VIEW);
+    KConfigGroup view = self()->group(VIEW);
     return view.readEntry<qreal>(VIEW_GRID_Y, 25.0);
 }
 
@@ -97,14 +97,14 @@ void PFEConfig::setGridY(qreal y)
 {
     if (y <= 0)
         return;
-    KConfigGroup view = instance()->group(VIEW);
+    KConfigGroup view = self()->group(VIEW);
     view.writeEntry<qreal>(VIEW_GRID_Y, y);
-    instance()->sync();
+    self()->sync();
 }
 
 KConfigSkeleton * PFEConfig::configSkeleton()
 {
-    return instance()->skeleton();
+    return self()->skeleton();
 }
 
 KConfigSkeleton * PFEConfig::skeleton()

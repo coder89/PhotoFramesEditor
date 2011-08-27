@@ -29,7 +29,6 @@ namespace KIPIPhotoFramesEditor
     {
         public:
             PhotoFramesEditorPriv() :
-                settings(0),
                 centralWidget(0),
                 openNewFileAction(0),
                 openFileAction(0),
@@ -94,9 +93,6 @@ namespace KIPIPhotoFramesEditor
                 //Q_DELETE(toolBorders)     // DELETED BY main window
                 //Q_DELETE(toolColorize)    // DELETED BY main window
             }
-
-            // Settings object
-            PFEConfig * settings;
 
             // Central widget of the window
             QWidget *   centralWidget;

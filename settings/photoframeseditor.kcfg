@@ -9,24 +9,24 @@
   <group name="Saving">
     <entry name="EmbedImages" type="Bool">
       <label>Embed full-sized imaged.</label>
-      <default code="true">PFEConfig::embedImagesData()</default>
+      <default>true</default>
     </entry>
   </group>
   <group name="View">
     <entry name="ShowGrid" type="Bool">
-      <default code="true">PFEConfig::showGrid()</default>
+      <default>false</default>
     </entry>
     <entry name="HorizontalGrid" type="Double">
       <label>Horizontal distance</label>
       <min>1.0</min>
       <max>999</max>
-      <default code="true">PFEConfig::gridX()</default>
+      <default>25.0</default>
     </entry>
     <entry name="VerticalGrid" type="Double">
       <label>Vertical distance</label>
       <min>1.0</min>
       <max>999</max>
-      <default code="true">PFEConfig::gridY()</default>
+      <default>25.0</default>
     </entry>
   </group>
 </kcfg>

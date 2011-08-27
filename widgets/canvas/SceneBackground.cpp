@@ -13,107 +13,32 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundFirstColorChangedCommand : public QUndoCommand
-{
-    QColor m_first_color;
-    SceneBackground * m_backgropund_item;
-public:
-    BackgroundFirstColorChangedCommand(const QColor & color, SceneBackground * backgroundItem, QUndoCommand * parent = 0) :
-        QUndoCommand(i18n("Background changed"), parent),
-        m_first_color(color),
-        m_backgropund_item(backgroundItem)
-    {}
-    virtual void redo()
-    {
-        run();
-    }
-    virtual void undo()
-    {
-        run();
-    }
-    void run()
-    {
-        QColor temp = m_backgropund_item->m_first_brush.color();
-        m_backgropund_item->m_first_brush.setColor(m_first_color);
-        m_first_color = temp;
-
-        m_backgropund_item->emitFirstColorChanged();
-        m_backgropund_item->render();
-        m_backgropund_item->update();
-    }
-};
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundSecondColorChangedCommand : public QUndoCommand
-{
-    QColor m_second_color;
-    Qt::BrushStyle m_second_style;
-    SceneBackground * m_backgropund_item;
-public:
-    BackgroundSecondColorChangedCommand(const QColor & color, SceneBackground * backgroundItem, QUndoCommand * parent = 0) :
-        QUndoCommand(i18n("Background changed"), parent),
-        m_second_color(color),
-        m_second_style(Qt::SolidPattern),
-        m_backgropund_item(backgroundItem)
-    {}
-    virtual void redo()
-    {
-        run();
-    }
-    virtual void undo()
-    {
-        run();
-    }
-    void run()
-    {
-        QColor temp = m_backgropund_item->m_second_brush.color();
-        m_backgropund_item->m_second_brush.setColor(m_second_color);
-        m_second_color = temp;
-
-        Qt::BrushStyle bstemp = m_backgropund_item->m_second_brush.style();
-        m_backgropund_item->m_second_brush.setStyle(m_second_style);
-        m_second_style = bstemp;
-
-        m_backgropund_item->emitSecondColorChanged();
-        m_backgropund_item->render();
-        m_backgropund_item->update();
-    }
-};
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundPatternChangedCommand : public QUndoCommand
-{
-    Qt::BrushStyle pattern;
-    SceneBackground * m_backgropund_item;
-public:
-    BackgroundPatternChangedCommand(Qt::BrushStyle patternStyle, SceneBackground * backgroundItem, QUndoCommand * parent = 0) :
-        QUndoCommand(i18n("Background changed"), parent),
-        pattern(patternStyle),
-        m_backgropund_item(backgroundItem)
-    {}
-    virtual void redo()
-    {
-        run();
-    }
-    virtual void undo()
-    {
-        run();
-    }
-    void run()
-    {
-        Qt::BrushStyle temp = m_backgropund_item->m_first_brush.style();
-        m_backgropund_item->m_first_brush.setStyle(pattern);
-        pattern = temp;
-
-        m_backgropund_item->emitPatternChanged();
-        m_backgropund_item->render();
-        m_backgropund_item->update();
-    }
-};
 class KIPIPhotoFramesEditor::SceneBackground::BackgroundImageChangedCommand : public QUndoCommand
 {
     QImage m_image;
+    Qt::Alignment m_alignment;
+    Qt::AspectRatioMode m_aspect_ratio;
+    QSize m_size;
+    bool m_repeat;
     SceneBackground * m_backgropund_item;
 public:
-    BackgroundImageChangedCommand(const QImage & image, SceneBackground * backgroundItem, QUndoCommand * parent = 0) :
+
+    BackgroundImageChangedCommand(const QImage & image, Qt::Alignment alignment, const QSize & size, bool repeat, SceneBackground * backgroundItem, QUndoCommand * parent = 0) :
         QUndoCommand(i18n("Background changed"), parent),
         m_image(image),
+        m_alignment(alignment),
+        m_size(size),
+        m_repeat(repeat),
+        m_backgropund_item(backgroundItem)
+    {
+    }
+
+    BackgroundImageChangedCommand(const QImage & image, Qt::Alignment alignment, Qt::AspectRatioMode aspectRatio, bool repeat, SceneBackground * backgroundItem, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Background changed"), parent),
+        m_image(image),
+        m_alignment(alignment),
+        m_aspect_ratio(aspectRatio),
+        m_repeat(repeat),
         m_backgropund_item(backgroundItem)
     {
     }
@@ -130,113 +55,37 @@ public:
         QImage temp = m_backgropund_item->m_image;
         m_backgropund_item->m_image = m_image;
         m_backgropund_item->m_first_brush.setTextureImage(m_image);
-        m_backgropund_item->m_image_size = m_image.size();
         m_image = temp;
 
-        m_backgropund_item->render();
-        m_backgropund_item->update();
-    }
-};
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundImageAlignmentCommand : public QUndoCommand
-{
-    Qt::Alignment m_alignment;
-    SceneBackground * m_backgropund_item;
-public:
-    BackgroundImageAlignmentCommand(Qt::Alignment alignment, SceneBackground * background, QUndoCommand * parent) :
-        QUndoCommand(parent),
-        m_alignment(alignment),
-        m_backgropund_item(background)
-    {
-    }
-    virtual void redo()
-    {
-        this->run();
-    }
-    virtual void undo()
-    {
-        this->run();
-    }
-    void run()
-    {
-        Qt::Alignment temp = m_backgropund_item->m_image_align;
+        Qt::Alignment temp2 = m_backgropund_item->m_image_align;
         m_backgropund_item->m_image_align = m_alignment;
-        m_alignment = temp;
+        m_alignment = temp2;
 
-        m_backgropund_item->render();
-        m_backgropund_item->update();
-    }
-};
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundImageTileCommand : public QUndoCommand
-{
-    bool m_tiled;
-    SceneBackground * m_backgropund_item;
-public:
-    BackgroundImageTileCommand(bool tiled, SceneBackground * background, QUndoCommand * parent) :
-        QUndoCommand(parent),
-        m_tiled(tiled),
-        m_backgropund_item(background)
-    {}
-    virtual void redo()
-    {
-        this->run();
-    }
-    virtual void undo()
-    {
-        this->run();
-    }
-    void run()
-    {
-        bool temp = m_backgropund_item->m_image_repeat;
-        m_backgropund_item->m_image_repeat = m_tiled;
-        m_tiled = temp;
-
-        m_backgropund_item->render();
-        m_backgropund_item->update();
-    }
-};
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundImageSizeCommand : public QUndoCommand
-{
-    QSize m_size;
-    Qt::AspectRatioMode m_aspect_ratio;
-    SceneBackground * m_backgropund_item;
-public:
-    BackgroundImageSizeCommand(const QSize & size, SceneBackground * background, QUndoCommand * parent) :
-        QUndoCommand(parent),
-        m_size(size),
-        m_aspect_ratio(Qt::IgnoreAspectRatio),
-        m_backgropund_item(background)
-    {}
-    virtual void redo()
-    {
-        this->run();
-    }
-    virtual void undo()
-    {
-        this->run();
-    }
-    void run()
-    {
-        QSize temp = m_backgropund_item->m_image_size;
-        m_backgropund_item->m_image_size = m_size;
-        m_size = temp;
-
-        Qt::AspectRatioMode temp2 = m_backgropund_item->m_image_aspect_ratio;
+        Qt::AspectRatioMode temp3 = m_backgropund_item->m_image_aspect_ratio;
         m_backgropund_item->m_image_aspect_ratio = m_aspect_ratio;
-        m_aspect_ratio = temp2;
+        m_aspect_ratio = temp3;
+
+        bool temp4 = m_backgropund_item->m_image_repeat;
+        m_backgropund_item->m_image_repeat = m_repeat;
+        m_repeat = temp4;
+
+        QSize temp5 = m_backgropund_item->m_image_size;
+        m_backgropund_item->m_image_size = m_size.isValid() ? m_size : m_image.size();
+        m_size = temp5;
 
         m_backgropund_item->render();
         m_backgropund_item->update();
     }
 };
-class KIPIPhotoFramesEditor::SceneBackground::BackgroundImageAspectRatioCommand : public QUndoCommand
+class KIPIPhotoFramesEditor::SceneBackground::BackgroundFirstBrushChangeCommand : public QUndoCommand
 {
-    Qt::AspectRatioMode m_aspect_ratio;
-    SceneBackground * m_backgropund_item;
+    QBrush m_brush;
+    SceneBackground * m_background;
 public:
-    BackgroundImageAspectRatioCommand(Qt::AspectRatioMode aspectRatio, SceneBackground * background, QUndoCommand * parent) :
-        QUndoCommand(parent),
-        m_aspect_ratio(aspectRatio),
-        m_backgropund_item(background)
+    BackgroundFirstBrushChangeCommand(const QBrush & brush, SceneBackground * background, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Background changed"), parent),
+        m_brush(brush),
+        m_background(background)
     {}
     virtual void redo()
     {
@@ -248,12 +97,40 @@ public:
     }
     void run()
     {
-        Qt::AspectRatioMode temp = m_backgropund_item->m_image_aspect_ratio;
-        m_backgropund_item->m_image_aspect_ratio = m_aspect_ratio;
-        m_aspect_ratio = temp;
+        QBrush temp = m_background->m_first_brush;
+        m_background->m_first_brush = m_brush;
+        m_brush = temp;
 
-        m_backgropund_item->render();
-        m_backgropund_item->update();
+        m_background->render();
+        m_background->update();
+    }
+};
+class KIPIPhotoFramesEditor::SceneBackground::BackgroundSecondBrushChangeCommand : public QUndoCommand
+{
+    QBrush m_brush;
+    SceneBackground * m_background;
+public:
+    BackgroundSecondBrushChangeCommand(const QBrush & brush, SceneBackground * background, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Background changed"), parent),
+        m_brush(brush),
+        m_background(background)
+    {}
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+    void run()
+    {
+        QBrush temp = m_background->m_second_brush;
+        m_background->m_second_brush = m_brush;
+        m_brush = temp;
+
+        m_background->render();
+        m_background->update();
     }
 };
 
@@ -278,7 +155,7 @@ void SceneBackground::setSecondColor(const QColor & color)
     bool patternChanged = (m_second_brush.style() != Qt::SolidPattern);
     if (colorChanged || patternChanged)
     {
-        QUndoCommand * command = new BackgroundSecondColorChangedCommand(color, this);
+        QUndoCommand * command = new BackgroundSecondBrushChangeCommand(QBrush(color), this);
         PFE_PostUndoCommand(command);
     }
 }
@@ -292,17 +169,14 @@ void SceneBackground::setSolidColor(const QColor & color)
     QUndoCommand * parent = 0;
     QUndoCommand * command = 0;
 
-    if ((colorChanged && patternChaged) ||
-        (colorChanged && secondColorChanged) ||
+    if ((colorChanged && secondColorChanged) ||
         (patternChaged && secondColorChanged))
         parent = new QUndoCommand(i18n("Background changed"));
 
-    if (colorChanged)
-        command = new BackgroundFirstColorChangedCommand(color, this, parent);
-    if (patternChaged)
-        command = new BackgroundPatternChangedCommand(Qt::SolidPattern, this, parent);
+    if (colorChanged || patternChaged)
+        command = new BackgroundFirstBrushChangeCommand(QBrush(color), this, parent);
     if (secondColorChanged)
-        command = new BackgroundSecondColorChangedCommand(Qt::transparent, this, parent);
+        command = new BackgroundSecondBrushChangeCommand(QBrush(Qt::transparent), this, parent);
 
     if (parent)
         PFE_PostUndoCommand(parent);
@@ -312,71 +186,44 @@ void SceneBackground::setSolidColor(const QColor & color)
 
 void SceneBackground::setPattern(const QColor & firstColor, const QColor & secondColor, Qt::BrushStyle patternStyle)
 {
-    bool color1Changed = (firstColor != m_first_brush.color());
+    bool color1Changed = (firstColor != m_first_brush.color() || patternStyle != m_first_brush.style());
     bool color2Changed = (secondColor != m_second_brush.color() || m_second_brush.style() != Qt::SolidPattern);
-    bool patternChanged = (patternStyle != m_first_brush.style());
-    int i = 0;
-    QUndoCommand * parent = new QUndoCommand("Background changed");
-    BackgroundFirstColorChangedCommand * command1 = 0;
-    BackgroundSecondColorChangedCommand * command2 = 0;
-    BackgroundPatternChangedCommand * command3 = 0;
-    if (color1Changed)
-        ++i;
-    if (color2Changed)
-        ++i;
-    if (patternChanged)
-        ++i;
+
+    QUndoCommand * parent = 0;
+    if (color1Changed && color2Changed)
+        parent = new QUndoCommand("Background changed");
+    QUndoCommand * command = 0;
 
     if (color1Changed)
-        command1 = new BackgroundFirstColorChangedCommand(firstColor, this, i>1?parent:0);
+        command = new BackgroundFirstBrushChangeCommand(QBrush(firstColor, patternStyle), this, parent);
     if (color2Changed)
-        command2 = new BackgroundSecondColorChangedCommand(secondColor, this, i>1?parent:0);
-    if (patternChanged)
-        command3 = new BackgroundPatternChangedCommand(patternStyle, this, i>1?parent:0);
+        command = new BackgroundSecondBrushChangeCommand(QBrush(secondColor, Qt::SolidPattern), this, parent);
 
-    if (i > 1)
+    if (parent)
         PFE_PostUndoCommand(parent);
     else
-    {
-        if (command1)
-            PFE_PostUndoCommand(command1);
-        if (command2)
-            PFE_PostUndoCommand(command2);
-        if (command3)
-            PFE_PostUndoCommand(command3);
-    }
+        PFE_PostUndoCommand(command);
 }
 
 void SceneBackground::setImage(const QImage & image, const QColor & backgroundColor, Qt::Alignment align, Qt::AspectRatioMode aspectRatio, bool repeat)
 {
-    bool imageChanged = (m_first_brush.textureImage() != image || m_first_brush.style() != Qt::TexturePattern);
-    bool alignmentChanged = (m_image_align != align);
-    bool aspectRatioChanged = (m_image_aspect_ratio != aspectRatio);
-    bool tiledChanged = (m_image_repeat != repeat);
+    bool imageChanged = (m_first_brush.textureImage() != image ||
+                         m_first_brush.style() != Qt::TexturePattern ||
+                         m_image_align != align ||
+                         m_image_aspect_ratio != aspectRatio ||
+                         m_image_repeat != repeat);
+
     bool colorChanged = (m_second_brush.color() != backgroundColor || m_second_brush.style() != Qt::SolidPattern);
 
-    int i = 0;
-    if (imageChanged) ++i;
-    if (alignmentChanged) ++i;
-    if (aspectRatioChanged) ++i;
-    if (tiledChanged) ++i;
-
     QUndoCommand * parent = 0;
-    QUndoCommand * command = 0;
-
-    if (i > 1)
+    if (imageChanged && colorChanged)
         parent = new QUndoCommand(i18n("Background changed"));
 
+    QUndoCommand * command = 0;
     if (imageChanged)
-        command = new BackgroundImageChangedCommand(image, this, parent);
-    if (alignmentChanged)
-        command = new BackgroundImageAlignmentCommand(align, this, parent);
-    if (aspectRatioChanged)
-        command = new BackgroundImageAspectRatioCommand(aspectRatio, this, parent);
-    if (tiledChanged)
-        command = new BackgroundImageTileCommand(repeat, this, parent);
+        command = new BackgroundImageChangedCommand(image, align, aspectRatio, repeat, this, parent);
     if (colorChanged)
-        command = new BackgroundSecondColorChangedCommand(backgroundColor, this, parent);
+        command = new BackgroundSecondBrushChangeCommand(QBrush(backgroundColor, Qt::SolidPattern), this, parent);
 
     if (parent)
         PFE_PostUndoCommand(parent);
@@ -386,34 +233,23 @@ void SceneBackground::setImage(const QImage & image, const QColor & backgroundCo
 
 void SceneBackground::setImage(const QImage & image, const QColor & backgroundColor, Qt::Alignment align, const QSize & fixedSize, bool repeat)
 {
-    bool imageChanged = (m_first_brush.textureImage() != image || m_first_brush.style() != Qt::TexturePattern);
-    bool alignmentChanged = (m_image_align != align);
-    bool sizeChanged = (m_image_size != fixedSize || m_image_aspect_ratio != Qt::IgnoreAspectRatio);
-    bool tiledChanged = (m_image_repeat != repeat);
+    bool imageChanged = (m_first_brush.textureImage() != image ||
+                         m_first_brush.style() != Qt::TexturePattern ||
+                         m_image_align != align ||
+                         m_image_size != fixedSize ||
+                         m_image_repeat != repeat);
+
     bool colorChanged = (m_second_brush.color() != backgroundColor || m_second_brush.style() != Qt::SolidPattern);
 
-    int i = 0;
-    if (imageChanged) ++i;
-    if (alignmentChanged) ++ i;
-    if (sizeChanged) ++i;
-    if (tiledChanged) ++i;
-
     QUndoCommand * parent = 0;
-    QUndoCommand * command = 0;
-
-    if (i > 1)
+    if (imageChanged && colorChanged)
         parent = new QUndoCommand(i18n("Background changed"));
 
+    QUndoCommand * command = 0;
     if (imageChanged)
-        command = new BackgroundImageChangedCommand(image, this, parent);
-    if (alignmentChanged)
-        command = new BackgroundImageAlignmentCommand(align, this, parent);
-    if (sizeChanged)
-        command = new BackgroundImageSizeCommand(fixedSize, this, parent);
-    if (tiledChanged)
-        command = new BackgroundImageTileCommand(repeat, this, parent);
+        command = new BackgroundImageChangedCommand(image, align, fixedSize, repeat, this, parent);
     if (colorChanged)
-        command = new BackgroundSecondColorChangedCommand(backgroundColor, this, parent);
+        command = new BackgroundSecondBrushChangeCommand(QBrush(backgroundColor, Qt::SolidPattern), this, parent);
 
     if (parent)
         PFE_PostUndoCommand(parent);

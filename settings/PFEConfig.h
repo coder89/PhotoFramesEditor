@@ -23,7 +23,7 @@ namespace KIPIPhotoFramesEditor
 
             ~PFEConfig();
 
-            static PFEConfig * instance(QObject * parent = 0);
+            static PFEConfig * self();
 
             static bool embedImagesData();
             static void setEmbedImagesData(bool embed);
@@ -39,7 +39,7 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            explicit PFEConfig(QObject *parent = 0);
+            explicit PFEConfig();
             KConfigSkeleton * skeleton();
     };
 }

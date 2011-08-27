@@ -67,6 +67,7 @@
       widgets/items/TextItem.cpp
       widgets/dialogs/ImageFileDialog.cpp
       settings/PFEConfig.cpp
+      settings/PFEConfigDialog.cpp
       settings/PFEConfigViewWidget.cpp
       widgets/tools/TextEditorTool.cpp
       listeners/TextColorChangeListener.cpp

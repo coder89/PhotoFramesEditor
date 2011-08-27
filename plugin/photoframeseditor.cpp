@@ -10,9 +10,8 @@
 #include "AbstractPhotoEffectFactory.h"
 #include "ImageFileDialog.h"
 #include "GridSetupDialog.h"
+#include "PFEConfigDialog.h"
 #include "global.h"
-#include "PFEConfigSkeleton.h"
-#include "PFEConfigViewWidget.h"
 
 #include "BorderDrawerInterface.h"
 #include "BorderDrawersLoader.h"
@@ -64,7 +63,6 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
     setObjectName("Photo Frames Editor");
 
     m_instance = this;
-    d->settings = PFEConfig::instance(this);
 
     loadEffects();
     loadBorders();
@@ -437,52 +435,21 @@ void PhotoFramesEditor::exportFile()
 
 void PhotoFramesEditor::printPreview()
 {
-     if (m_canvas && m_canvas->scene())
-     {
-         QPrinter printer;
-         printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-         SizeUnits su = m_canvas->sizeUnits();
-         QSizeF cs = m_canvas->paperSize();
-         switch (su)
-         {
-         case Pixels:
-             printer.setPaperSize(cs, QPrinter::DevicePixel);
-             break;
-         case Meters:
-             cs *= 100;
-         case Centimeters:
-             cs *= 10;
-         case Milimeters:
-             printer.setPaperSize(cs, QPrinter::Millimeter);
-             break;
-         case Yards:
-             cs *= 3;
-         case Feet:
-             cs *= 12;
-         case Inches:
-             printer.setPaperSize(cs, QPrinter::Inch);
-             break;
-         case Points:
-             printer.setPaperSize(cs, QPrinter::Point);
-             break;
-         case Picas:
-             printer.setPaperSize(cs, QPrinter::Pica);
-             break;
-         default:
-#ifdef QT_DEBUG
-             qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__
-#endif
-             ;
-         }
-         QPrintPreviewDialog dialog(&printer, this);
-         connect(&dialog, SIGNAL(paintRequested(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
-         dialog.exec();
-     }
+    if (m_canvas && m_canvas->scene())
+    {
+        QPrinter printer;
+        m_canvas->preparePrinter(&printer);
+        QPrintPreviewDialog dialog(&printer, this);
+        connect(&dialog, SIGNAL(paintRequested(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
+        dialog.exec();
+    }
 }
 
 void PhotoFramesEditor::print()
 {
-    QPrintDialog dialog(this);
+    QPrinter printer;
+    m_canvas->preparePrinter(&printer);
+    QPrintDialog dialog(&printer, this);
     connect(&dialog, SIGNAL(accepted(QPrinter*)), m_canvas, SLOT(renderCanvas(QPrinter*)));
     dialog.exec();
 }
@@ -525,10 +492,7 @@ void PhotoFramesEditor::settings()
     if ( KConfigDialog::showDialog( "settings" ) )
       return;
 
-    KConfigDialog * dialog = new KConfigDialog(this, "settings", PFEConfig::configSkeleton());
-    PFEConfigViewWidget * confWdg = new PFEConfigViewWidget( 0, i18n("View") );
-    dialog->addPage( confWdg, i18n("View") )->setIcon(KIcon(QIcon(":view.png")));
-    connect( dialog, SIGNAL(settingsChanged()), this, SLOT(updateConfiguration()) );
+    PFEConfigDialog * dialog = new PFEConfigDialog(this);
     dialog->show();
 }
 

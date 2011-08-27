@@ -71,7 +71,10 @@ namespace KIPIPhotoFramesEditor
             /// Converts item data to SVG format
             virtual QDomElement svgVisibleArea(QDomDocument & document) const;
 
-            QVariant itemChange(GraphicsItemChange change, const QVariant & value);
+            virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
+            virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent * event);
+            virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
+            virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 
             /// Updates item icon
             virtual void updateIcon();
@@ -93,6 +96,12 @@ namespace KIPIPhotoFramesEditor
             // Recalculates item shape
             void recalcShape();
 
+            // Highlight item
+            Q_PROPERTY(bool m_highlight READ highlightItem WRITE setHighlightItem)
+            bool highlightItem();
+            void setHighlightItem(bool isHighlighted);
+            bool m_highlight;
+
             PhotoItemPrivate * d;
 
             Q_PROPERTY(QPixmap m_pixmap_original READ pixmap WRITE setPixmap)
@@ -104,6 +113,8 @@ namespace KIPIPhotoFramesEditor
             // Widget path
             QPainterPath m_complete_path;
             QPainterPath m_image_path;
+
+        friend class Scene;
     };
 }
 

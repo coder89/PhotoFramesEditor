@@ -61,7 +61,8 @@ SOURCES += main.cpp\
     settings/PFEConfigSkeleton.cpp \
     settings/PFEConfigViewWidget.cpp \
     widgets/tools/AbstractTool.cpp \
-    widgets/canvas/MousePressListener.cpp
+    widgets/canvas/MousePressListener.cpp \
+    settings/PFEConfigDialog.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/photo_context_menu.h \
@@ -119,7 +120,8 @@ HEADERS  += plugin/photoframeseditor.h \
     widgets/canvas/CropWidgetItem.h \
     settings/PFEConfig.h \
     settings/PFEConfigSkeleton.h \
-    settings/PFEConfigViewWidget.h
+    settings/PFEConfigViewWidget.h \
+    settings/PFEConfigDialog.h
 
 LIBS += \
     -L/usr \
@@ -148,10 +150,10 @@ INCLUDEPATH += \
     settings
 
 OTHER_FILES += \
-    resources/photoframeseditorui.rc \
-    resources/photoframeseditor.kcfg \
+    plugin/photoframeseditorui.rc \
+    settings/photoframeseditor.kcfg \
     CMakeLists.txt \
-    resources/PFEConfigSkeleton.kcfgc \
+    settings/PFEConfigSkeleton.kcfgc \
     resources/photoframeseditor.desktop
 
 RESOURCES += \

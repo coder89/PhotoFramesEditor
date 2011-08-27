@@ -68,6 +68,7 @@ PhotoItem::PhotoItem(const QImage & photo) :
     AbstractPhoto(),
     d(new PhotoItemPrivate(this))
 {
+    this->setHighlightItem(false);
     this->setupItem(QPixmap::fromImage(photo));
     this->setName(i18n("New image"));
 }
@@ -198,6 +199,33 @@ QDomElement PhotoItem::svgVisibleArea(QDomDocument & document) const
     return img;
 }
 
+void PhotoItem::dragEnterEvent(QGraphicsSceneDragDropEvent * /*event*/)
+{
+    this->setHighlightItem(true);
+}
+
+void PhotoItem::dragLeaveEvent(QGraphicsSceneDragDropEvent * /*event*/)
+{
+    this->setHighlightItem(false);
+}
+
+void PhotoItem::dropEvent(QGraphicsSceneDragDropEvent * event)
+{
+    const QMimeData * mimeData = event->mimeData();
+    if (mimeData->hasFormat("text/uri-list"))
+    {
+        QList<QUrl> urls = mimeData->urls();
+        if (urls.count() == 1)
+        {
+            QImageReader ir(urls.at(0).toLocalFile());
+            QImage img;
+            if (ir.read(&img))
+                this->setPixmap(QPixmap::fromImage(img));
+        }
+    }
+    this->setHighlightItem(false);
+}
+
 QVariant PhotoItem::itemChange(GraphicsItemChange change, const QVariant & value)
 {
     switch (change)
@@ -259,6 +287,12 @@ void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * optio
         painter->restore();
     }
     AbstractPhoto::paint(painter, option, widget);
+
+    // Highlight item
+    if (m_highlight)
+    {
+        painter->fillPath(this->shape(), QColor(255,0,0,100));
+    }
 }
 
 void PhotoItem::refreshItem()
@@ -266,7 +300,7 @@ void PhotoItem::refreshItem()
     if (m_pixmap_original.isNull())
         return;
     this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->m_image_path.boundingRect().size().toSize(),
-                                                                     Qt::IgnoreAspectRatio,
+                                                                     Qt::KeepAspectRatioByExpanding,
                                                                      Qt::SmoothTransformation));
     this->updateIcon();
     this->recalcShape();
@@ -300,4 +334,17 @@ void PhotoItem::setupItem(const QPixmap & photo)
 void PhotoItem::recalcShape()
 {
     m_complete_path = m_image_path;
+}
+
+bool PhotoItem::highlightItem()
+{
+    return m_highlight;
+}
+
+void PhotoItem::setHighlightItem(bool isHighlighted)
+{
+    if (m_highlight == isHighlighted)
+        return;
+    m_highlight = isHighlighted;
+    this->update();
 }

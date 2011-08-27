@@ -1,5 +1,6 @@
 #include "PFEConfigViewWidget.h"
 #include "PFEConfigSkeleton.h"
+#include "PFEConfig.h"
 
 #include <QFormLayout>
 #include <QDoubleSpinBox>

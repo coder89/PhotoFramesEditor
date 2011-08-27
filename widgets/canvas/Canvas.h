@@ -89,6 +89,8 @@ namespace KIPIPhotoFramesEditor
             void setPageSize(const QSizeF & paperSize, SizeUnits units);
             void setCanvasResolution(const QSizeF & resolution, ResolutionUnits units);
 
+            void preparePrinter(QPrinter * printer);
+
             operator Scene*()
             {
                 return m_scene;

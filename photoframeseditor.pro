@@ -154,7 +154,9 @@ OTHER_FILES += \
     settings/photoframeseditor.kcfg \
     CMakeLists.txt \
     settings/PFEConfigSkeleton.kcfgc \
-    resources/photoframeseditor.desktop
+    resources/photoframeseditor.desktop \
+    plugin/photoframeseditor.desktop \
+    resources/app/CMakeLists.txt
 
 RESOURCES += \
     resources/icons.qrc

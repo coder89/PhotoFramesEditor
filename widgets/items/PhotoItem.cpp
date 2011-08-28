@@ -20,6 +20,32 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+class KIPIPhotoFramesEditor::PhotoItemPixmapChangeCommand : public QUndoCommand
+{
+    QImage m_image;
+    PhotoItem * m_item;
+public:
+    PhotoItemPixmapChangeCommand(QImage & image, PhotoItem * item, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Image change"), parent),
+        m_image(image),
+        m_item(item)
+    {}
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+    void run()
+    {
+        QImage temp = m_item->pixmap().toImage();
+        m_item->setPixmap(QPixmap::fromImage(m_image));
+        m_image = temp;
+    }
+};
+
 class KIPIPhotoFramesEditor::PhotoItemPrivate
 {
     PhotoItemPrivate(PhotoItem * item) :
@@ -220,7 +246,10 @@ void PhotoItem::dropEvent(QGraphicsSceneDragDropEvent * event)
             QImageReader ir(urls.at(0).toLocalFile());
             QImage img;
             if (ir.read(&img))
-                this->setPixmap(QPixmap::fromImage(img));
+            {
+                PhotoItemPixmapChangeCommand * command = new PhotoItemPixmapChangeCommand(img, this);
+                PFE_PostUndoCommand(command);
+            }
         }
     }
     this->setHighlightItem(false);

@@ -6,6 +6,7 @@
 namespace KIPIPhotoFramesEditor
 {
     class PhotoItemPrivate;
+    class PhotoItemPixmapChangeCommand;
 
     class PhotoItem : public AbstractPhoto
     {
@@ -115,6 +116,7 @@ namespace KIPIPhotoFramesEditor
             QPainterPath m_image_path;
 
         friend class Scene;
+        friend class PhotoItemPixmapChangeCommand;
     };
 }
 

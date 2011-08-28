@@ -2,6 +2,8 @@
 
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+  SUBDIRS( ./resources/app )
+
   ADD_SUBDIRECTORY( ./utils/qtpropertybrowser )
 
   FIND_PACKAGE(Qt4 REQUIRED)
@@ -132,7 +134,7 @@
 
   SET(PhotoFramesEditor_SRCS main.cpp)
 
-  KDE4_ADD_APP_ICON( PhotoFramesEditor_SRCS "resources/app/hi*-app-photoframeseditor.png" )
+  KDE4_ADD_APP_ICON( PhotoFramesEditor_SRCS "photoframeseditor" )
 
   KDE4_ADD_EXECUTABLE( photoframeseditor ${PhotoFramesEditor_SRCS} )
 

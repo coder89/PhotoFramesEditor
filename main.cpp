@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
     KCmdLineArgs::init(argc,argv,&aboutData);
 
     KApplication a;
-    QResource::registerResource("resources/icons.qcc");
+
+    Q_INIT_RESOURCE(icons);
 
     PhotoFramesEditor * w = PhotoFramesEditor::instance(0);
     w->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
 
     int result = a.exec();
 
-    QResource::unregisterResource("resources/icons.qcc");
+    Q_CLEANUP_RESOURCE(icons);
 
     return result;
 }

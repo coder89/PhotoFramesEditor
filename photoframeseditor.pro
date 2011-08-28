@@ -62,7 +62,8 @@ SOURCES += main.cpp\
     settings/PFEConfigViewWidget.cpp \
     widgets/tools/AbstractTool.cpp \
     widgets/canvas/MousePressListener.cpp \
-    settings/PFEConfigDialog.cpp
+    settings/PFEConfigDialog.cpp \
+    widgets/canvas/CanvasSize.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/photo_context_menu.h \
@@ -121,7 +122,8 @@ HEADERS  += plugin/photoframeseditor.h \
     settings/PFEConfig.h \
     settings/PFEConfigSkeleton.h \
     settings/PFEConfigViewWidget.h \
-    settings/PFEConfigDialog.h
+    settings/PFEConfigDialog.h \
+    widgets/canvas/CanvasSize.h
 
 LIBS += \
     -L/usr \

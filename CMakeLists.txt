@@ -89,6 +89,7 @@
       widgets/canvas/ScalingWidgetItem.cpp
       widgets/canvas/CropWidgetItem.cpp
       widgets/canvas/MousePressListener.cpp
+      widgets/canvas/CanvasSize.cpp
   )
 
   SET(PhotoFramesEditor_RCS

@@ -262,18 +262,18 @@ void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
     QDomDocument document;
     document.setContent(&file, true);
     m_canvas = Canvas::fromSvg(document);
-    m_canvas->setFile(fileUrl);
     if (m_canvas)
     {
+        m_canvas->setFile(fileUrl);
         m_canvas->setParent(d->centralWidget);
         this->prepareSignalsConnections();
+        m_canvas->undoStack()->clear();
     }
     else
     {
         KMessageBox::error(this,
                            i18n("Can't read image file."));
     }
-    m_canvas->undoStack()->clear();
 }
 
 void PhotoFramesEditor::prepareSignalsConnections()

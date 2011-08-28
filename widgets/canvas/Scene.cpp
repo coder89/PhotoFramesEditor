@@ -1197,6 +1197,11 @@ QDomNode Scene::toSvg(QDomDocument & document)
     result.setAttribute("xmlns","http://www.w3.org/2000/svg");
     result.setAttribute("width",QString::number(this->width()));
     result.setAttribute("height",QString::number(this->height()));
+    QRectF sceneRect = this->sceneRect().toRect();
+    result.setAttribute("viewBox", QString::number(sceneRect.x()) + " " +
+                                   QString::number(sceneRect.y()) + " " +
+                                   QString::number(sceneRect.width()) + " " +
+                                   QString::number(sceneRect.height()));
     result.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     result.setAttribute("version", "1.2");
     result.setAttribute("baseProfile", "tiny");
@@ -1209,7 +1214,7 @@ QDomNode Scene::toSvg(QDomDocument & document)
     {
         AbstractPhoto * photo = dynamic_cast<AbstractPhoto*>(item);
         if (photo)
-            result.appendChild(photo->toSvg(document)); /// TODO : true (should be able to set to false!)
+            result.appendChild(photo->toSvg(document));
     }
     return result;
 }
@@ -1221,9 +1226,16 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
         return 0;
 
     // Scene dimension
-    qreal width = svgImage.attribute("width").toDouble();
-    qreal height = svgImage.attribute("width").toDouble();
-    QRectF dimension(0,0,width,height);
+    QString viewBox = svgImage.attribute("viewBox");
+    QRegExp vbr("[0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+");
+    if (!vbr.exactMatch(viewBox))
+        return 0;
+    QStringList rectList = viewBox.split(" ");
+    qreal xSceneRect = rectList.at(0).toDouble();
+    qreal ySceneRect = rectList.at(1).toDouble();
+    qreal widthSceneRect = rectList.at(2).toDouble();
+    qreal heightSceneRect = rectList.at(3).toDouble();
+    QRectF dimension(xSceneRect,ySceneRect,widthSceneRect,heightSceneRect);
     Scene * result = new Scene(dimension);
 
     // Create elements

@@ -43,9 +43,9 @@ void Plugin_PhotoFramesEditor::setup( QWidget * widget )
     m_parentWidget = widget;
     KIPI::Plugin::setup(m_parentWidget);
 
-    m_action = actionCollection()->addAction("photoframeseditor");
-    m_action->setText(i18n("Create photo frames..."));
-    m_action->setIcon(KIcon("photoframeseditor"));
+    m_action = actionCollection()->addAction("photolayoutseditor");
+    m_action->setText(i18n("Create photo layouts..."));
+    m_action->setIcon(KIcon("photolayoutseditor"));
 
     connect(m_action, SIGNAL(triggered(bool)),
             this, SLOT(slotActivate()));

@@ -87,6 +87,8 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
     m_interface(0),
     d(new PhotoFramesEditorPriv)
 {
+    Q_INIT_RESOURCE(icons);
+
     setXMLFile("photoframeseditorui.rc");
 
     setObjectName("Photo Frames Editor");
@@ -108,6 +110,8 @@ PhotoFramesEditor::~PhotoFramesEditor()
         delete m_canvas;
     if (d)
         delete d;
+
+    Q_CLEANUP_RESOURCE(icons);
 }
 
 PhotoFramesEditor * PhotoFramesEditor::instance(QWidget * parent)

@@ -30,8 +30,6 @@ int main(int argc, char *argv[])
 
     KApplication a;
 
-    Q_INIT_RESOURCE(icons);
-
     PhotoFramesEditor * w = PhotoFramesEditor::instance(0);
     w->setAttribute(Qt::WA_DeleteOnClose, true);
     int height = QApplication::desktop()->height()-500;
@@ -41,8 +39,6 @@ int main(int argc, char *argv[])
     w->show();
 
     int result = a.exec();
-
-    Q_CLEANUP_RESOURCE(icons);
 
     return result;
 }

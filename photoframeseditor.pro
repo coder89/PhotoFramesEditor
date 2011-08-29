@@ -168,7 +168,9 @@ OTHER_FILES += \
     effects/photolayoutseditoreffectplugin.desktop \
     effectplugins/colorize/photolayoutseditoreffectplugin_colorize.desktop \
     effectplugins/greyscale/photolayoutseditoreffectplugin_grayscale.desktop \
-    effectplugins/sepia/photolayoutseditoreffectplugin_sepia.desktop
+    effectplugins/sepia/photolayoutseditoreffectplugin_sepia.desktop \
+    plugin/kipiplugin_photolayoutseditor.desktop \
+    plugin/photolayoutseditor.desktop
 
 RESOURCES += \
     resources/icons.qrc

@@ -12,5 +12,5 @@ PFEConfigDialog::PFEConfigDialog(QWidget * parent) :
     KConfigDialog(parent, "settings", PFEConfig::configSkeleton())
 {
     PFEConfigViewWidget * confWdg = new PFEConfigViewWidget( 0, i18n("View") );
-    this->addPage( confWdg, i18n("View") )->setIcon(KIcon(QIcon(":view.png")));
+    this->addPage( confWdg, i18n("View") )->setIcon(KIcon(QIcon(":/view.png")));
 }

@@ -117,20 +117,21 @@
 
   KDE4_ADD_LIBRARY( libphotolayoutseditor STATIC ${PhotoLayoutsEditor_SRCS} ${PhotoLayoutsEditor_RC_SRCS} )
 
-  TARGET_LINK_LIBRARIES( libphotolayoutseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ${KIPI_LIBRARIES} PropertyBrowser )
+  SET_TARGET_PROPERTIES(libphotolayoutseditor PROPERTIES COMPILE_FLAGS "-fPIC")
 
+  TARGET_LINK_LIBRARIES( libphotolayoutseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} PropertyBrowser )
 
 # =======================================================
 # PhotoLayoutsEditor plugin
 
-  #SET(kipiplugin_PhotoLayoutsEditor_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugin_photoframeseditor.cpp)
+  SET(kipiplugin_PhotoLayoutsEditor_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugin_photoframeseditor.cpp)
 
-  #KDE4_ADD_PLUGIN(kipiplugin_photolayoutseditor ${kipiplugin_PhotoLayoutsEditor_PART_SRCS})
+  KDE4_ADD_PLUGIN(kipiplugin_photolayoutseditor ${kipiplugin_PhotoLayoutsEditor_PART_SRCS})
 
-  #TARGET_LINK_LIBRARIES(kipiplugin_photolayoutseditor libphotolayoutseditor)
+  TARGET_LINK_LIBRARIES(kipiplugin_photolayoutseditor libphotolayoutseditor ${KIPI_LIBRARIES})
 
-  #INSTALL(TARGETS kipiplugin_photolayoutseditor DESTINATION ${PLUGIN_INSTALL_DIR})
-  #INSTALL(FILES plugin/kipiplugin_PhotoLayoutsEditor.desktop DESTINATION ${SERVICES_INSTALL_DIR})
+  INSTALL(TARGETS kipiplugin_photolayoutseditor DESTINATION ${PLUGIN_INSTALL_DIR})
+  INSTALL(FILES plugin/kipiplugin_photolayoutseditor.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 # =======================================================
 # Stand-alone version of PhotoLayoutsEditor
@@ -142,7 +143,7 @@
   KDE4_ADD_EXECUTABLE( photolayoutseditor ${PhotoLayoutsEditor_SRCS} )
 
   TARGET_LINK_LIBRARIES( photolayoutseditor libphotolayoutseditor )
-  INSTALL(TARGETS photolayoutseditor  ${INSTALL_TARGETS_DEFAULT_ARGS})
+  INSTALL(TARGETS photolayoutseditor ${INSTALL_TARGETS_DEFAULT_ARGS})
   INSTALL(PROGRAMS plugin/photolayoutseditor.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
   INSTALL(FILES plugin/photolayoutseditorui.rc DESTINATION ${DATA_INSTALL_DIR}/photolayoutseditor)
   INSTALL(FILES effects/photolayoutseditoreffectplugin.desktop DESTINATION ${SERVICETYPES_INSTALL_DIR})

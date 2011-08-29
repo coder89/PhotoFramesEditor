@@ -24,8 +24,8 @@ namespace KIPIPhotoFramesEditor
                 QWidget(parent),
                 m_layout(new QHBoxLayout(this)),
                 m_label(new QLabel(i18n("Layers"),this)),
-                m_up_btn(new KPushButton(KIcon(":arrow_top.png"), "", this)),
-                m_dwn_btn(new KPushButton(KIcon(":arrow_down.png"), "", this))
+                m_up_btn(new KPushButton(KIcon(":/arrow_top.png"), "", this)),
+                m_dwn_btn(new KPushButton(KIcon(":/arrow_down.png"), "", this))
             {
                 m_layout->addWidget(m_label,1);
                 m_layout->addWidget(m_up_btn);

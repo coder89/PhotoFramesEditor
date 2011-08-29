@@ -2,6 +2,7 @@
 #define DOCUMENT_H
 
 #include "global.h"
+#include "CanvasSize.h"
 
 // Qt
 #include <QObject>
@@ -43,7 +44,7 @@ namespace KIPIPhotoFramesEditor
                 SingleSelcting = 4,
             };
 
-            explicit Canvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits, QWidget * parent = 0);
+            explicit Canvas(const CanvasSize & size, QWidget * parent = 0);
 
             virtual void wheelEvent(QWheelEvent *event);
 
@@ -81,13 +82,8 @@ namespace KIPIPhotoFramesEditor
                 return m_undo_stack;
             }
 
-            QSizeF paperSize() const;
-            SizeUnits sizeUnits() const;
-            QSizeF resolution() const;
-            QString resolutionUnits() const;
-            void setCanvasSize(const QSize & dimension);
-            void setPageSize(const QSizeF & paperSize, SizeUnits units);
-            void setCanvasResolution(const QSizeF & resolution, ResolutionUnits units);
+            CanvasSize canvasSize() const;
+            void setCanvasSize(const CanvasSize & size);
 
             void preparePrinter(QPrinter * printer);
 

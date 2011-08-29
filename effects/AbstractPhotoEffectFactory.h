@@ -8,7 +8,7 @@
 
 namespace KIPIPhotoFramesEditor
 {
-    class AbstractPhotoEffectFactory : public QObject
+    class KDE_EXPORT AbstractPhotoEffectFactory : public QObject
     {
         public:
 

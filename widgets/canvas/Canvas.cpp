@@ -8,6 +8,8 @@
 #include "global.h"
 
 #include <QPrinter>
+#include <QPaintDevice>
+#include <QPaintEngine>
 
 #include <kapplication.h>
 #include <kmessagebox.h>
@@ -20,21 +22,17 @@ using namespace KIPIPhotoFramesEditor;
 
 class KIPIPhotoFramesEditor::CanvasPrivate
 {
-    QSizeF m_size;
-    QSizeF m_resolution;
-    SizeUnits m_size_units;
-    QString m_resolution_units;
+    CanvasSize m_size;
 
     friend class Canvas;
 };
 
-Canvas::Canvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits, /*const QSizeF & resolution, const QString & resolutionUnits, */QWidget * parent) :
+Canvas::Canvas(const CanvasSize & size, QWidget * parent) :
     QGraphicsView(parent),
     d(new CanvasPrivate)
 {
-    d->m_size = paperSize;
-    d->m_size_units = sizeUnits;
-    m_scene = new Scene(QRectF(QPointF(0,0), QSizeF(dimension)), this);
+    d->m_size = size;
+    m_scene = new Scene(QRectF(QPointF(0,0), d->m_size.size(CanvasSize::Pixels)), this);
     this->init();
 }
 
@@ -160,61 +158,22 @@ LayersSelectionModel * Canvas::selectionModel() const
 }
 
 /** ###########################################################################################################################
- * Canvas size
+ * gets canvas size
  #############################################################################################################################*/
-QSizeF Canvas::paperSize() const
+CanvasSize Canvas::canvasSize() const
 {
     return d->m_size;
 }
 
 /** ###########################################################################################################################
- * Canvas size units
+ * Set canvas size
  #############################################################################################################################*/
-SizeUnits Canvas::sizeUnits() const
+void Canvas::setCanvasSize(const CanvasSize & size)
 {
-    return d->m_size_units;
-}
-
-/** ###########################################################################################################################
- * Canvas resolution
- #############################################################################################################################*/
-QSizeF Canvas::resolution() const
-{
-    return d->m_resolution;
-}
-
-/** ###########################################################################################################################
- * Canvas rersolution units
- #############################################################################################################################*/
-QString Canvas::resolutionUnits() const
-{
-    return d->m_resolution_units;
-}
-
-/** ###########################################################################################################################
- * Sets canvas size
- #############################################################################################################################*/
-void Canvas::setCanvasSize(const QSize & dimension)
-{
-    m_scene->setSceneRect(QRectF(QPointF(0, 0), dimension));
-}
-
-/** ###########################################################################################################################
- * Sets canvas paper size (for printing purpose)
- #############################################################################################################################*/
-void Canvas::setPageSize(const QSizeF & paperSize, SizeUnits units)
-{
-    d->m_size = paperSize;
-    d->m_size_units = units;
-}
-
-/** ###########################################################################################################################
- * Sets canvas resolution size (for printing purpose)
- #############################################################################################################################*/
-void Canvas::setCanvasResolution(const QSizeF & resolution, ResolutionUnits units)
-{
-    d->m_resolution = resolution;
-    d->m_resolution_units = units;
+    if (!size.isValid())
+        return;
+    d->m_size = size;
+    m_scene->setSceneRect(QRectF(QPointF(0,0), size.size(CanvasSize::Pixels)));
 }
 
 /** ###########################################################################################################################
@@ -223,33 +182,38 @@ void Canvas::setCanvasResolution(const QSizeF & resolution, ResolutionUnits unit
 void Canvas::preparePrinter(QPrinter * printer)
 {
     printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    SizeUnits su = sizeUnits();
-    QSizeF cs = paperSize();
+    CanvasSize::SizeUnits su = d->m_size.sizeUnit();
+    QSizeF cs = d->m_size.size();
+    bool setResolution = true;
     switch (su)
     {
-    case Meters:
-        cs *= 100;
-    case Centimeters:
+    case CanvasSize::Centimeters:
         cs *= 10;
-    case Milimeters:
+    case CanvasSize::Milimeters:
         printer->setPaperSize(cs, QPrinter::Millimeter);
         break;
-    case Yards:
-        cs *= 3;
-    case Feet:
-        cs *= 12;
-    case Inches:
+    case CanvasSize::Inches:
         printer->setPaperSize(cs, QPrinter::Inch);
         break;
-    case Points:
+    case CanvasSize::Points:
         printer->setPaperSize(cs, QPrinter::Point);
         break;
-    case Picas:
+    case CanvasSize::Picas:
         printer->setPaperSize(cs, QPrinter::Pica);
+        break;
+    case CanvasSize::Pixels:
+        printer->setPaperSize(cs, QPrinter::DevicePixel);
+        setResolution = false;
         break;
     default:
         printer->setPaperSize(cs, QPrinter::DevicePixel);
+        setResolution = false;
         qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__;
+    }
+    if (setResolution)
+    {
+        QSize printerResolution = d->m_size.resolution(CanvasSize::PixelsPerInch).toSize();
+        printer->setResolution(qMin(printerResolution.width(), printerResolution.height()));
     }
 }
 
@@ -669,7 +633,46 @@ void Canvas::wheelEvent(QWheelEvent * event)
 QDomDocument Canvas::toSvg() const
 {
     QDomDocument result(" svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"");
-    result.appendChild(m_scene->toSvg(result));
+    QDomElement svg = m_scene->toSvg(result);
+    result.appendChild(svg);
+    svg.setAttribute("width", QString::number(d->m_size.size().width()));
+    svg.setAttribute("height", QString::number(d->m_size.size().height()));
+    switch (d->m_size.sizeUnit())
+    {
+        case CanvasSize::Centimeters:
+            svg.setAttribute("width", svg.attribute("width") + "cm");
+            svg.setAttribute("height", svg.attribute("height") + "cm");
+            break;
+        case CanvasSize::Milimeters:
+            svg.setAttribute("width", svg.attribute("width") + "mm");
+            svg.setAttribute("height", svg.attribute("height") + "mm");
+            break;
+        case CanvasSize::Inches:
+            svg.setAttribute("width", svg.attribute("width") + "in");
+            svg.setAttribute("height", svg.attribute("height") + "in");
+            break;
+        case CanvasSize::Picas:
+            svg.setAttribute("width", svg.attribute("width") + "pc");
+            svg.setAttribute("height", svg.attribute("height") + "pc");
+            break;
+        case CanvasSize::Points:
+            svg.setAttribute("width", svg.attribute("width") + "pt");
+            svg.setAttribute("height", svg.attribute("height") + "pt");
+            break;
+        case CanvasSize::Pixels:
+            svg.setAttribute("width", svg.attribute("width") + "px");
+            svg.setAttribute("height", svg.attribute("height") + "px");
+            break;
+        default:
+            svg.setAttribute("width", svg.attribute("width") + "px");
+            svg.setAttribute("height", svg.attribute("height") + "px");
+            qDebug() << "Unhandled size unit at:" << __FILE__ << ":" << __LINE__;
+    }
+    QDomElement resolution = result.createElementNS(KIPIPhotoFramesEditor::uri(), "page");
+    resolution.setAttribute("width", QString::number(d->m_size.resolution().width()));
+    resolution.setAttribute("height", QString::number(d->m_size.resolution().height()));
+    resolution.setAttribute("unit", CanvasSize::resolutionUnitName(d->m_size.resolutionUnit()));
+    svg.appendChild(resolution);
     return result;
 }
 
@@ -682,33 +685,47 @@ Canvas * Canvas::fromSvg(QDomDocument & document)
     QDomNodeList childs = document.childNodes();
     if (childs.count())
     {
-        int i = 0;
-        QDomNode node;
-        QDomElement element;
-        while (childs.count() > i)
-        {
-            node = childs.at(i++);
-            if (node.isElement())
-            {
-                element = node.toElement();
-                if (element.tagName() == "svg")
-                    break;
-                else
-                    element = QDomElement();
-            }
-        }
+        QDomElement element = document.firstChildElement("svg");
         if (!element.isNull())
         {
-            qreal width = element.attribute("width").toDouble();
-            qreal height = element.attribute("width").toDouble();
-            qDebug() << width << height;
-            QSizeF dimension(width,height);
-            if (dimension.isValid())
+            QString width = element.attribute("width");
+            QString height = element.attribute("height");
+            QDomElement pageElement = element.firstChildElement("page");
+            QString xResolution = pageElement.attribute("width");
+            QString yResolution = pageElement.attribute("height");
+            QString resUnit = pageElement.attribute("unit");
+            // Canvas size validation
+            QRegExp sizeRegExp("[0-9.]+((cm)|(mm)|(in)|(pc)|(pt)|(px))");
+            QRegExp resRegExp("[0-9.]+");
+            if (sizeRegExp.exactMatch(width) &&
+                    sizeRegExp.exactMatch(height) &&
+                    width.right(2) == height.right(2) &&
+                    pageElement.namespaceURI() == KIPIPhotoFramesEditor::uri() &&
+                    resRegExp.exactMatch(xResolution) &&
+                    resRegExp.exactMatch(yResolution) &&
+                    CanvasSize::resolutionUnit(resUnit) != CanvasSize::UnknownResolutionUnit)
             {
-                Scene * scene = Scene::fromSvg(element);
-                if (scene)
-                    result = new Canvas(scene);
+                CanvasSize size;
+                size.setSizeUnit( CanvasSize::sizeUnit(width.right(2)) );
+                width.remove(width.length()-2, 2);
+                height.remove(height.length()-2, 2);
+                QSizeF dimension(width.toDouble(),height.toDouble());
+                size.setSize(dimension);
+                size.setResolutionUnit( CanvasSize::resolutionUnit(resUnit) );
+                QSizeF resolution(xResolution.toDouble(), yResolution.toDouble());
+                size.setResolution(resolution);
+                if (dimension.isValid())
+                {
+                    Scene * scene = Scene::fromSvg(element);
+                    if (scene)
+                    {
+                        result = new Canvas(scene);
+                        result->d->m_size = size;
+                    }
+                }
             }
+            else
+                KMessageBox::error(0, i18n("Invalid image size!"));
         }
     }
     return result;
@@ -839,6 +856,13 @@ void Canvas::renderCanvas(QPaintDevice * device)
 
         scene()->setSelectionVisible(false);
         QPainter p(device);
+        if (d->m_size.sizeUnit() != CanvasSize::Pixels &&
+                d->m_size.sizeUnit() != CanvasSize::UnknownSizeUnit)
+        {
+            QSizeF resolution = d->m_size.resolution(CanvasSize::PixelsPerInch);
+            p.setTransform( QTransform::fromScale( device->logicalDpiX() / resolution.width(),
+                                                   device->logicalDpiY() / resolution.height()) );
+        }
         scene()->render(&p, scene()->sceneRect(), scene()->sceneRect());
         p.end();
 

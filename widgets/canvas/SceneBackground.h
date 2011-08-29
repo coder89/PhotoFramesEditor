@@ -88,6 +88,10 @@ namespace KIPIPhotoFramesEditor
 
             void sceneChanged();
 
+        private slots:
+
+            void sceneRectChanged(const QRectF & sceneRect);
+
         friend class BackgroundImageChangedCommand;
         friend class BackgroundFirstBrushChangeCommand;
         friend class BackgroundSecondBrushChangeCommand;

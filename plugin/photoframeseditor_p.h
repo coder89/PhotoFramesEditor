@@ -7,6 +7,7 @@
 #include <krecentfilesaction.h>
 #include <kfiledialog.h>
 #include <ktoggleaction.h>
+#include <kservicetypetrader.h>
 
 // Qt
 #include <QHBoxLayout>
@@ -21,6 +22,7 @@
 #include "EffectsEditorTool.h"
 #include "BorderEditTool.h"
 #include "ColorizeTool.h"
+#include "AbstractPhotoEffectFactory.h"
 #include "global.h"
 
 namespace KIPIPhotoFramesEditor
@@ -132,6 +134,10 @@ namespace KIPIPhotoFramesEditor
             EffectsEditorTool * toolEffects;
             BorderEditTool * toolBorders;
             ColorizeTool * toolColorize;
+
+            // Plugins
+            QMap<QString, KService::Ptr> effectServiceMap;
+            QMap<QString, AbstractPhotoEffectFactory*> effectMap;
     };
 }
 

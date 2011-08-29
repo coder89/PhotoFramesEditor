@@ -99,6 +99,7 @@ QPainterPath KIPIPhotoFramesEditor::pathFromSvg(const QDomElement & element)
         }
         ++it;
     }
+    qreal t1, t2, t3, t4, t5, t6;
     while (operations.count())
     {
         char opc = operations.dequeue();
@@ -107,24 +108,27 @@ QPainterPath KIPIPhotoFramesEditor::pathFromSvg(const QDomElement & element)
             case 'M':
                 if (coordinates.count() < 2)
                     return QPainterPath();
-                result.moveTo(coordinates.dequeue(),
-                              coordinates.dequeue());
+                t1 = coordinates.dequeue();
+                t2 = coordinates.dequeue();
+                result.moveTo(t1, t2);
                 break;
             case 'L':
                 if (coordinates.count() < 2)
                     return QPainterPath();
-                result.lineTo(coordinates.dequeue(),
-                              coordinates.dequeue());
+                t1 = coordinates.dequeue();
+                t2 = coordinates.dequeue();
+                result.lineTo(t1, t2);
                 break;
             case 'C':
                 if (coordinates.count() < 4)
                     return QPainterPath();
-                result.cubicTo(coordinates.dequeue(),
-                               coordinates.dequeue(),
-                               coordinates.dequeue(),
-                               coordinates.dequeue(),
-                               coordinates.dequeue(),
-                               coordinates.dequeue());
+                t1 = coordinates.dequeue();
+                t2 = coordinates.dequeue();
+                t3 = coordinates.dequeue();
+                t4 = coordinates.dequeue();
+                t5 = coordinates.dequeue();
+                t6 = coordinates.dequeue();
+                result.cubicTo(t1, t2, t3, t4, t5, t6);
                 break;
             case 'z':
                 result.closeSubpath();
@@ -134,73 +138,4 @@ QPainterPath KIPIPhotoFramesEditor::pathFromSvg(const QDomElement & element)
         }
     }
     return result;
-}
-
-const QMap<KIPIPhotoFramesEditor::ResolutionUnits,qreal> & KIPIPhotoFramesEditor::resolutionUnitsFactors()
-{
-    static QMap<ResolutionUnits,qreal> resolutionUnits;
-    if (resolutionUnits.isEmpty())
-    {
-        resolutionUnits.insert(PixelsPerMilimeter, 25.4);
-        resolutionUnits.insert(PixelsPerCentimeter, 2.54);
-        resolutionUnits.insert(PixelsPerMeter, 0.0254);
-        resolutionUnits.insert(PixelsPerInch, 1);
-        resolutionUnits.insert(PixelsPerFeet, 0.083333);
-        resolutionUnits.insert(PixelsPerYard, 0.027778);
-        resolutionUnits.insert(PixelsPerPoint, 72.27);
-        resolutionUnits.insert(PixelsPerPicas, 6.0225);
-    }
-    return resolutionUnits;
-}
-
-const QMap<KIPIPhotoFramesEditor::ResolutionUnits,QString> & KIPIPhotoFramesEditor::resolutionUnitsNames()
-{
-    static QMap<ResolutionUnits,QString> resolutionUnits;
-    if (resolutionUnits.isEmpty())
-    {
-        resolutionUnits.insert(PixelsPerMilimeter, "px/mm");
-        resolutionUnits.insert(PixelsPerCentimeter, "px/cm");
-        resolutionUnits.insert(PixelsPerMeter, "px/m");
-        resolutionUnits.insert(PixelsPerInch, "px/in");
-        resolutionUnits.insert(PixelsPerFeet, "px/ft");
-        resolutionUnits.insert(PixelsPerYard, "px/yd");
-        resolutionUnits.insert(PixelsPerPoint, "px/pt");
-        resolutionUnits.insert(PixelsPerPicas, "px/pc");
-    }
-    return resolutionUnits;
-}
-
-const QMap<KIPIPhotoFramesEditor::SizeUnits,qreal> & KIPIPhotoFramesEditor::sizeUnitsFactors()
-{
-    static QMap<KIPIPhotoFramesEditor::SizeUnits,qreal> sizeUnits;
-    if (sizeUnits.isEmpty())
-    {
-        sizeUnits.insert(Milimeters, 25.4);
-        sizeUnits.insert(Centimeters, 2.54);
-        sizeUnits.insert(Meters, 0.0254);
-        sizeUnits.insert(Inches, 1);
-        sizeUnits.insert(Feet, 0.083333);
-        sizeUnits.insert(Yards, 0.027778);
-        sizeUnits.insert(Points, 72.27);
-        sizeUnits.insert(Picas, 6.0225);
-    }
-    return sizeUnits;
-}
-
-const QMap<KIPIPhotoFramesEditor::SizeUnits,QString> & KIPIPhotoFramesEditor::sizeUnitsNames()
-{
-    static QMap<SizeUnits,QString> sizeUnits;
-    if (sizeUnits.isEmpty())
-    {
-        sizeUnits.insert(Pixels, "px");
-        sizeUnits.insert(Milimeters, "mm");
-        sizeUnits.insert(Centimeters, "cm");
-        sizeUnits.insert(Meters, "m");
-        sizeUnits.insert(Inches, "in");
-        sizeUnits.insert(Feet, "ft");
-        sizeUnits.insert(Yards, "yd");
-        sizeUnits.insert(Points, "pt");
-        sizeUnits.insert(Picas, "pc");
-    }
-    return sizeUnits;
 }

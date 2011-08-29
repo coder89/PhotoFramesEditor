@@ -75,7 +75,6 @@ namespace KIPIPhotoFramesEditor
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
-            virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value);
 
             /// Updates item icon
             virtual void updateIcon();

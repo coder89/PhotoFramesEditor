@@ -574,7 +574,7 @@ void Scene::removeItems(const QList<AbstractPhoto *> & items)
 {
     if (!askAboutRemoving(items.count()))
         return;
-    QUndoCommand * command;
+    QUndoCommand * command = 0;
     QUndoCommand * parent = 0;
     if (items.count() > 1)
         parent = new QUndoCommand("Remove items");
@@ -1191,7 +1191,7 @@ qreal Scene::gridVerticalDistance() const
 }
 
 //#####################################################################################################
-QDomNode Scene::toSvg(QDomDocument & document)
+QDomElement Scene::toSvg(QDomDocument & document)
 {
     QDomElement result = document.createElement("svg");
     result.setAttribute("xmlns","http://www.w3.org/2000/svg");
@@ -1243,10 +1243,9 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
     QDomNodeList children = svgImage.childNodes();
     for (int i = 0; i < children.count(); ++i)
     {
-        QDomNode node = children.at(i);
-        if (!node.isElement())
+        QDomElement element = children.at(i).toElement();
+        if (element.isNull() || element.tagName() != "g")
             continue;
-        QDomElement element = node.toElement();
         QString itemClass = element.attribute("class");
         AbstractPhoto * item;
         if (itemClass == "PhotoItem")
@@ -1261,7 +1260,7 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
             continue;
         }
         else
-            item = 0;
+            continue;
 
         if (item)
         {

@@ -15,11 +15,12 @@
 // Local
 #include "CanvasWidget.h"
 #include "UndoCommandEvent.h"
-#include "global.h"
+#include "CanvasSize.h"
 
 namespace KIPIPhotoFramesEditor
 {
     class Canvas;
+    class CanvasSizeChangeCommand;
 
     class PhotoFramesEditor : public KXmlGuiWindow
     {
@@ -46,7 +47,7 @@ namespace KIPIPhotoFramesEditor
             void print();
             bool closeDocument();
             void setGridVisible(bool isVisible);
-            void createCanvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits);
+            void createCanvas(const CanvasSize & size);
             void createCanvas(const KUrl & fileUrl);
             void settings();
             void setupGrid();

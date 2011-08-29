@@ -255,23 +255,6 @@ void PhotoItem::dropEvent(QGraphicsSceneDragDropEvent * event)
     this->setHighlightItem(false);
 }
 
-QVariant PhotoItem::itemChange(GraphicsItemChange change, const QVariant & value)
-{
-    switch (change)
-    {
-        case ItemSceneChange:
-            {
-                QGraphicsScene * scene = value.value<QGraphicsScene*>();
-                if (scene)
-                    fitToRect(scene->sceneRect().toRect());
-            }
-            break;
-        default:
-            break;
-    }
-    return AbstractPhoto::itemChange(change, value);
-}
-
 void PhotoItem::setPixmap(const QPixmap & pixmap)
 {
     if (pixmap.isNull())
@@ -282,7 +265,19 @@ void PhotoItem::setPixmap(const QPixmap & pixmap)
 
 void PhotoItem::updateIcon()
 {
-    this->setIcon(QIcon(m_pixmap.scaled(100,100,Qt::KeepAspectRatioByExpanding)));
+    QPixmap temp(m_pixmap.size());
+    temp.fill(Qt::transparent);
+    QPainter p(&temp);
+    p.fillPath(itemOpaqueArea(), QBrush(this->m_pixmap));
+    p.end();
+    temp = temp.scaled(48,48,Qt::KeepAspectRatio);
+    p.begin(&temp);
+    QPen pen(Qt::gray,1);
+    pen.setCosmetic(true);
+    p.setPen(pen);
+    p.drawRect( QRect(QPoint(0,0), temp.size()-QSize(1,1)) );
+    p.end();
+    this->setIcon(QIcon(temp));
 }
 
 void PhotoItem::fitToRect(const QRect & rect)

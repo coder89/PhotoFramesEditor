@@ -15,7 +15,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         plugin/photoframeseditor.cpp \
     widgets/photo_context_menu.cpp \
-    widgets/dialogs/CanvasCreationDialog.cpp \
     models/LayersModel.cpp \
     models/LayersModelItem.cpp \
     models/LayersSelectionModel.cpp \
@@ -63,13 +62,13 @@ SOURCES += main.cpp\
     widgets/tools/AbstractTool.cpp \
     widgets/canvas/MousePressListener.cpp \
     settings/PFEConfigDialog.cpp \
-    widgets/canvas/CanvasSize.cpp
+    widgets/canvas/CanvasSize.cpp \
+    widgets/dialogs/CanvasSizeDialog.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/photo_context_menu.h \
     plugin/photoframeseditor_p.h \
     utils/global.h \
-    widgets/dialogs/CanvasCreationDialog.h \
     models/LayersModel.h \
     models/LayersModelItem.h \
     models/LayersSelectionModel.h \
@@ -123,7 +122,8 @@ HEADERS  += plugin/photoframeseditor.h \
     settings/PFEConfigSkeleton.h \
     settings/PFEConfigViewWidget.h \
     settings/PFEConfigDialog.h \
-    widgets/canvas/CanvasSize.h
+    widgets/canvas/CanvasSize.h \
+    widgets/dialogs/CanvasSizeDialog.h
 
 LIBS += \
     -L/usr \
@@ -158,7 +158,17 @@ OTHER_FILES += \
     settings/PFEConfigSkeleton.kcfgc \
     resources/photoframeseditor.desktop \
     plugin/photoframeseditor.desktop \
-    resources/app/CMakeLists.txt
+    resources/app/CMakeLists.txt \
+    effectplugins/CMakeLists.txt \
+    effectplugins/blur/CMakeLists.txt \
+    effectplugins/colorize/CMakeLists.txt \
+    effectplugins/greyscale/CMakeLists.txt \
+    effectplugins/sepia/CMakeLists.txt \
+    effectplugins/blur/photolayoutseditoreffectplugin_blur.desktop \
+    effects/photolayoutseditoreffectplugin.desktop \
+    effectplugins/colorize/photolayoutseditoreffectplugin_colorize.desktop \
+    effectplugins/greyscale/photolayoutseditoreffectplugin_grayscale.desktop \
+    effectplugins/sepia/photolayoutseditoreffectplugin_sepia.desktop
 
 RESOURCES += \
     resources/icons.qrc

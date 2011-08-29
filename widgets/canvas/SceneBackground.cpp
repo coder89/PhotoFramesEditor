@@ -593,9 +593,21 @@ void SceneBackground::render(QPainter * painter, const QRect & rect)
 
 void SceneBackground::sceneChanged()
 {
+    this->disconnect(0, 0, this, SLOT(sceneRectChanged(QRectF)));
     if (scene())
     {
-        m_rect = scene()->sceneRect();
+        sceneRectChanged(scene()->sceneRect());
+        this->connect(scene(), SIGNAL(sceneRectChanged(QRectF)), this, SLOT(sceneRectChanged(QRectF)));
+    }
+    else
+        sceneRectChanged(QRectF());
+}
+
+void SceneBackground::sceneRectChanged(const QRectF & sceneRect)
+{
+    if (sceneRect.isValid())
+    {
+        m_rect = sceneRect;
         m_pixmap = QPixmap(m_rect.size().toSize());
         m_pixmap.fill(Qt::transparent);
         QPainter p(&m_pixmap);

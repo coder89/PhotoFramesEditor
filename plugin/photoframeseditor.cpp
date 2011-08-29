@@ -1,7 +1,7 @@
 // Local
 #include "photoframeseditor.h"
 #include "photoframeseditor_p.h"
-#include "CanvasCreationDialog.h"
+#include "CanvasSizeDialog.h"
 #include "Canvas.h"
 #include "Scene.h"
 #include "LayersSelectionModel.h"
@@ -47,8 +47,37 @@
 #include <kapplication.h>
 #include <kprintpreview.h>
 #include <kconfigdialog.h>
+#include <kservice.h>
+#include <kservicetypetrader.h>
+#include <kdebug.h>
 
 using namespace KIPIPhotoFramesEditor;
+
+class KIPIPhotoFramesEditor::CanvasSizeChangeCommand : public QUndoCommand
+{
+    CanvasSize m_size;
+    Canvas * m_canvas;
+public:
+    CanvasSizeChangeCommand(const CanvasSize & size, Canvas * canvas, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Canvas size change"), parent),
+        m_size(size),
+        m_canvas(canvas)
+    {}
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+    void run()
+    {
+        CanvasSize temp = m_canvas->canvasSize();
+        m_canvas->setCanvasSize(m_size);
+        m_size = temp;
+    }
+};
 
 PhotoFramesEditor * PhotoFramesEditor::m_instance = 0;
 
@@ -240,14 +269,14 @@ void PhotoFramesEditor::createWidgets()
     this->open(KUrl("/home/coder89/Desktop/first.pfe"));   /// TODO : REMOVE WHEN FINISH
 }
 
-void PhotoFramesEditor::createCanvas(const QSize & dimension, const QSizeF & paperSize, SizeUnits sizeUnits)
+void PhotoFramesEditor::createCanvas(const CanvasSize & size)
 {
     if (m_canvas)
     {
         d->centralWidget->layout()->removeWidget(m_canvas);
         m_canvas->deleteLater();
     }
-    m_canvas = new Canvas(dimension, paperSize, sizeUnits, d->centralWidget);
+    m_canvas = new Canvas(size, d->centralWidget);
     this->prepareSignalsConnections();
 }
 
@@ -318,16 +347,13 @@ void PhotoFramesEditor::open()
 {
     closeDocument();
 
-    CanvasCreationDialog * newCanvas = new CanvasCreationDialog(this);
-    newCanvas->setModal(true);
-    int result = newCanvas->exec();
+    CanvasSizeDialog * canvasSizeDialog = new CanvasSizeDialog(this);
+    canvasSizeDialog->setModal(true);
+    int result = canvasSizeDialog->exec();
 
-    if (result == KDialog::Accepted)
-    {
-        createCanvas(newCanvas->canvasSize(),
-                     newCanvas->paperSize(),
-                     newCanvas->sizeUnits());
-    }
+    CanvasSize size = canvasSizeDialog->canvasSize();
+    if (result == KDialog::Accepted && size.isValid())
+        createCanvas(size);
 
     refreshActions();
 }
@@ -519,45 +545,66 @@ void PhotoFramesEditor::changeCanvasSize()
 {
     if (!m_canvas)
         return;
-    CanvasCreationDialog ccd(m_canvas->paperSize(), m_canvas->sizeUnits(), m_canvas->resolution(), m_canvas->resolutionUnits(), this);
+    CanvasSizeDialog ccd(m_canvas->canvasSize(), this);
     int result = ccd.exec();
+    CanvasSize size = ccd.canvasSize();
     if (result == KDialog::Accepted)
     {
-        m_canvas->setCanvasSize(ccd.canvasSize());
-        m_canvas->setPageSize(ccd.paperSize(), ccd.sizeUnits());
-        m_canvas->setCanvasResolution(ccd.paperResolution(), ccd.resolutionUnits());
+        if (size.isValid())
+        {
+            if (m_canvas->canvasSize() != size)
+            {
+                CanvasSizeChangeCommand * command = new CanvasSizeChangeCommand(size, m_canvas);
+                PFE_PostUndoCommand(command);
+            }
+        }
+        else
+            KMessageBox::error(this, i18n("Invalid image size!"));
     }
 }
 
 void PhotoFramesEditor::loadEffects()
 {
-    QDir effectsDir("./effects");
-    QStringList filters;
-    filters << "*.so" << "*.dll";
-    QFileInfoList filesList = effectsDir.entryInfoList(filters, QDir::Files);
-    foreach (QFileInfo fileInfo, filesList)
+
+    KServiceType::List t = KServiceType::allServiceTypes();
+    foreach (KServiceType::Ptr serv, t)
     {
-        QPluginLoader loader(fileInfo.absoluteFilePath());
-        QObject * plugin = loader.instance();
-        if (plugin)
-        {
-            AbstractPhotoEffectFactory * newEffectFactory = qobject_cast<AbstractPhotoEffectFactory*>(plugin);
-            if (newEffectFactory)
-            {
-                PhotoEffectsLoader::registerEffect(newEffectFactory);
-#ifdef QT_DEBUG
-                qDebug() << "LOADED!";
-#endif
-            }
-#ifdef QT_DEBUG
-            else
-                qDebug() << "Invalid class interface!";
-#endif
-        }
-#ifdef QT_DEBUG
+        qDebug() << serv->name();
+    }
+    qDebug() << "------------------------";
+    const KService::List offers = KServiceTypeTrader::self()->query("PhotoLayoutsEditor/EffectPlugin");
+    foreach (const KService::Ptr& service, offers)
+    {
+        if (service)
+            d->effectServiceMap[service->name()] = service;
+    }
+
+    foreach (const QString & name, d->effectServiceMap.keys())
+    {
+        KService::Ptr service = d->effectServiceMap.value(name);
+        AbstractPhotoEffectFactory * plugin;
+
+        if ( d->effectMap.contains(name) )
+            continue;
         else
-            qDebug() << loader.errorString();
-#endif
+        {
+            QString error;
+            plugin = service->createInstance<AbstractPhotoEffectFactory>(this, QVariantList(), &error);
+            if (plugin)
+            {
+                d->effectMap[name] = plugin;
+                PhotoEffectsLoader::registerEffect(plugin);
+                kDebug() << "PhotoFramesEditor: Loaded effect " << service->name();
+            }
+            else
+            {
+                kWarning() << "PhotoFramesEditor: createInstance returned 0 for "
+                           << service->name()
+                           << " (" << service->library() << ")"
+                           << " with error: "
+                           << error;
+            }
+        }
     }
 }
 

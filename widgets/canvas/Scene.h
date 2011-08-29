@@ -71,7 +71,7 @@ namespace KIPIPhotoFramesEditor
             void setInteractionMode(int mode);
             void setSelectionMode(SelectionMode selectionMode);
             bool isSelectionVisible();
-            QDomNode toSvg(QDomDocument & document);
+            QDomElement toSvg(QDomDocument & document);
             static Scene * fromSvg(QDomElement & svgImage);
             void addSelectingFilter(const QMetaObject & classMeta);
             void clearSelectingFilters();

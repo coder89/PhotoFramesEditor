@@ -1,7 +1,5 @@
 #include "PhotoEffectsGroup.h"
 #include "PhotoEffectsLoader.h"
-#include "BlurPhotoEffect.h"
-#include "PixelizePhotoEffect.h"
 #include "AbstractPhoto.h"
 #include "AbstractPhotoEffectFactory.h"
 #include "AbstractPhotoEffectInterface.h"

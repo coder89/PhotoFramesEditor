@@ -31,7 +31,7 @@ LayersTree::LayersTree(QWidget * parent) :
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setAnimated(true);
     this->setMultiSelection();
-    this->setIconSize(QSize(50,50));
+    this->setIconSize(QSize(48,48));
 }
 
 void LayersTree::setModel(QAbstractItemModel * model)

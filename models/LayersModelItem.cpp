@@ -8,6 +8,9 @@
 #include <QIcon>
 #include <QString>
 
+// KDE
+#include <klocalizedstring.h>
+
 using namespace KIPIPhotoFramesEditor;
 
 LayersModelItem::LayersModelItem(AbstractPhoto * photo, LayersModelItem * parent, LayersModel * model) :
@@ -143,7 +146,7 @@ AbstractPhoto * LayersModelItem::photo() const
 QVariant LayersModelItem::data(int column) const
 {
     if (column == LayersModelItem::NameString)
-        return itemPhoto ? itemPhoto->name() : "Empty layer";
+        return itemPhoto ? itemPhoto->name() : i18n("Layer");
     else if (column == LayersModelItem::Thumbnail)
         return itemPhoto ? itemPhoto->icon() : QIcon();
     else

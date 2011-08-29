@@ -1,8 +1,8 @@
-  PROJECT( photoframeseditor )
+  PROJECT( photolayoutseditor )
+
+  SET(CMAKE_INSTALL_PREFIX /usr/)
 
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
-  SUBDIRS( ./resources/app )
 
   ADD_SUBDIRECTORY( ./utils/qtpropertybrowser )
 
@@ -40,10 +40,10 @@
       settings
   )
 
-  SET( PhotoFramesEditor_SRCS
+  SET( PhotoLayoutsEditor_SRCS
       plugin/photoframeseditor.cpp
       widgets/photo_context_menu.cpp
-      widgets/dialogs/CanvasCreationDialog.cpp
+      widgets/dialogs/CanvasSizeDialog.cpp
       models/LayersModel.cpp
       models/LayersModelItem.cpp
       models/LayersSelectionModel.cpp
@@ -92,7 +92,7 @@
       widgets/canvas/CanvasSize.cpp
   )
 
-  SET(PhotoFramesEditor_RCS
+  SET(PhotoLayoutsEditor_RCS
       resources/icons.qrc
   )
 
@@ -101,46 +101,51 @@
                       ${INCLUDE_DIRS}
                       ${KIPI_INCLUDE_DIR})
 
-  QT4_ADD_RESOURCES( PhotoFramesEditor_RC_SRCS ${PhotoFramesEditor_RCS} )
+  QT4_ADD_RESOURCES( PhotoLayoutsEditor_RC_SRCS ${PhotoLayoutsEditor_RCS} )
 
-  KDE4_ADD_KCFG_FILES(PhotoFramesEditor_SRCS GENERATE_MOC ./settings/PFEConfigSkeleton.kcfgc)
+  ADD_SUBDIRECTORY( ./resources/app )
+
+  KDE4_ADD_KCFG_FILES(PhotoLayoutsEditor_SRCS GENERATE_MOC ./settings/PFEConfigSkeleton.kcfgc)
   INSTALL( FILES ./settings/PFEConfigSkeleton.kcfgc DESTINATION ${KCFG_INSTALL_DIR} )
 
   # Adjust flag for static lib and 64 bits computers using -fPIC for GCC compiler (B.K.O: #269903)
-  FOREACH(_currentfile ${expoblending_common_SRCS})
+  FOREACH(_currentfile ${PhotoLayoutsEditor_SRCS})
       IF(NOT MSVC)
           SET_SOURCE_FILES_PROPERTIES(${_currentfile} PROPERTIES COMPILE_FLAGS "-fPIC")
       ENDIF(NOT MSVC)
-  ENDFOREACH(_currentfile ${expoblending_common_SRCS})
+  ENDFOREACH(_currentfile ${PhotoLayoutsEditor_SRCS})
 
-  KDE4_ADD_LIBRARY( libphotoframeseditor STATIC ${PhotoFramesEditor_SRCS} ${PhotoFramesEditor_RC_SRCS} )
+  KDE4_ADD_LIBRARY( libphotolayoutseditor STATIC ${PhotoLayoutsEditor_SRCS} ${PhotoLayoutsEditor_RC_SRCS} )
 
-  TARGET_LINK_LIBRARIES( libphotoframeseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ${KIPI_LIBRARIES} PropertyBrowser )
+  TARGET_LINK_LIBRARIES( libphotolayoutseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ${KIPI_LIBRARIES} PropertyBrowser )
 
-
-# =======================================================
-# PhotoFramesEditor plugin
-
-  #SET(kipiplugin_PhotoFramesEditor_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugin_photoframeseditor.cpp)
-
-  #KDE4_ADD_PLUGIN(kipiplugin_photoframeseditor ${kipiplugin_PhotoFramesEditor_PART_SRCS})
-
-  #TARGET_LINK_LIBRARIES(kipiplugin_photoframeseditor libphotoframeseditor)
-
-  #INSTALL(TARGETS kipiplugin_photoframeseditor DESTINATION ${PLUGIN_INSTALL_DIR})
-  #INSTALL(FILES plugin/kipiplugin_photoframeseditor.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 # =======================================================
-# Stand-alone version of PhotoFramesEditor
+# PhotoLayoutsEditor plugin
 
-  SET(PhotoFramesEditor_SRCS main.cpp)
+  #SET(kipiplugin_PhotoLayoutsEditor_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugin_photoframeseditor.cpp)
 
-  KDE4_ADD_APP_ICON( PhotoFramesEditor_SRCS "photoframeseditor" )
+  #KDE4_ADD_PLUGIN(kipiplugin_photolayoutseditor ${kipiplugin_PhotoLayoutsEditor_PART_SRCS})
 
-  KDE4_ADD_EXECUTABLE( photoframeseditor ${PhotoFramesEditor_SRCS} )
+  #TARGET_LINK_LIBRARIES(kipiplugin_photolayoutseditor libphotolayoutseditor)
 
-  TARGET_LINK_LIBRARIES( photoframeseditor libphotoframeseditor )
-  INSTALL(TARGETS photoframeseditor  ${INSTALL_TARGETS_DEFAULT_ARGS})
-  INSTALL(PROGRAMS plugin/photoframeseditor.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
-  INSTALL(FILES plugin/photoframeseditorui.rc DESTINATION ${DATA_INSTALL_DIR}/photoframeseditor)
-  #INSTALL(FILES main/photoframeseditor.notifyrc DESTINATION ${DATA_INSTALL_DIR}/photoframeseditor)
+  #INSTALL(TARGETS kipiplugin_photolayoutseditor DESTINATION ${PLUGIN_INSTALL_DIR})
+  #INSTALL(FILES plugin/kipiplugin_PhotoLayoutsEditor.desktop DESTINATION ${SERVICES_INSTALL_DIR})
+
+# =======================================================
+# Stand-alone version of PhotoLayoutsEditor
+
+  SET(PhotoLayoutsEditor_SRCS main.cpp)
+
+  KDE4_ADD_APP_ICON( PhotoLayoutsEditor_SRCS "photolayoutseditor" )
+
+  KDE4_ADD_EXECUTABLE( photolayoutseditor ${PhotoLayoutsEditor_SRCS} )
+
+  TARGET_LINK_LIBRARIES( photolayoutseditor libphotolayoutseditor )
+  INSTALL(TARGETS photolayoutseditor  ${INSTALL_TARGETS_DEFAULT_ARGS})
+  INSTALL(PROGRAMS plugin/photolayoutseditor.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
+  INSTALL(FILES plugin/photolayoutseditorui.rc DESTINATION ${DATA_INSTALL_DIR}/photolayoutseditor)
+  INSTALL(FILES effects/photolayoutseditoreffectplugin.desktop DESTINATION ${SERVICETYPES_INSTALL_DIR})
+  #INSTALL(FILES main/photolayoutseditor.notifyrc DESTINATION ${DATA_INSTALL_DIR}/photolayoutseditor)
+
+  ADD_SUBDIRECTORY( ./effectplugins )

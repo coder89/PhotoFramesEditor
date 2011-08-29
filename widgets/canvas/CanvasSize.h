@@ -3,9 +3,12 @@
 
 #include <QString>
 #include <QMap>
+#include <QSizeF>
 
 namespace KIPIPhotoFramesEditor
 {
+    class CanvasSizeDialog;
+
     class CanvasSize
     {
         public:
@@ -15,10 +18,7 @@ namespace KIPIPhotoFramesEditor
                 UnknownResolutionUnit,
                 PixelsPerMilimeter,
                 PixelsPerCentimeter,
-                PixelsPerMeter,
                 PixelsPerInch,
-                PixelsPerFeet,
-                PixelsPerYard,
                 PixelsPerPoint,
                 PixelsPerPicas,
             };
@@ -29,10 +29,7 @@ namespace KIPIPhotoFramesEditor
                 Pixels,
                 Milimeters,
                 Centimeters,
-                Meters,
                 Inches,
-                Feet,
-                Yards,
                 Points,
                 Picas,
             };
@@ -44,6 +41,9 @@ namespace KIPIPhotoFramesEditor
             static qreal resolutionUnitFactor(QString unitName);
             static QString resolutionUnitName(ResolutionUnits unit);
             static QString resolutionUnitName(qreal factor);
+            static ResolutionUnits resolutionUnit(qreal factor);
+            static ResolutionUnits resolutionUnit(QString name);
+            static qreal resolutionConvert(qreal value, ResolutionUnits from, ResolutionUnits to);
 
             static QList<qreal> sizeUnitsFactors();
             static QList<QString> sizeUnitsNames();
@@ -52,6 +52,30 @@ namespace KIPIPhotoFramesEditor
             static qreal sizeUnitFactor(QString unitName);
             static QString sizeUnitName(SizeUnits unit);
             static QString sizeUnitName(qreal factor);
+            static SizeUnits sizeUnit(qreal factor);
+            static SizeUnits sizeUnit(QString name);
+            static qreal sizeConvert(qreal value, SizeUnits from, SizeUnits to);
+
+            static int toPixels(qreal value, qreal resolution, SizeUnits sUnit, ResolutionUnits rUnit);
+            static qreal fromPixels(int pixels, qreal resolution, SizeUnits sUnit, ResolutionUnits rUnit);
+
+            CanvasSize();
+            CanvasSize(const QSizeF & size, SizeUnits sUnit, const QSizeF & resolution, ResolutionUnits rUnit);
+
+            QSizeF size() const;
+            void setSize(const QSizeF & size);
+            QSizeF size(SizeUnits unit) const;
+            SizeUnits sizeUnit() const;
+            void setSizeUnit(SizeUnits unit);
+            QSizeF resolution() const;
+            QSizeF resolution(ResolutionUnits unit) const;
+            void setResolution(const QSizeF & resolution);
+            ResolutionUnits resolutionUnit() const;
+            void setResolutionUnit(ResolutionUnits unit);
+            bool isValid() const;
+
+            bool operator ==(const CanvasSize & size) const;
+            bool operator !=(const CanvasSize & size) const;
 
         private:
 
@@ -62,6 +86,13 @@ namespace KIPIPhotoFramesEditor
             static QMap<SizeUnits,QString> size_names;
 
             static void prepare_maps();
+
+            SizeUnits m_size_unit;
+            QSizeF m_size;
+            ResolutionUnits m_resolution_unit;
+            QSizeF m_resolution;
+
+        friend class CanvasSizeDialog;
     };
 }
 

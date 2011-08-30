@@ -136,8 +136,8 @@ class KIPIPhotoFramesEditor::AbstractItemsListViewToolPrivate
     friend class AbstractItemsListViewTool;
 };
 
-AbstractItemsListViewTool::AbstractItemsListViewTool(const QString & toolName, Scene * scene, QWidget * parent) :
-    AbstractItemsTool(scene, parent),
+AbstractItemsListViewTool::AbstractItemsListViewTool(const QString & toolName, Scene * scene, Canvas::SelectionMode selectionMode, QWidget * parent) :
+    AbstractItemsTool(scene, selectionMode, parent),
     d(new AbstractItemsListViewToolPrivate)
 {
     QGridLayout * layout = new QGridLayout(this);

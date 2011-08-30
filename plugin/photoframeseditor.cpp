@@ -89,9 +89,9 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
 {
     Q_INIT_RESOURCE(icons);
 
-    setXMLFile("photoframeseditorui.rc");
+    setXMLFile("photolayoutseditorui.rc");
 
-    setObjectName("Photo Frames Editor");
+    setCaption("Photo Layouts Editor");
 
     m_instance = this;
 
@@ -149,6 +149,11 @@ void PhotoFramesEditor::setInterface(KIPI::Interface * interface)
 bool PhotoFramesEditor::hasInterface() const
 {
     return (bool) m_interface;
+}
+
+KIPI::Interface * PhotoFramesEditor::interface() const
+{
+    return this->m_interface;
 }
 
 void PhotoFramesEditor::setupActions()
@@ -245,7 +250,7 @@ void PhotoFramesEditor::refreshActions()
 void PhotoFramesEditor::createWidgets()
 {
     // Tools
-    d->toolsWidget = new ToolsDockWidget(this);
+    d->toolsWidget = ToolsDockWidget::instance(this);
     this->addDockWidget(Qt::RightDockWidgetArea, d->toolsWidget);
 
     // Layers dockwidget

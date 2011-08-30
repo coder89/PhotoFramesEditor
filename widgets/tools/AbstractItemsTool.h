@@ -21,7 +21,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            AbstractItemsTool(Scene * scene, QWidget * parent = 0);
+            AbstractItemsTool(Scene * scene, Canvas::SelectionMode selectionMode, QWidget * parent = 0);
 
           /** Current photo property
             * This property holds an information which item is currently editing.

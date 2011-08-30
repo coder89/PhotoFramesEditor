@@ -3,10 +3,13 @@
 
 #include "AbstractPhoto.h"
 
+#include <kurl.h>
+
 namespace KIPIPhotoFramesEditor
 {
     class PhotoItemPrivate;
     class PhotoItemPixmapChangeCommand;
+    class PhotoItemUrlChangeCommand;
 
     class PhotoItem : public AbstractPhoto
     {
@@ -14,7 +17,8 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            PhotoItem(const QImage & photo = QImage());
+            PhotoItem(const QImage & photo, const QString & name = QString(), Scene * scene = 0);
+            static PhotoItem * fromUrl(const KUrl & imageUrl, Scene * scene = 0);
             virtual ~PhotoItem();
 
             /// Convert photo item to SVG format
@@ -24,15 +28,16 @@ namespace KIPIPhotoFramesEditor
             static PhotoItem * fromSvg(QDomElement & element);
 
             /// Pixmap data
-            QPixmap & pixmap()
-            {
-                return m_pixmap;
-            }
-            const QPixmap & pixmap() const
-            {
-                return m_pixmap;
-            }
+            Q_PROPERTY(QPixmap m_pixmap_original READ pixmap WRITE setPixmap)
+            QPixmap & pixmap();
+            const QPixmap & pixmap() const;
             void setPixmap(const QPixmap & pixmap);
+
+            /// Pixmap and pixmap's url
+            void setImageUrl(const KUrl & url);
+
+            /// Scales image to fit scenes rect
+            void fitToRect(const QRect & rect);
 
             /// Reimplemented from QGraphicsItem
             virtual bool contains(const QPointF & point) const
@@ -69,18 +74,18 @@ namespace KIPIPhotoFramesEditor
 
         protected:
 
+            PhotoItem(const QString & name = QString(), Scene * scene = 0);
+
             /// Converts item data to SVG format
             virtual QDomElement svgVisibleArea(QDomDocument & document) const;
 
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent * event);
+            virtual void dragMoveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
 
             /// Updates item icon
             virtual void updateIcon();
-
-            /// Scales image to fit scenes rect
-            void fitToRect(const QRect & rect);
 
             /// Reimplemented from AbstractPhoto
             void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
@@ -104,10 +109,6 @@ namespace KIPIPhotoFramesEditor
 
             PhotoItemPrivate * d;
 
-            Q_PROPERTY(QPixmap m_pixmap_original READ pixmap WRITE setPixmap)
-            QPixmap m_pixmap_original;
-            QString m_file_path;
-
             QPixmap m_pixmap;
 
             // Widget path
@@ -115,7 +116,9 @@ namespace KIPIPhotoFramesEditor
             QPainterPath m_image_path;
 
         friend class Scene;
+        friend class PhotoItemPrivate;
         friend class PhotoItemPixmapChangeCommand;
+        friend class PhotoItemUrlChangeCommand;
     };
 }
 

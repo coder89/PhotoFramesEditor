@@ -170,7 +170,8 @@ OTHER_FILES += \
     effectplugins/greyscale/photolayoutseditoreffectplugin_grayscale.desktop \
     effectplugins/sepia/photolayoutseditoreffectplugin_sepia.desktop \
     plugin/kipiplugin_photolayoutseditor.desktop \
-    plugin/photolayoutseditor.desktop
+    plugin/photolayoutseditor.desktop \
+    plugin/photolayoutseditorui.rc
 
 RESOURCES += \
     resources/icons.qrc

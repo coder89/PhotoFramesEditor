@@ -22,12 +22,16 @@ namespace KIPIPhotoFramesEditor
     class PhotoEffectsGroup;
     class AbstractPhotoEffectInterface;
 
+    class AbstractPhotoPrivate;
+    class CropShapeChangeCommand;
+    class ItemNameChangeCommand;
+
     class AbstractPhoto : public AbstractItemInterface
     {
             Q_OBJECT
 
-            QString m_name;
-            int m_name_number;
+            AbstractPhotoPrivate * d;
+
             mutable QString m_id;
 
         public:
@@ -93,10 +97,7 @@ namespace KIPIPhotoFramesEditor
             /// Name of item property
             Q_PROPERTY(QString name READ name WRITE setName)
             void setName(const QString & name);
-            QString name() const
-            {
-                return m_name + (m_name_number > 1 ? " " + QString::number(m_name_number) : "");
-            }
+            QString name() const;
 
             /// Icon of the item [50px x 50px]
             Q_PROPERTY(QIcon m_icon READ icon)
@@ -150,7 +151,7 @@ namespace KIPIPhotoFramesEditor
 
         protected:
 
-            explicit AbstractPhoto();
+            explicit AbstractPhoto(const QString & name, Scene * scene);
 
             // For widgets drawing
             static AbstractPhoto * getInstance() { return 0; }
@@ -166,9 +167,6 @@ namespace KIPIPhotoFramesEditor
 
             // Draws abstract item presentation
             virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-            // React on item changes
-            virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
             // Mouse events
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
@@ -190,8 +188,8 @@ namespace KIPIPhotoFramesEditor
                 m_icon = icon;
             }
 
-            // Widget path
-            QPainterPath m_border_path;
+            // Creates unique name (on whole scene)
+            QString uniqueName(const QString & name);
 
             // Photo resizer class
             class AbstractPhotoResizer;
@@ -207,23 +205,17 @@ namespace KIPIPhotoFramesEditor
             PhotoEffectsGroup * m_effects_group;
             BordersGroup * m_borders_group;
 
-            qreal m_border_width;
-            Qt::PenJoinStyle m_border_corner_style;
-            QColor m_border_color;
-
-            qreal x_grid;
-            qreal y_grid;
-
             // Icon object
             QIcon m_icon;
-
-            // Item's crop shape
-            QPainterPath m_crop_shape;
 
             static const QColor SELECTED_ITEM_COLOR;
 
             friend class Scene;
             friend class PhotoEffectsGroup;
+
+            friend class AbstractPhotoPrivate;
+            friend class CropShapeChangeCommand;
+            friend class ItemNameChangeCommand;
     };
 }
 

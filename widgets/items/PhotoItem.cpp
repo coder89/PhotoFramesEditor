@@ -20,14 +20,44 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+class KIPIPhotoFramesEditor::PhotoItemPrivate
+{
+    PhotoItemPrivate(PhotoItem * item) :
+        m_item(item)
+    {}
+
+    static QString locateFile(const QString & filePath);
+
+    PhotoItem * m_item;
+
+    // Pixmap
+    void setPixmap(const QPixmap & pixmap);
+    inline QPixmap & pixmap();
+    QPixmap m_pixmap_original;
+
+    // Pixmap's url
+    void setFileUrl(const KUrl & url);
+    inline KUrl & fileUrl();
+    KUrl m_file_path;
+
+    friend class PhotoItem;
+    friend class PhotoItemPixmapChangeCommand;
+    friend class PhotoItemUrlChangeCommand;
+};
+
 class KIPIPhotoFramesEditor::PhotoItemPixmapChangeCommand : public QUndoCommand
 {
-    QImage m_image;
+    QPixmap m_pixmap;
     PhotoItem * m_item;
 public:
-    PhotoItemPixmapChangeCommand(QImage & image, PhotoItem * item, QUndoCommand * parent = 0) :
+    PhotoItemPixmapChangeCommand(const QImage & image, PhotoItem * item, QUndoCommand * parent = 0) :
         QUndoCommand(i18n("Image change"), parent),
-        m_image(image),
+        m_pixmap(QPixmap::fromImage(image)),
+        m_item(item)
+    {}
+    PhotoItemPixmapChangeCommand(const QPixmap & pixmap, PhotoItem * item, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Image change"), parent),
+        m_pixmap(pixmap),
         m_item(item)
     {}
     virtual void redo()
@@ -40,25 +70,35 @@ public:
     }
     void run()
     {
-        QImage temp = m_item->pixmap().toImage();
-        m_item->setPixmap(QPixmap::fromImage(m_image));
-        m_image = temp;
+        QPixmap temp = m_item->pixmap();
+        m_item->d->setPixmap(m_pixmap);
+        m_pixmap = temp;
     }
 };
-
-class KIPIPhotoFramesEditor::PhotoItemPrivate
+class KIPIPhotoFramesEditor::PhotoItemUrlChangeCommand : public QUndoCommand
 {
-    PhotoItemPrivate(PhotoItem * item) :
+    KUrl m_url;
+    PhotoItem * m_item;
+public:
+    PhotoItemUrlChangeCommand(const KUrl & url, PhotoItem * item, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Image path change"), parent),
+        m_url(url),
         m_item(item)
     {}
-
-    static QString locateFile(const QString & filePath);
-
-    PhotoItem * m_item;
-
-    QPainterPath m_crop_shape;
-
-    friend class PhotoItem;
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+    void run()
+    {
+        KUrl temp = m_item->d->fileUrl();
+        m_item->d->setFileUrl(m_url);
+        m_url = temp;
+    }
 };
 
 QString PhotoItemPrivate::locateFile(const QString & filePath)
@@ -89,14 +129,65 @@ QString PhotoItemPrivate::locateFile(const QString & filePath)
     }
     return resultPath;
 }
+void PhotoItemPrivate::setPixmap(const QPixmap & pixmap)
+{
+    if (pixmap.isNull() || &pixmap == &m_pixmap_original)
+        return;
+    m_pixmap_original = pixmap;
+    m_item->refresh();
+}
+QPixmap & PhotoItemPrivate::pixmap()
+{
+    return m_pixmap_original;
+}
+void PhotoItemPrivate::setFileUrl(const KUrl & url)
+{
+    this->m_file_path = url;
+}
+KUrl & PhotoItemPrivate::fileUrl()
+{
+    return this->m_file_path;
+}
 
-PhotoItem::PhotoItem(const QImage & photo) :
-    AbstractPhoto(),
+PhotoItem::PhotoItem(const QImage & photo, const QString & name, Scene * scene) :
+    AbstractPhoto((name.isEmpty() ? i18n("New image") : name), scene),
     d(new PhotoItemPrivate(this))
 {
     this->setHighlightItem(false);
     this->setupItem(QPixmap::fromImage(photo));
-    this->setName(i18n("New image"));
+}
+
+PhotoItem * PhotoItem::fromUrl(const KUrl & imageUrl, Scene * scene)
+{
+    QImage img;
+    if (PhotoFramesEditor::instance()->hasInterface())
+    {
+        KIPI::ImageInfo info = PhotoFramesEditor::instance()->interface()->info(imageUrl);
+        QImageReader ir (info.path().toLocalFile());
+        if (!ir.read(&img))
+            return 0;
+    }
+    else if (imageUrl.isValid())
+    {
+        QImageReader ir (imageUrl.toLocalFile());
+        if (!ir.read(&img))
+            return 0;
+    }
+
+    if (img.isNull())
+        return 0;
+
+    PhotoItem * result = new PhotoItem(img, imageUrl.fileName(), scene);
+    result->d->setFileUrl(imageUrl);
+    return result;
+}
+
+PhotoItem::PhotoItem(const QString & name, Scene * scene) :
+    AbstractPhoto((name.isEmpty() ? i18n("New image") : name), scene),
+    d(new PhotoItemPrivate(this))
+{
+    this->setHighlightItem(false);
+    this->setupItem(QPixmap());
 }
 
 PhotoItem::~PhotoItem()
@@ -131,22 +222,31 @@ QDomElement PhotoItem::toSvg(QDomDocument & document) const
     QDomElement image = document.createElementNS(KIPIPhotoFramesEditor::uri(), "image");
     appNS.appendChild(image);
     // Saving image data
-    if (PFEConfig::embedImagesData() && !m_pixmap_original.isNull())
+    if (!PFEConfig::embedImagesData())
+    {
+        int result = KMessageBox::questionYesNo(0,
+                                                i18n("Do you want to embed images data?\n"
+                                                        "Remember that when you move or rename image files on your disk or the storage device become unavailable, those images become unavailable for %1 "
+                                                        "and this layout might become broken.", KApplication::applicationName()),
+                                                i18n("Saving: %1", this->name()),
+                                                KStandardGuiItem::yes(),
+                                                KStandardGuiItem::no(),
+                                                PFEConfig::self()->name());
+        if (result == KMessageBox::Yes)
+            PFEConfig::setEmbedImagesData(true);
+    }
+
+    if ( (PFEConfig::embedImagesData() && !d->pixmap().isNull()) || !d->fileUrl().isValid())
     {
         QByteArray byteArray;
         QBuffer buffer(&byteArray);
-        m_pixmap_original.save(&buffer, "PNG");
+        d->pixmap().save(&buffer, "PNG");
         image.appendChild( document.createTextNode( QString(byteArray.toBase64()) ) );
     }
 
-    if (PhotoFramesEditor::instance()->hasInterface())
-    {
-        /// Save with KIPI::Interface
-    }
-
     // Saving image path
-    if (!m_file_path.isEmpty())
-        image.setAttribute("src", m_file_path);
+    if (d->fileUrl().isValid())
+        image.setAttribute("src", d->fileUrl().url());
 
     return result;
 }
@@ -178,8 +278,15 @@ PhotoItem * PhotoItem::fromSvg(QDomElement & element)
         QDomElement image = data.firstChildElement("image");
         QString imageAttribute;
         QImage img;
+        // Fullsize image is embedded in SVG file!
+        if (!(imageAttribute = image.text()).isEmpty())
+        {
+            img = QImage::fromData( QByteArray::fromBase64(imageAttribute.toAscii()) );
+            if (img.isNull())
+                goto _delete;
+        }
         // Try to find file from path attribute
-        if ( !(imageAttribute = PhotoItemPrivate::locateFile( image.attribute("xlink:href") )).isEmpty() )
+        else if ( !(imageAttribute = PhotoItemPrivate::locateFile( image.attribute("xlink:href") )).isEmpty() )
         {
             QImageReader reader(imageAttribute);
             if (!reader.canRead())
@@ -189,21 +296,11 @@ PhotoItem * PhotoItem::fromSvg(QDomElement & element)
             if (!reader.read(&img))
                 goto _delete;
         }
-        // Try to load from digikam database
-        else if (!(imageAttribute = image.attribute("kipi")).isEmpty())
-        {
-            /// TODO : load using KIPI::Interface
-        }
-        // Fullsize image is embedded in SVG file!
-        else if (!(imageAttribute = image.text()).isEmpty())
-        {
-            img = QImage::fromData( QByteArray::fromBase64(imageAttribute.toAscii()) );
-            if (img.isNull())
-                goto _delete;
-        }
         else
+        {
             goto _delete;
-        item->setPixmap(QPixmap::fromImage(img));
+        }
+        item->d->setPixmap(QPixmap::fromImage(img));
 
         return item;
     }
@@ -225,9 +322,32 @@ QDomElement PhotoItem::svgVisibleArea(QDomDocument & document) const
     return img;
 }
 
-void PhotoItem::dragEnterEvent(QGraphicsSceneDragDropEvent * /*event*/)
+void PhotoItem::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
 {
-    this->setHighlightItem(true);
+    const QMimeData * mimeData = event->mimeData();
+    if ( PhotoFramesEditor::instance()->hasInterface() &&
+            mimeData->hasFormat("digikam/item-ids"))
+    {
+        KUrl::List urls;
+        QByteArray ba = mimeData->data("digikam/item-ids");
+        QDataStream ds(&ba, QIODevice::ReadOnly);
+        ds >> urls;
+        event->setAccepted( (urls.count() == 1) );
+        if (urls.count() == 1)
+            event->setDropAction( Qt::CopyAction );
+        else
+            event->setDropAction( Qt::IgnoreAction );
+    }
+    else if (mimeData->hasFormat("text/uri-list"))
+    {
+        QList<QUrl> urls = mimeData->urls();
+        event->setAccepted( (urls.count() == 1) );
+        if (urls.count() == 1)
+            event->setDropAction( Qt::CopyAction );
+        else
+            event->setDropAction( Qt::IgnoreAction );
+    }
+    this->setHighlightItem( event->isAccepted() );
 }
 
 void PhotoItem::dragLeaveEvent(QGraphicsSceneDragDropEvent * /*event*/)
@@ -235,32 +355,105 @@ void PhotoItem::dragLeaveEvent(QGraphicsSceneDragDropEvent * /*event*/)
     this->setHighlightItem(false);
 }
 
-void PhotoItem::dropEvent(QGraphicsSceneDragDropEvent * event)
+void PhotoItem::dragMoveEvent(QGraphicsSceneDragDropEvent * event)
 {
     const QMimeData * mimeData = event->mimeData();
-    if (mimeData->hasFormat("text/uri-list"))
+    if ( PhotoFramesEditor::instance()->hasInterface() &&
+            mimeData->hasFormat("digikam/item-ids"))
+    {
+        KUrl::List urls;
+        QByteArray ba = mimeData->data("digikam/item-ids");
+        QDataStream ds(&ba, QIODevice::ReadOnly);
+        ds >> urls;
+        event->setAccepted( (urls.count() == 1) );
+        if (urls.count() == 1)
+            event->setDropAction( Qt::CopyAction );
+        else
+            event->setDropAction( Qt::IgnoreAction );
+    }
+    else if (mimeData->hasFormat("text/uri-list"))
+    {
+        QList<QUrl> urls = mimeData->urls();
+        event->setAccepted( (urls.count() == 1) );
+        if (urls.count() == 1)
+            event->setDropAction( Qt::CopyAction );
+        else
+            event->setDropAction( Qt::IgnoreAction );
+    }
+    this->setHighlightItem( event->isAccepted() );
+}
+
+void PhotoItem::dropEvent(QGraphicsSceneDragDropEvent * event)
+{
+    QImage img;
+    const QMimeData * mimeData = event->mimeData();
+    if ( PhotoFramesEditor::instance()->hasInterface() &&
+            mimeData->hasFormat("digikam/item-ids"))
+    {
+        KUrl::List urls;
+        QByteArray ba = mimeData->data("digikam/item-ids");
+        QDataStream ds(&ba, QIODevice::ReadOnly);
+        ds >> urls;
+        if (urls.count() == 1)
+            this->setImageUrl(urls.at(0));
+    }
+    else if (mimeData->hasFormat("text/uri-list"))
     {
         QList<QUrl> urls = mimeData->urls();
         if (urls.count() == 1)
-        {
-            QImageReader ir(urls.at(0).toLocalFile());
-            QImage img;
-            if (ir.read(&img))
-            {
-                PhotoItemPixmapChangeCommand * command = new PhotoItemPixmapChangeCommand(img, this);
-                PFE_PostUndoCommand(command);
-            }
-        }
+            this->setImageUrl(urls.at(0));
     }
+
     this->setHighlightItem(false);
+    event->setAccepted( !img.isNull() );
+}
+
+QPixmap & PhotoItem::pixmap()
+{
+    return d->m_pixmap_original;
+}
+
+const QPixmap & PhotoItem::pixmap() const
+{
+    return d->m_pixmap_original;
 }
 
 void PhotoItem::setPixmap(const QPixmap & pixmap)
 {
     if (pixmap.isNull())
         return;
-    this->m_pixmap_original = pixmap;
-    this->refresh();
+    PhotoItemPixmapChangeCommand * command = new PhotoItemPixmapChangeCommand(pixmap, this);
+    PFE_PostUndoCommand(command);
+}
+
+void PhotoItem::setImageUrl(const KUrl & url)
+{
+    QImage img;
+    QUndoCommand * command = 0;
+    if (PhotoFramesEditor::instance()->hasInterface())
+    {
+        KIPI::ImageInfo info = PhotoFramesEditor::instance()->interface()->info(url);
+        QImageReader ir (info.path().toLocalFile());
+        if (ir.read(&img))
+        {
+            command = new QUndoCommand(i18n("Image change"));
+            new PhotoItemPixmapChangeCommand(img, this, command);
+            new PhotoItemUrlChangeCommand(info.path(), this, command);
+        }
+    }
+    else if (url.isValid())
+    {
+        QImageReader ir (url.toLocalFile());
+        if (ir.read(&img))
+        {
+            command = new QUndoCommand(i18n("Image change"));
+            new PhotoItemPixmapChangeCommand(img, this, command);
+            new PhotoItemUrlChangeCommand(url, this, command);
+        }
+    }
+
+    if (command)
+        PFE_PostUndoCommand(command);
 }
 
 void PhotoItem::updateIcon()
@@ -283,8 +476,8 @@ void PhotoItem::updateIcon()
 void PhotoItem::fitToRect(const QRect & rect)
 {
     // Scaling if to big
-    QSize s = m_pixmap_original.size();
-    QRect r = m_pixmap_original.rect();
+    QSize s = d->pixmap().size();
+    QRect r = d->pixmap().rect();
     if (rect.isValid() && (rect.width()<s.width() || rect.height()<s.height()))
     {
         s.scale(rect.size()*0.8, Qt::KeepAspectRatio);
@@ -321,9 +514,9 @@ void PhotoItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * optio
 
 void PhotoItem::refreshItem()
 {
-    if (m_pixmap_original.isNull())
+    if (d->pixmap().isNull())
         return;
-    this->m_pixmap = effectsGroup()->apply( m_pixmap_original.scaled(this->m_image_path.boundingRect().size().toSize(),
+    this->m_pixmap = effectsGroup()->apply( d->pixmap().scaled(this->m_image_path.boundingRect().size().toSize(),
                                                                      Qt::KeepAspectRatioByExpanding,
                                                                      Qt::SmoothTransformation));
     this->updateIcon();
@@ -341,7 +534,7 @@ void PhotoItem::setupItem(const QPixmap & photo)
     if (photo.isNull())
         return;
 
-    m_pixmap_original = photo;
+    d->setPixmap(photo);
 
     // Scaling if to big
     if (scene())

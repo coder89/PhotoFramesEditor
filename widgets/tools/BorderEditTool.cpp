@@ -21,7 +21,7 @@
 using namespace KIPIPhotoFramesEditor;
 
 BorderEditTool::BorderEditTool(Scene * scene, QWidget * parent) :
-    AbstractItemsListViewTool(i18n("Borders editor"), scene, parent)
+    AbstractItemsListViewTool(i18n("Borders editor"), scene, Canvas::SingleSelcting, parent)
 {
 }
 

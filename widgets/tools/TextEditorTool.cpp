@@ -7,7 +7,7 @@
 using namespace KIPIPhotoFramesEditor;
 
 TextEditorTool::TextEditorTool(Scene * scene, QWidget * parent) :
-    AbstractItemsTool(scene, parent),
+    AbstractItemsTool(scene, Canvas::SingleSelcting, parent),
     m_text_item(0),
     m_created_text_item(0),
     m_browser(0),

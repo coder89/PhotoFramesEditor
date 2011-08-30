@@ -167,7 +167,6 @@ class KIPIPhotoFramesEditor::TextItem::TextEditUndoCommand : public QUndoCommand
             QStringList temp = m_item->m_string_list;
             m_item->m_string_list = m_prevText;
             m_prevText = temp;
-            m_item->setName(m_item->m_string_list.join(" "));
             m_item->refresh();
         }
         virtual void undo()
@@ -178,7 +177,6 @@ class KIPIPhotoFramesEditor::TextItem::TextEditUndoCommand : public QUndoCommand
             QStringList temp = m_item->m_string_list;
             m_item->m_string_list = m_prevText;
             m_prevText = temp;
-            m_item->setName(m_item->m_string_list.join(" "));
             m_item->refresh();
         }
 };
@@ -235,8 +233,8 @@ class KIPIPhotoFramesEditor::TextItem::TextFontUndoCommand : public QUndoCommand
         }
 };
 
-TextItem::TextItem(const QString & text) :
-    AbstractPhoto(),
+TextItem::TextItem(const QString & text, Scene * scene) :
+    AbstractPhoto((text.isEmpty() ? i18n("Text item") : text), scene),
     d(new TextItemPrivate(this)),
     m_color(Qt::black),
     m_font(QFont()),

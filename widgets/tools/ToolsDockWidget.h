@@ -8,6 +8,8 @@
 
 #include <kpushbutton.h>
 
+#include "AbstractTool.h"
+
 namespace KIPIPhotoFramesEditor
 {
     class Scene;
@@ -42,9 +44,11 @@ namespace KIPIPhotoFramesEditor
 
             Scene * m_scene;
 
+            static ToolsDockWidget * m_instance;
+
         public:
 
-            explicit ToolsDockWidget(QWidget * parent = 0);
+            static ToolsDockWidget * instance(QWidget * parent = 0);
             void setDefaultTool();
 
         signals:
@@ -86,23 +90,21 @@ namespace KIPIPhotoFramesEditor
             void mousePositionChoosen(const QPointF & position);
             void emitNewItemCreated(AbstractPhoto * item);
 
-        protected slots:
-
             void selectionChanged(bool hasSelection)
             {
                 m_tool_widget_layout->setEnabled(hasSelection);
                 m_has_selection = hasSelection;
             }
 
-            void setCanvasWidgetVisible(bool isVisible);
-            void setEffectsWidgetVisible(bool isVisible);
-            void setTextWidgetVisible(bool isVisible);
-            void setRotateWidgetVisible(bool isVisible);
-            void setScaleWidgetVisible(bool isVisible);
-            void setCropWidgetVisible(bool isVisible);
-            void setBordersWidgetVisible(bool isVisible);
+            void setCanvasWidgetVisible(bool isVisible = true);
+            void setEffectsWidgetVisible(bool isVisible = true);
+            void setTextWidgetVisible(bool isVisible = true);
+            void setRotateWidgetVisible(bool isVisible = true);
+            void setScaleWidgetVisible(bool isVisible = true);
+            void setCropWidgetVisible(bool isVisible = true);
+            void setBordersWidgetVisible(bool isVisible = true);
 
-            void emitPointerToolSelected(bool isSelected)
+            void emitPointerToolSelected(bool isSelected = true)
             {
                 if (isSelected)
                 {
@@ -113,7 +115,7 @@ namespace KIPIPhotoFramesEditor
                 }
             }
 
-            void emitHandToolSelected(bool isSelected)
+            void emitHandToolSelected(bool isSelected = true)
             {
                 if (isSelected)
                 {
@@ -123,6 +125,10 @@ namespace KIPIPhotoFramesEditor
                     emit handToolSelected();
                 }
             }
+
+        private:
+
+            explicit ToolsDockWidget(QWidget * parent = 0);
     };
 }
 

@@ -30,7 +30,7 @@ namespace KIPIPhotoFramesEditor
 
         public:
 
-            TextItem(const QString & text = QString());
+            TextItem(const QString & text = QString(), Scene * scene = 0);
             virtual void focusInEvent(QFocusEvent *event);
             virtual void focusOutEvent(QFocusEvent *event);
             virtual void keyPressEvent(QKeyEvent * event);

@@ -131,7 +131,7 @@ class KIPIPhotoFramesEditor::CanvasEditToolPrivate
 };
 
 CanvasEditTool::CanvasEditTool(Scene * scene, QWidget * parent) :
-    AbstractTool(scene, parent),
+    AbstractTool(scene, Canvas::Viewing, parent),
     d(new CanvasEditToolPrivate(this)),
     hold_update(false)
 {

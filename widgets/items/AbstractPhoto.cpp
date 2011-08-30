@@ -21,13 +21,107 @@ using namespace KIPIPhotoFramesEditor;
 
 const QColor AbstractPhoto::SELECTED_ITEM_COLOR(255,0,0,20);
 
-AbstractPhoto::AbstractPhoto() :
-    AbstractItemInterface(0,0),
-    m_name(i18n("New layer")),
-    m_name_number(1),
-    m_border_width(0)
+class KIPIPhotoFramesEditor::AbstractPhotoPrivate
+{
+    AbstractPhoto * m_item;
+
+    AbstractPhotoPrivate(AbstractPhoto * item) :
+        m_item(item)
+    {}
+
+    // Crop shape
+    void setCropShape(const QPainterPath & cropShape);
+    QPainterPath & cropShape();
+    QPainterPath m_crop_shape;
+
+    void setName(const QString & name);
+    QString name();
+    QString m_name;
+
+    friend class AbstractPhoto;
+    friend class CropShapeChangeCommand;
+    friend class ItemNameChangeCommand;
+};
+
+class KIPIPhotoFramesEditor::CropShapeChangeCommand : public QUndoCommand
+{
+    QPainterPath m_crop_shape;
+    AbstractPhoto * m_item;
+public:
+    CropShapeChangeCommand(const QPainterPath & cropShape, AbstractPhoto * item, QUndoCommand * parent = 0) :
+        QUndoCommand(parent),
+        m_crop_shape(cropShape),
+        m_item(item)
+    {}
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+    void run()
+    {
+        QPainterPath temp = m_item->d->cropShape();
+        m_item->d->setCropShape(m_crop_shape);
+        m_crop_shape = temp;
+    }
+};
+class KIPIPhotoFramesEditor::ItemNameChangeCommand : public QUndoCommand
+{
+    QString m_name;
+    AbstractPhoto * m_item;
+public:
+    ItemNameChangeCommand(const QString & name, AbstractPhoto * item, QUndoCommand * parent = 0) :
+        QUndoCommand(i18n("Name change"), parent),
+        m_name(name),
+        m_item(item)
+    {}
+    virtual void redo()
+    {
+        this->run();
+    }
+    virtual void undo()
+    {
+        this->run();
+    }
+    void run()
+    {
+        QString temp = m_item->d->name();
+        m_item->d->setName(m_name);
+        m_name = temp;
+    }
+};
+
+void AbstractPhotoPrivate::setCropShape(const QPainterPath & cropShape)
+{
+    m_crop_shape = cropShape;
+    m_item->refresh();
+}
+QPainterPath & AbstractPhotoPrivate::cropShape()
+{
+    return m_crop_shape;
+}
+void AbstractPhotoPrivate::setName(const QString & name)
+{
+    if (name.isEmpty())
+        return;
+    this->m_name = name;
+}
+QString AbstractPhotoPrivate::name()
+{
+    return this->m_name;
+}
+
+AbstractPhoto::AbstractPhoto(const QString & name, Scene * scene) :
+    AbstractItemInterface(0, scene),
+    d(new AbstractPhotoPrivate(this))
 {
     this->setupItem();
+
+    // Item's name
+    this->d->setName( this->uniqueName( name.isEmpty() ? i18n("New layer") : name ) );
 
     // Effects group
     m_effects_group = new PhotoEffectsGroup(this);
@@ -46,6 +140,38 @@ void AbstractPhoto::setupItem()
 {
     this->setFlag(QGraphicsItem::ItemIsSelectable);
     this->setFlag(QGraphicsItem::ItemIsMovable);
+}
+
+QString AbstractPhoto::uniqueName(const QString & name)
+{
+    QString temp;
+    QString result;
+    if (name.isEmpty())
+        return name;
+    temp = name.simplified();
+    if (temp.length() > 20)
+    {
+        temp = temp.left(20);
+        temp.append("...");
+    }
+    result = temp;
+    Scene * scene = qobject_cast<Scene*>(this->scene());
+    if (!scene)
+        return result;
+    int nameNumber = 1;
+    QList<QGraphicsItem*> items = scene->items();
+    foreach (QGraphicsItem * item, items)
+    {
+        AbstractPhoto * myItem = dynamic_cast<AbstractPhoto*>(item);
+        if (!myItem || myItem == this || myItem->name().isEmpty())
+            continue;
+        while (myItem->name() == result)
+        {
+            nameNumber += 1;
+            result = temp + (nameNumber > 1 ? " " + QString::number(nameNumber) : "");
+        }
+    }
+    return result;
 }
 
 QDomElement AbstractPhoto::toSvg(QDomDocument & document) const
@@ -243,7 +369,7 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
     // Crop path
     QDomElement cropPath = appNS.firstChildElement("crop_path");
     if (!cropPath.isNull())
-        this->setCropShape( KIPIPhotoFramesEditor::pathFromSvg( cropPath.firstChildElement("path") ) );
+        this->d->setCropShape( KIPIPhotoFramesEditor::pathFromSvg( cropPath.firstChildElement("path") ) );
     else
         return false;
 
@@ -252,43 +378,19 @@ bool AbstractPhoto::fromSvg(QDomElement & element)
 
 void AbstractPhoto::setName(const QString & name)
 {
-    if (name.isEmpty())
-        return;
-    m_name = name.simplified();
-    if (m_name.length() > 20)
-    {
-        m_name = m_name.left(20);
-        m_name.append("...");
-    }
-    m_name_number = 0;
-    Scene * scene = qobject_cast<Scene*>(this->scene());
-    if (!scene)
-        return;
-    QList<QGraphicsItem*> items = scene->items();
-    foreach (QGraphicsItem * item, items)
-    {
-        AbstractPhoto * myItem = dynamic_cast<AbstractPhoto*>(item);
-        if (!myItem || myItem == this || myItem->m_name.isEmpty())
-            continue;
-        while (myItem->name() == this->name())
-            m_name_number += 1;
-    }
+    QString newName = this->uniqueName(name);
+    QUndoCommand * command = new ItemNameChangeCommand(newName, this);
+    PFE_PostUndoCommand(command);
+}
+
+QString AbstractPhoto::name() const
+{
+    return d->name();
 }
 
 void AbstractPhoto::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * /*widget*/)
 {
     bordersGroup()->paint(painter, option);
-}
-
-QVariant AbstractPhoto::itemChange(GraphicsItemChange change, const QVariant & value)
-{
-    switch (change)
-    {
-        case QGraphicsItem::ItemSceneHasChanged:
-            this->setName(m_name);
-        default:
-            return AbstractItemInterface::itemChange(change, value);
-    }
 }
 
 void AbstractPhoto::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
@@ -351,12 +453,14 @@ QString AbstractPhoto::id() const
 
 void AbstractPhoto::setCropShape(const QPainterPath & cropShape)
 {
-    qDebug() << "cropShape" << this->name() << cropShape;
-    m_crop_shape = cropShape;
-    this->refresh();
+    if (cropShape != this->d->cropShape())
+    {
+        QUndoCommand * command = new CropShapeChangeCommand(cropShape, this);
+        PFE_PostUndoCommand(command);
+    }
 }
 
 QPainterPath AbstractPhoto::cropShape() const
 {
-    return m_crop_shape;
+    return d->cropShape();
 }

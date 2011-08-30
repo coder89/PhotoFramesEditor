@@ -38,21 +38,21 @@ PFEConfigSkeleton::PFEConfigSkeleton(  )
   setCurrentGroup( QLatin1String( "Saving" ) );
 
   KConfigSkeleton::ItemBool  *itemEmbedImages;
-  itemEmbedImages = new KConfigSkeleton::ItemBool( currentGroup(), QLatin1String( "EmbedImages" ), mEmbedImages, PFEConfig::embedImagesData() );
+  itemEmbedImages = new KConfigSkeleton::ItemBool( currentGroup(), QLatin1String( "EmbedImages" ), mEmbedImages, true );
   addItem( itemEmbedImages, QLatin1String( "EmbedImages" ) );
 
   setCurrentGroup( QLatin1String( "View" ) );
 
   KConfigSkeleton::ItemBool  *itemShowGrid;
-  itemShowGrid = new KConfigSkeleton::ItemBool( currentGroup(), QLatin1String( "ShowGrid" ), mShowGrid, PFEConfig::showGrid() );
+  itemShowGrid = new KConfigSkeleton::ItemBool( currentGroup(), QLatin1String( "ShowGrid" ), mShowGrid, false );
   addItem( itemShowGrid, QLatin1String( "ShowGrid" ) );
   KConfigSkeleton::ItemDouble  *itemHorizontalGrid;
-  itemHorizontalGrid = new KConfigSkeleton::ItemDouble( currentGroup(), QLatin1String( "HorizontalGrid" ), mHorizontalGrid, PFEConfig::gridX() );
+  itemHorizontalGrid = new KConfigSkeleton::ItemDouble( currentGroup(), QLatin1String( "HorizontalGrid" ), mHorizontalGrid, 25.0 );
   itemHorizontalGrid->setMinValue(1.0);
   itemHorizontalGrid->setMaxValue(999);
   addItem( itemHorizontalGrid, QLatin1String( "HorizontalGrid" ) );
   KConfigSkeleton::ItemDouble  *itemVerticalGrid;
-  itemVerticalGrid = new KConfigSkeleton::ItemDouble( currentGroup(), QLatin1String( "VerticalGrid" ), mVerticalGrid, PFEConfig::gridY() );
+  itemVerticalGrid = new KConfigSkeleton::ItemDouble( currentGroup(), QLatin1String( "VerticalGrid" ), mVerticalGrid, 25.0 );
   itemVerticalGrid->setMinValue(1.0);
   itemVerticalGrid->setMaxValue(999);
   addItem( itemVerticalGrid, QLatin1String( "VerticalGrid" ) );

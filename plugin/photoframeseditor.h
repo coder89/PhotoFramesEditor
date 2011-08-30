@@ -33,6 +33,7 @@ namespace KIPIPhotoFramesEditor
             void addUndoCommand(QUndoCommand * command);
             void setInterface(KIPI::Interface * interface);
             bool hasInterface() const;
+            KIPI::Interface * interface() const;
 
         public Q_SLOTS:
 

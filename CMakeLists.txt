@@ -1,6 +1,6 @@
   PROJECT( photolayoutseditor )
 
-  SET(CMAKE_INSTALL_PREFIX /usr/)
+  #SET(CMAKE_INSTALL_PREFIX /usr/)
 
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
@@ -119,7 +119,7 @@
 
   SET_TARGET_PROPERTIES(libphotolayoutseditor PROPERTIES COMPILE_FLAGS "-fPIC")
 
-  TARGET_LINK_LIBRARIES( libphotolayoutseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} PropertyBrowser )
+  TARGET_LINK_LIBRARIES( libphotolayoutseditor ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ${KIPI_LIBRARIES} PropertyBrowser )
 
 # =======================================================
 # PhotoLayoutsEditor plugin

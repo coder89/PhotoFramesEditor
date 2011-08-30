@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include "Scene.h"
+#include "Canvas.h"
 #include "ToolsDockWidget.h"
 
 namespace KIPIPhotoFramesEditor
@@ -15,11 +16,14 @@ namespace KIPIPhotoFramesEditor
 
             Scene * m_scene;
 
+            Canvas::SelectionMode sel_mode;
+
         public:
 
-            AbstractTool(Scene * scene, QWidget * parent = 0) :
+            AbstractTool(Scene * scene, Canvas::SelectionMode selectionMode, QWidget * parent = 0) :
                 QWidget(parent),
-                m_scene(scene)
+                m_scene(scene),
+                sel_mode(selectionMode)
             {}
 
             Scene * scene() const

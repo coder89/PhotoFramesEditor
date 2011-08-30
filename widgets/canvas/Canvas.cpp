@@ -226,7 +226,7 @@ void Canvas::addImage(const QImage & image)
     PhotoItem * it = new PhotoItem(image);
 
     // Add item to scene & model
-    m_scene->addItemCommand(it);
+    m_scene->addItem(it);
 }
 
 /** ###########################################################################################################################
@@ -238,7 +238,7 @@ void Canvas::addText(const QString & text)
     TextItem * it = new TextItem(text);
 
     // Add item to scene & model
-    m_scene->addItemCommand(it);
+    m_scene->addItem(it);
 }
 
 /** ###########################################################################################################################
@@ -246,11 +246,10 @@ void Canvas::addText(const QString & text)
  #############################################################################################################################*/
 void Canvas::addNewItem(AbstractPhoto * item)
 {
-    qDebug() << "text item added";
     if (!item)
         return;
 
-    m_scene->addItemCommand(item);
+    m_scene->addItem(item);
 
     m_scene->clearSelection();
     m_scene->clearFocus();
@@ -520,8 +519,8 @@ void Canvas::enableViewingMode()
  #############################################################################################################################*/
 void Canvas::enableCanvasEditingMode()
 {
-    m_scene->setInteractionMode(Scene::Selecting);
-    setSelectionMode(MultiSelecting);
+    m_scene->setInteractionMode(Scene::NoSelection);
+    setSelectionMode(Viewing);
     this->setCursor(QCursor(Qt::ArrowCursor));
     m_scene->clearSelectingFilters();
 }

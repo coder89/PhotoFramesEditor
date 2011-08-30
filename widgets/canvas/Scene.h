@@ -65,6 +65,8 @@ namespace KIPIPhotoFramesEditor
             LayersModel * model() const;
             LayersSelectionModel * selectionModel() const;
 
+            void addItem(AbstractPhoto * photo);
+            void addItems(const QList<AbstractPhoto*> & item);
             void removeItem(AbstractPhoto * item);
             void removeItems(const QList<AbstractPhoto*> & items);
             QList<AbstractPhoto*> selectedItems() const;
@@ -102,7 +104,6 @@ namespace KIPIPhotoFramesEditor
 
         public Q_SLOTS:
 
-            void addItemCommand(AbstractPhoto * item);
             void removeSelectedItems();
             void setGrid(qreal x, qreal y);
             void setGridVisible(bool visible);
@@ -113,10 +114,12 @@ namespace KIPIPhotoFramesEditor
 
         protected:
 
+            virtual void contextMenuEvent(QGraphicsSceneMouseEvent * event);
             virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent * event);
             virtual void drawBackground(QPainter * painter, const QRectF & rect);
             virtual void drawForeground(QPainter * painter, const QRectF & rect);
             virtual void dragEnterEvent(QGraphicsSceneDragDropEvent * event);
+            virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dragMoveEvent(QGraphicsSceneDragDropEvent * event);
             virtual void dropEvent(QGraphicsSceneDragDropEvent * event);
             virtual void keyPressEvent(QKeyEvent * event);
@@ -136,7 +139,6 @@ namespace KIPIPhotoFramesEditor
 
         private:
 
-            void addItem(AbstractPhoto * photo);
             bool askAboutRemoving(int count);
             bool canDecode(const QMimeData * mimeData);
 

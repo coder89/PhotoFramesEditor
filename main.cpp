@@ -16,9 +16,9 @@ using namespace KIPIPhotoFramesEditor;
 int main(int argc, char *argv[])
 {
 
-    KAboutData aboutData("photoframeseditor",
+    KAboutData aboutData("photolayoutseditor",
                          0,
-                         ki18n("Photo Frames Editor"),
+                         ki18n("Photo Layouts Editor"),
                          QString("").toUtf8(),
                          ki18n(""),
                          KAboutData::License_GPL,

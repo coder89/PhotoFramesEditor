@@ -68,11 +68,7 @@ void Plugin_PhotoFramesEditor::slotActivate()
         return;
     }
 
-    KIPI::ImageCollection images = m_interface->currentSelection();
-
-    if (!images.isValid() || images.images().isEmpty())
-        return;
-
     m_manager = PhotoFramesEditor::instance(m_parentWidget);
+    m_manager->setInterface(m_interface);
     m_manager->show();
 }

@@ -28,6 +28,8 @@ class Plugin_PhotoFramesEditor : public KIPI::Plugin
         KIPI::Category category( KAction* action ) const;
         void setup( QWidget* );
 
+        static Plugin_PhotoFramesEditor * self();
+
     public Q_SLOTS:
 
         void slotActivate();

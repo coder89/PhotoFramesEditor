@@ -61,7 +61,7 @@ class KIPIPhotoFramesEditor::EffectsEditorToolPrivate
 };
 
 EffectsEditorTool::EffectsEditorTool(Scene * scene, QWidget * parent) :
-    AbstractItemsTool(scene, parent),
+    AbstractItemsTool(scene, Canvas::SingleSelcting, parent),
     d(new EffectsEditorToolPrivate)
 {
     QGridLayout * layout = new QGridLayout(this);

@@ -4,8 +4,8 @@
 
 using namespace KIPIPhotoFramesEditor;
 
-AbstractItemsTool::AbstractItemsTool(Scene * scene, QWidget * parent) :
-    AbstractTool(scene, parent)
+AbstractItemsTool::AbstractItemsTool(Scene * scene, Canvas::SelectionMode selectionMode, QWidget * parent) :
+    AbstractTool(scene, selectionMode, parent)
 {
 }
 

@@ -16,6 +16,8 @@
 
 using namespace KIPIPhotoFramesEditor;
 
+ToolsDockWidget * ToolsDockWidget::m_instance = 0;
+
 class MyStackedLayout : public QStackedLayout
 {
     public:
@@ -34,6 +36,13 @@ class MyStackedLayout : public QStackedLayout
             return sizeHint();
         }
 };
+
+ToolsDockWidget * ToolsDockWidget::instance(QWidget * parent)
+{
+    if (!m_instance)
+        m_instance = new ToolsDockWidget(parent);
+    return m_instance;
+}
 
 ToolsDockWidget::ToolsDockWidget(QWidget * parent) :
     QDockWidget("Tools",parent),
@@ -252,6 +261,7 @@ void ToolsDockWidget::emitNewItemCreated(AbstractPhoto * item)
 
 void ToolsDockWidget::setCanvasWidgetVisible(bool isVisible)
 {
+    m_canvas_button->setChecked(isVisible);
     emit canvasToolSelectionChanged(isVisible);
     if (isVisible)
     {

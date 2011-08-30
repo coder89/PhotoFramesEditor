@@ -6,6 +6,8 @@
 #include "CropWidgetItem.h"
 #include "SceneBackground.h"
 #include "MousePressListener.h"
+#include "ToolsDockWidget.h"
+#include "photoframeseditor.h"
 
 #include "LayersModel.h"
 #include "LayersModelItem.h"
@@ -54,7 +56,8 @@ class KIPIPhotoFramesEditor::ScenePrivate
         m_scale_item(0),
         m_crop_item(0),
         m_readSceneMousePress_listener(0),
-        m_readSceneMousePress_enabled(false)
+        m_readSceneMousePress_enabled(false),
+        m_hovered_photo(0)
     {
         // Background of the scene
         m_background = new SceneBackground(m_scene);
@@ -223,6 +226,9 @@ class KIPIPhotoFramesEditor::ScenePrivate
     // For reading mouse press
     MousePressListener * m_readSceneMousePress_listener;
     bool m_readSceneMousePress_enabled;
+
+    // Used for drag&drop images
+    PhotoItem * m_hovered_photo;
 
     friend class Scene;
 };
@@ -561,6 +567,71 @@ LayersSelectionModel * Scene::selectionModel() const
 }
 
 //#####################################################################################################
+void Scene::addItem(AbstractPhoto * item)
+{
+    // Prevent multiple addition of the item
+    if (item->scene() == this)
+        return;
+
+    QModelIndexList selectedIndexes = d->selection_model->selectedIndexes();
+    unsigned insertionRow = -1;
+    foreach (QModelIndex index, selectedIndexes)
+    {
+        if (index.column() != LayersModelItem::NameString)
+            continue;
+        if (insertionRow > (unsigned)index.row())
+            insertionRow = index.row();
+    }
+
+    if (insertionRow == (unsigned)-1)
+        insertionRow = 0;
+
+    QUndoCommand * command = new AddItemsCommand(item, insertionRow, this);
+    PFE_PostUndoCommand(command);
+}
+
+//#####################################################################################################
+void Scene::addItems(const QList<AbstractPhoto*> & items)
+{
+    // Prevent multiple addition of the item
+    QList<AbstractPhoto*> tempItems;
+    foreach (AbstractPhoto * item, items)
+    {
+        if (item->scene() == this && this->model()->findIndex(item).isValid())
+            continue;
+        tempItems.prepend(item);
+    }
+    if (tempItems.count() < 1)
+        return;
+
+    QModelIndexList selectedIndexes = d->selection_model->selectedIndexes();
+    unsigned insertionRow = -1;
+    foreach (QModelIndex index, selectedIndexes)
+    {
+        if (index.column() != LayersModelItem::NameString)
+            continue;
+        if (insertionRow > (unsigned)index.row())
+            insertionRow = index.row();
+    }
+
+    if (insertionRow == (unsigned)-1)
+        insertionRow = 0;
+
+    QUndoCommand * parent = 0;
+    QUndoCommand * command = 0;
+    if (items.count() > 1)
+        parent = new QUndoCommand(i18n("Add items"));
+
+    foreach (AbstractPhoto * item, tempItems)
+        command = new AddItemsCommand(item, insertionRow++, this, parent);
+
+    if (parent)
+        PFE_PostUndoCommand(parent);
+    else if (command)
+        PFE_PostUndoCommand(command);
+}
+
+//#####################################################################################################
 void Scene::removeItem(AbstractPhoto * item)
 {
     if (!askAboutRemoving(1))
@@ -593,15 +664,30 @@ void Scene::removeSelectedItems()
 }
 
 //#####################################################################################################
+void Scene::contextMenuEvent(QGraphicsSceneMouseEvent * event)
+{
+    QMenu menu;
+
+    // Remove items
+    QList<AbstractPhoto*> items = this->selectedItems();
+    if (items.count())
+    {
+        QAction * removeAction = menu.addAction( (items.count() > 1 ? i18n("Delete items") : "Delete item") );
+        connect(removeAction, SIGNAL(triggered()), this, SLOT(removeSelectedItems()));
+        menu.addSeparator();
+    }
+
+    // Background
+    QAction * background = menu.addAction( i18n("Canvas background") );
+    connect(background, SIGNAL(triggered()), ToolsDockWidget::instance(), SLOT(setCanvasWidgetVisible()));
+
+    menu.exec(event->screenPos());
+}
+
+//#####################################################################################################
 void Scene::contextMenuEvent(QGraphicsSceneContextMenuEvent * event)
 {
-    QGraphicsScene::contextMenuEvent(event);
-    if (event->isAccepted())
-        return;
-    QMenu menu;
-    QAction * background = menu.addAction("Background");
-    connect(background,SIGNAL(triggered()),this,SLOT(enableItemsDrawing()));
-    menu.exec(event->screenPos());
+    this->contextMenuEvent( (QGraphicsSceneMouseEvent*) event );
 }
 
 //#####################################################################################################
@@ -718,8 +804,8 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
         }
         event->setAccepted(d->m_pressed_item);
     }
-    else
-        QGraphicsScene::mousePressEvent(event);
+    else if (event->button() == Qt::RightButton)
+        this->contextMenuEvent(event);
 }
 
 //#####################################################################################################
@@ -758,8 +844,6 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
             }
         }
     }
-    else
-        QGraphicsScene::mouseMoveEvent(event);
 }
 
 //#####################################################################################################
@@ -794,8 +878,6 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
             }
         }
     }
-    else
-        QGraphicsScene::mouseReleaseEvent(event);
 }
 
 //#####################################################################################################
@@ -812,8 +894,6 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
         if (m_interaction_mode & Selecting)
             d->focusPressed();
     }
-    else
-        QGraphicsScene::mouseDoubleClickEvent(event);
 }
 
 //#####################################################################################################
@@ -862,94 +942,105 @@ void Scene::dragEnterEvent(QGraphicsSceneDragDropEvent * event)
 }
 
 //#####################################################################################################
+void Scene::dragLeaveEvent(QGraphicsSceneDragDropEvent * event)
+{
+    if (d->m_hovered_photo)
+    {
+        d->m_hovered_photo->dragLeaveEvent(event);
+        d->m_hovered_photo = 0;
+    }
+}
+
+//#####################################################################################################
 void Scene::dragMoveEvent(QGraphicsSceneDragDropEvent * event)
 {
-    static PhotoItem * item = 0;
     PhotoItem * tempItem = dynamic_cast<PhotoItem*>(this->itemAt(event->scenePos()));
+    // Send event to item
     if (tempItem)
-        tempItem->dragEnterEvent(event);
-    if (item && item != tempItem)
-        item->dragLeaveEvent(event);
-    item = tempItem;
+    {
+        if (d->m_hovered_photo != tempItem)
+        {
+            if (tempItem)
+                tempItem->dragEnterEvent(event);
+            if (d->m_hovered_photo)
+                d->m_hovered_photo->dragLeaveEvent(event);
+        }
+        else
+            tempItem->dragMoveEvent(event);
+    }
+    // Proces event on scene
+    else
+    {
+        if (d->m_hovered_photo)
+            d->m_hovered_photo->dragLeaveEvent(event);
+        if (canDecode(event->mimeData()))
+        {
+            event->setDropAction(Qt::CopyAction);
+            event->setAccepted(true);
+        }
+        // Ignore event
+        else
+        {
+            event->setDropAction(Qt::IgnoreAction);
+            event->setAccepted(false);
+        }
+    }
+
+    d->m_hovered_photo = tempItem;
 }
 
 //#####################################################################################################
 void Scene::dropEvent(QGraphicsSceneDragDropEvent * event)
 {
-    qDebug() << "dropEvent();";
-    const QMimeData * mimeData = event->mimeData();
-    qDebug() << mimeData->formats();
-    if (mimeData->hasFormat("digikam/item-ids") &&
-            mimeData->hasFormat("digikam/digikamalbums") &&
-            mimeData->hasFormat("digikam/album-ids") &&
-            mimeData->hasFormat("digikam/image-ids-long"))
+    PhotoItem * item = dynamic_cast<PhotoItem*>(this->itemAt(event->scenePos()));
+    if (item)
     {
-        qDebug() << "digikam/item-ids";
-        /** For example:
-          * (QUrl("file:///home/coder89/Obrazy/Max/2007_12_28/Zdjęcie 0505.CR2") )
-          */
+        item->dropEvent(event);
+        return;
+    }
+
+    QImage img;
+    QList<AbstractPhoto*> newItems;
+    const QMimeData * mimeData = event->mimeData();
+    if ( PhotoFramesEditor::instance()->hasInterface() &&
+            mimeData->hasFormat("digikam/item-ids"))
+    {
         KUrl::List urls;
         QByteArray ba = mimeData->data("digikam/item-ids");
         QDataStream ds(&ba, QIODevice::ReadOnly);
         ds >> urls;
-        qDebug() << urls;
         foreach (KUrl u, urls)
         {
-            QImageReader ir (u.toLocalFile());
-                    qDebug() << ir.canRead();
+            PhotoItem * temp = PhotoItem::fromUrl(u, this);
+            if (temp)
+                newItems.append(temp);
         }
-
-        qDebug() << "digikam/digikamalbums";
-        /** For example:
-          * (QUrl("digikamalbums:/Max/2007_12_28/Zdjęcie 0505.CR2?albumRoot=/home/coder89/Obrazy&albumRootId=1&databaseType=QSQLITE&databaseName=/home/coder89/Obrazy/digikam4.db&connectOptions=&hostName=&userName=&password=") )
-          */
-        KUrl::List kioUrls;
-        QByteArray ba2 = mimeData->data("digikam/digikamalbums");
-        QDataStream ds2(&ba2, QIODevice::ReadOnly);
-        ds2 >> kioUrls;
-        qDebug() << kioUrls;
-
-        qDebug() << "digikam/album-ids";
-        /** For example:
-          * (3)
-          */
-        QList<int> albumIDs;
-        QByteArray ba3 = mimeData->data("digikam/album-ids");
-        QDataStream ds3(&ba3, QIODevice::ReadOnly);
-        ds3 >> albumIDs;
-        qDebug() << albumIDs;
-
-        qDebug() << "digikam/image-ids-long";
-        /** For example:
-          * (113)
-          */
-        QList<qlonglong> imageIDs;
-        QByteArray ba4 = mimeData->data("digikam/image-ids-long");
-        QDataStream ds4(&ba4, QIODevice::ReadOnly);
-        ds4 >> imageIDs;
-        qDebug() << imageIDs;
     }
     else if (mimeData->hasFormat("text/uri-list"))
     {
         QList<QUrl> urls = mimeData->urls();
-        PhotoItem * item = dynamic_cast<PhotoItem*>(this->itemAt(event->scenePos()));
-        if (item && urls.count() == 1)
-            item->dropEvent(event);
-        else
+        foreach (QUrl url, urls)
         {
-            foreach (QUrl url, urls)
-            {
-                QImageReader ir(url.toLocalFile());
-                QImage img;
-                if (ir.read(&img))
-                {
-                    item = new PhotoItem(img);
-                    item->setPos(event->scenePos());
-                    this->addItemCommand(item);
-                }
-            }
+            PhotoItem * temp = PhotoItem::fromUrl(url, this);
+            if (temp)
+                newItems.append(temp);
         }
     }
+
+    QPointF scenePos = event->scenePos();
+    foreach (AbstractPhoto * item, newItems)
+    {
+        item->setPos(scenePos);
+        scenePos += QPointF (20, 20);
+        if (scenePos.x() >= this->sceneRect().bottomRight().x() ||
+               scenePos.y() >= this->sceneRect().bottomRight().y() )
+        {
+            scenePos = this->sceneRect().topLeft();
+        }
+    }
+
+    this->addItems(newItems);
+    event->setAccepted( (newItems.count() > 0) );
 }
 
 //#####################################################################################################
@@ -1264,7 +1355,8 @@ Scene * Scene::fromSvg(QDomElement & svgImage)
 
         if (item)
         {
-            result->addItem(item);
+            result->QGraphicsScene::addItem(item);
+            result->model()->insertItem(item, 0, result->model()->findIndex( dynamic_cast<AbstractPhoto*>(item->parentItem()) ));
             item->setZValue(i+1);
         }
         else
@@ -1310,54 +1402,6 @@ void Scene::readSceneMousePress(MousePressListener * mouseListsner)
         d->m_readSceneMousePress_enabled = true;
         this->views().at(0)->setCursor(Qt::CrossCursor);
     }
-}
-
-//#####################################################################################################
-void Scene::addItemCommand(AbstractPhoto * item)
-{
-    // Prevent multiple addition of the item
-    if (item->scene() == this)
-        return;
-
-    QModelIndexList selectedIndexes = d->selection_model->selectedIndexes();
-    unsigned insertionRow = -1;
-    foreach (QModelIndex index, selectedIndexes)
-    {
-        if (index.column() != LayersModelItem::NameString)
-            continue;
-        if (insertionRow > (unsigned)index.row())
-            insertionRow = index.row();
-    }
-
-    if (insertionRow == (unsigned)-1)
-        insertionRow = 0;
-
-    QUndoCommand * command = new AddItemsCommand(item, insertionRow, this);
-    PFE_PostUndoCommand(command);
-}
-
-//#####################################################################################################
-void Scene::addItem(AbstractPhoto * photo)
-{
-    // Prevent multiple addition of the item
-    if (photo->scene() == this)
-        return;
-
-    QModelIndexList selectedIndexes = d->selection_model->selectedIndexes();
-    unsigned insertionRow = -1;
-    foreach (QModelIndex index, selectedIndexes)
-    {
-        if (index.column() != LayersModelItem::NameString)
-            continue;
-        if (insertionRow > (unsigned)index.row())
-            insertionRow = index.row();
-    }
-
-    if (insertionRow == (unsigned)-1)
-        insertionRow = 0;
-
-    QGraphicsScene::addItem(photo);
-    model()->insertItem(photo, insertionRow);
 }
 
 //#####################################################################################################
@@ -1460,8 +1504,8 @@ void Scene::scalingCommand(qreal xFactor, qreal yFactor)
 //#####################################################################################################
 void Scene::cropSelectedItems(const QPainterPath & shape)
 {
-    CropItemsCommand * command = new CropItemsCommand(shape, d->m_selected_items.keys());
-    PFE_PostUndoCommand(command);
+    foreach (AbstractPhoto * item, d->m_selected_items.keys())
+        item->setCropShape(shape);
     setCropWidgetVisible(false);
 }
 
@@ -1480,10 +1524,8 @@ bool Scene::askAboutRemoving(int count)
 //#####################################################################################################
 bool Scene::canDecode(const QMimeData * mimeData)
 {
-    if (mimeData->hasFormat("digikam/item-ids") &&
-            mimeData->hasFormat("digikam/digikamalbums") &&
-            mimeData->hasFormat("digikam/album-ids") &&
-            mimeData->hasFormat("digikam/image-ids-long"))
+    if (PhotoFramesEditor::instance()->hasInterface() &&
+            mimeData->hasFormat("digikam/item-ids"))
         return true;
 
     QList<QUrl> urls = mimeData->urls();

@@ -58,6 +58,8 @@ namespace KIPIPhotoFramesEditor
 
             bool queryClose();
             void refreshActions();
+            void addRecentFile(const KUrl & url);
+            void clearRecentList();
 
         private:
 

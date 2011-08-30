@@ -89,7 +89,7 @@ PhotoFramesEditor::PhotoFramesEditor(QWidget * parent) :
 {
     Q_INIT_RESOURCE(icons);
 
-    setXMLFile("photolayoutseditorui.rc");
+    setXMLFile("/home/coder89/KDE/PFE/photoframeseditor/plugin/photolayoutseditorui.rc");
 
     setCaption("Photo Layouts Editor");
 
@@ -167,6 +167,10 @@ void PhotoFramesEditor::setupActions()
     actionCollection()->addAction("open", d->openFileAction);
     //------------------------------------------------------------------------
     d->openRecentFilesMenu = KStandardAction::openRecent(this, SLOT(open(const KUrl &)), actionCollection());
+    KUrl::List urls = PFEConfig::recentFiles();
+    foreach (KUrl url, urls)
+        d->openRecentFilesMenu->addUrl(url);
+    connect(d->openRecentFilesMenu, SIGNAL(recentListCleared()), this, SLOT(clearRecentList()));
     actionCollection()->addAction("open_recent", d->openRecentFilesMenu);
     //------------------------------------------------------------------------
     d->saveAction = KStandardAction::save(this, SLOT(save()), actionCollection());
@@ -247,6 +251,21 @@ void PhotoFramesEditor::refreshActions()
     d->toolsWidget->setEnabled(isEnabledForCanvas);
 }
 
+void PhotoFramesEditor::addRecentFile(const KUrl & url)
+{
+    if (url.isValid())
+    {
+        PFEConfig::addRecentFile( url );
+        if ( !d->openRecentFilesMenu->urls().contains( url ) )
+            d->openRecentFilesMenu->addUrl( url );
+    }
+}
+
+void PhotoFramesEditor::clearRecentList()
+{
+    PFEConfig::setRecentFiles(KUrl::List());
+}
+
 void PhotoFramesEditor::createWidgets()
 {
     // Tools
@@ -296,6 +315,7 @@ void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
         d->centralWidget->layout()->removeWidget(m_canvas);
         m_canvas->deleteLater();
     }
+
     QFile file(fileUrl.path());
     QDomDocument document;
     document.setContent(&file, true);
@@ -305,13 +325,14 @@ void PhotoFramesEditor::createCanvas(const KUrl & fileUrl)
         m_canvas->setFile(fileUrl);
         m_canvas->setParent(d->centralWidget);
         this->prepareSignalsConnections();
-        m_canvas->undoStack()->clear();
+        m_canvas->undoStack()->clear(); /// TODO : prevent pushing to undo stack when reading from file!!!!
     }
     else
     {
         KMessageBox::error(this,
                            i18n("Can't read image file."));
     }
+    file.close();
 }
 
 void PhotoFramesEditor::prepareSignalsConnections()
@@ -381,16 +402,17 @@ void PhotoFramesEditor::openDialog()
 
 void PhotoFramesEditor::open(const KUrl & fileUrl)
 {
-    if (fileUrl.isEmpty())
-    {
-        open();
+    if (m_canvas && m_canvas->file() == fileUrl)
         return;
-    }
-    else
+
+    if (fileUrl.isValid())
     {
         closeDocument();
         createCanvas(fileUrl);
         refreshActions();
+
+        // Adds recent open file
+        this->addRecentFile(m_canvas->file());
     }
 }
 
@@ -493,6 +515,10 @@ bool PhotoFramesEditor::closeDocument()
 {
     if (m_canvas)
     {
+        // Adds recent open file
+        this->addRecentFile(m_canvas->file());
+
+        // Try to save unsaved changes
         int saving = KMessageBox::No;
         if (!m_canvas->isSaved())
             saving = KMessageBox::warningYesNoCancel( this, i18n("Save changes to current frame?"));

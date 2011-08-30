@@ -1225,7 +1225,7 @@ void Scene::setScalingWidgetVisible(bool isVisible)
         d->m_scale_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_scale_item);
         if (d->m_selected_items.count() == 1)
-            d->m_scale_item->setScaleShape(d->m_selected_items_path);
+            d->m_scale_item->setScaleShape(d->m_selected_items.keys());
         else
             d->m_scale_item->hide();
     }

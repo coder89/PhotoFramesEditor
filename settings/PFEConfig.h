@@ -12,6 +12,9 @@ namespace KIPIPhotoFramesEditor
 
             static PFEConfig * m_instance;
 
+            static QString MAIN;
+            static QString MAIN_RECENT_FILES;
+            static QString MAIN_RECENT_FILES_COUNT;
             static QString SAVING;
             static QString SAVING_EMBED_IMG;
             static QString VIEW;
@@ -24,6 +27,14 @@ namespace KIPIPhotoFramesEditor
             ~PFEConfig();
 
             static PFEConfig * self();
+
+            static void addRecentFile(const KUrl & file);
+            static void addRecentFile(const QString & file);
+            static void setRecentFiles(const KUrl::List & files);
+            static void setRecentFiles(const QStringList & files);
+            static KUrl::List recentFiles();
+            static void setMaxRecentFilesCount(unsigned count);
+            static unsigned maxRecentFilesCount();
 
             static bool embedImagesData();
             static void setEmbedImagesData(bool embed);

@@ -5,7 +5,9 @@
 #include <QGraphicsView>
 #include <QPainter>
 #include <QKeyEvent>
-#include <QDebug>
+
+#include <kmessagebox.h>
+#include <klocalizedstring.h>
 
 using namespace KIPIPhotoFramesEditor;
 
@@ -77,7 +79,7 @@ void CropWidgetItemPrivate::transformDrawings(const QTransform & viewTransform)
 void CropWidgetItemPrivate::calculateDrawings()
 {
     // Scale height of handlers
-    qreal h = m_rect.height() - 60;
+    qreal h = qAbs(m_rect.height()) - 60;
     h = (h < 0 ? h / 3.0 : 0);
     h = (h < -10 ? -10 : h);
     m_handlers[Top][Left].setHeight(20+h);
@@ -90,7 +92,7 @@ void CropWidgetItemPrivate::calculateDrawings()
     m_handlers[Bottom][Right].setHeight(20+h);
 
     // Scale width of handlers
-    qreal w = m_rect.width() - 60;
+    qreal w = qAbs(m_rect.width()) - 60;
     w = (w < 0 ? w / 3.0 : 0);
     w = (w < -10 ? -10 : w);
     m_handlers[Top][Left].setWidth(20+w);
@@ -102,17 +104,21 @@ void CropWidgetItemPrivate::calculateDrawings()
     m_handlers[Bottom][HCenter].setWidth(20+w);
     m_handlers[Bottom][Right].setWidth(20+w);
 
-    m_handlers[Top][Left].moveCenter(m_rect.topLeft());
-    m_handlers[Top][HCenter].moveCenter( QPointF( m_rect.center().x(), m_rect.top() ) );
-    m_handlers[Top][Right].moveCenter(m_rect.topRight());
-    m_handlers[VCenter][Left].moveCenter( QPointF( m_rect.left(), m_rect.center().y() ) );
-    m_handlers[VCenter][Right].moveCenter( QPointF( m_rect.right(), m_rect.center().y() ) );
-    m_handlers[Bottom][Left].moveCenter(m_rect.bottomLeft());
-    m_handlers[Bottom][HCenter].moveCenter( QPointF( m_rect.center().x(), m_rect.bottom() ) );
-    m_handlers[Bottom][Right].moveCenter(m_rect.bottomRight());
-
     m_elipse = QPainterPath();
-    m_elipse.addEllipse(m_rect.center(), 10, 10);
+    m_elipse.addEllipse(m_rect.center(), 18 + w, 18 + h);
+
+    w = qAbs(m_rect.width()) - 35;
+    w = (w < 0 ? w / 2.0 : 0);
+    h = qAbs(m_rect.height()) - 35;
+    h = (h < 0 ? h / 2.0 : 0);
+    m_handlers[Top][Left].moveCenter(m_rect.topLeft() + QPointF(w,h));
+    m_handlers[Top][HCenter].moveCenter( QPointF( m_rect.center().x(), m_rect.top() + h ) );
+    m_handlers[Top][Right].moveCenter(m_rect.topRight() + QPointF(-w,h));
+    m_handlers[VCenter][Left].moveCenter( QPointF( m_rect.left() + w, m_rect.center().y() ) );
+    m_handlers[VCenter][Right].moveCenter( QPointF( m_rect.right() - w, m_rect.center().y() ) );
+    m_handlers[Bottom][Left].moveCenter(m_rect.bottomLeft() + QPointF(w,-h));
+    m_handlers[Bottom][HCenter].moveCenter( QPointF( m_rect.center().x(), m_rect.bottom() - h ) );
+    m_handlers[Bottom][Right].moveCenter(m_rect.bottomRight() + QPointF(-w,-h));
 
     m_shape = QPainterPath();
     m_shape.setFillRule(Qt::WindingFill);
@@ -145,15 +151,15 @@ QRectF CropWidgetItem::boundingRect() const
 
 QPainterPath CropWidgetItem::opaqueArea() const
 {
-    return d->m_crop_shape + d->m_shape;
+    return (d->m_crop_shape + d->m_shape);
 }
 
 QPainterPath CropWidgetItem::shape() const
 {
-    return d->m_crop_shape + d->m_shape;
+    return (d->m_crop_shape + d->m_shape);
 }
 
-void CropWidgetItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
+void CropWidgetItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * widget)
 {
     // Get the view
     QGraphicsView * view = qobject_cast<QGraphicsView*>(widget->parentWidget());
@@ -190,12 +196,29 @@ void CropWidgetItem::keyPressEvent(QKeyEvent * event)
 {
     if (event->key() == Qt::Key_Return)
     {
-        QPainterPath p;
-        p.addRect( d->m_rect );
-        emit cropShapeSelected( this->mapToScene( d->currentViewTransform.inverted().map(p) ) );
+        if (d->m_rect.height() > 1 && d->m_rect.width() > 1)
+        {
+            QPainterPath p;
+            p.addRect( d->m_rect );
+            emit cropShapeSelected( this->mapToScene( d->currentViewTransform.inverted().map(p) ) );
+        }
+        else
+        {
+            KMessageBox::error(0,
+                               i18n("Bounding rectangle of the crop shape has size [%1px x %2px] "
+                                    "and it's less than 1px x 1px",
+                                    QString::number(qRound(d->m_rect.width())),
+                                    QString::number(qRound(d->m_rect.height()))
+                                    )
+                               );
+        }
+        event->setAccepted(true);
     }
     else if (event->key() == Qt::Key_Escape)
+    {
         emit cancelCrop();
+        event->setAccepted(true);
+    }
 }
 
 void CropWidgetItem::mousePressEvent(QGraphicsSceneMouseEvent * event)
@@ -238,7 +261,17 @@ void CropWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
     QRectF maxRect = d->currentViewTransform.mapRect(d->m_crop_shape.boundingRect());
     QGraphicsView * view = qobject_cast<QGraphicsView*>(event->widget()->parentWidget());
-    QPointF point = view->transform().map(event->pos());
+
+    // New handler position calc
+    QPointF point = view->transform().map(event->pos()) + d->handlerOffset;
+    if (point.rx() < maxRect.left())
+        point.setX( maxRect.left() );
+    else if (point.rx() > maxRect.right())
+        point.setX( maxRect.right() );
+    if (point.ry() < maxRect.top())
+        point.setY( maxRect.top() );
+    else if (point.ry() > maxRect.bottom())
+        point.setY( maxRect.bottom() );
 
     QRectF temp = d->m_rect;
 
@@ -254,15 +287,15 @@ void CropWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     {
         // Vertical size change
         if (d->pressedVHandler == CropWidgetItemPrivate::Top)
-            temp.setTop( point.y() + d->handlerOffset.y() );
+            temp.setTop( point.y() );
         else if (d->pressedVHandler == CropWidgetItemPrivate::Bottom)
-            temp.setBottom( point.y() + d->handlerOffset.y() );
+            temp.setBottom( point.y() );
 
         // Horizontal size change
         if (d->pressedHHandler == CropWidgetItemPrivate::Right)
-            temp.setRight( point.x() + d->handlerOffset.x() );
+            temp.setRight( point.x() );
         else if (d->pressedHHandler == CropWidgetItemPrivate::Left)
-            temp.setLeft( point.x() + d->handlerOffset.x() );
+            temp.setLeft( point.x() );
 
         // Keeps aspect ratio
         if (event->modifiers() & Qt::ShiftModifier)
@@ -305,9 +338,19 @@ void CropWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
 
     // Rect inverse
     if (temp.height() < 0)
+    {
+        qreal t = temp.bottom();
+        temp.setBottom(temp.top());
+        temp.setTop(t);
         d->pressedVHandler = (d->pressedVHandler == CropWidgetItemPrivate::Top ? CropWidgetItemPrivate::Bottom :CropWidgetItemPrivate::Top);
+    }
     if (temp.width() < 0)
+    {
+        qreal t = temp.right();
+        temp.setRight(temp.left());
+        temp.setLeft(t);
         d->pressedHHandler = (d->pressedHHandler == CropWidgetItemPrivate::Left ? CropWidgetItemPrivate::Right :CropWidgetItemPrivate::Left);
+    }
 
     d->m_rect = temp;
 
@@ -315,10 +358,10 @@ void CropWidgetItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     this->update();
 }
 
-void CropWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * event)
+void CropWidgetItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*event*/)
 {}
 
-void CropWidgetItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+void CropWidgetItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * /*event*/)
 {}
 
 void CropWidgetItem::setItems(const QList<AbstractPhoto*> & items)

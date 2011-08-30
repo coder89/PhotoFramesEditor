@@ -10,6 +10,11 @@
 using namespace KIPIPhotoFramesEditor;
 
 PFEConfig * PFEConfig::m_instance = 0;
+
+QString PFEConfig::MAIN = "main";
+QString PFEConfig::MAIN_RECENT_FILES = "recent_files";
+QString PFEConfig::MAIN_RECENT_FILES_COUNT = "recent_files_count";
+
 QString PFEConfig::SAVING = "saving";
 QString PFEConfig::SAVING_EMBED_IMG = "embed_images_data";
 
@@ -22,14 +27,6 @@ PFEConfig::PFEConfig() :
     KConfig(),
     m_skeleton(0)
 {
-    QStringList groups = this->groupList();
-
-    if (!groups.contains(SAVING))
-    {
-        KConfigGroup saving = group(SAVING);
-        saving.writeEntry<bool>(SAVING_EMBED_IMG, true);
-    }
-    this->sync();
 }
 
 PFEConfig::~PFEConfig()
@@ -45,6 +42,68 @@ PFEConfig * PFEConfig::self()
     return m_instance;
 }
 
+void PFEConfig::addRecentFile(const KUrl & file)
+{
+    PFEConfig::addRecentFile(file.url());
+}
+
+void PFEConfig::addRecentFile(const QString & file)
+{
+    if (file.isEmpty())
+        return;
+
+    KUrl::List currentRecent = PFEConfig::recentFiles();
+    currentRecent.removeAll(file);
+    currentRecent.push_front(file);
+    unsigned maxCount = PFEConfig::maxRecentFilesCount();
+    while (currentRecent.count() > maxCount)
+        currentRecent.removeAt(maxCount);
+
+    KConfigGroup saving = self()->group(MAIN);
+    saving.writeEntry(MAIN_RECENT_FILES, currentRecent.toStringList());
+    self()->sync();
+}
+
+void PFEConfig::setRecentFiles(const KUrl::List & files)
+{
+    PFEConfig::setRecentFiles(files.toStringList());
+}
+
+void PFEConfig::setRecentFiles(const QStringList & files)
+{
+    QStringList temp = files;
+    unsigned maxCount = PFEConfig::maxRecentFilesCount();
+    while (temp.count() > maxCount)
+        temp.removeAt(maxCount);
+
+    KConfigGroup saving = self()->group(MAIN);
+    saving.writeEntry(MAIN_RECENT_FILES, temp);
+    self()->sync();
+}
+
+KUrl::List PFEConfig::recentFiles()
+{
+    KConfigGroup saving = self()->group(MAIN);
+    return KUrl::List( saving.readEntry(MAIN_RECENT_FILES, QStringList()) );
+}
+
+void PFEConfig::setMaxRecentFilesCount(unsigned count)
+{
+    if (count < 2)
+        return;
+    KConfigGroup saving = self()->group(MAIN);
+    saving.writeEntry<unsigned>(MAIN_RECENT_FILES_COUNT, count);
+    self()->sync();
+}
+
+unsigned PFEConfig::maxRecentFilesCount()
+{
+    KConfigGroup saving = self()->group(MAIN);
+    unsigned result = saving.readEntry<unsigned>(MAIN_RECENT_FILES_COUNT, 5);
+    result = result < 2 ? 2 : result;
+    return result;
+}
+
 bool PFEConfig::embedImagesData()
 {
     KConfigGroup saving = self()->group(SAVING);
@@ -57,7 +116,6 @@ void PFEConfig::setEmbedImagesData(bool embed)
     saving.writeEntry<bool>(SAVING_EMBED_IMG, embed);
     self()->sync();
 }
-
 
 bool PFEConfig::showGrid()
 {

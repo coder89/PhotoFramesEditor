@@ -6,18 +6,13 @@
 
   ADD_SUBDIRECTORY( ./utils/qtpropertybrowser )
 
-  FIND_PACKAGE(Qt4 REQUIRED)
   FIND_PACKAGE(KDE4 REQUIRED)
-  FIND_PACKAGE(Kipi REQUIRED)
+  INCLUDE( KDE4Defaults )
 
-  ADD_DEFINITIONS( -Wall )
-  ADD_DEFINITIONS(${QT_DEFINITIONS})
+  FIND_PACKAGE(Kipi REQUIRED)
 
   SET( CMAKE_PACKAGE_QTGUI TRUE )
   SET( QT_USE_QTXML TRUE )
-
-  INCLUDE( ${QT_USE_FILE} )
-  INCLUDE( KDE4Defaults )
 
   SET( INCLUDE_DIRS
       plugin
@@ -147,6 +142,7 @@
   INSTALL(PROGRAMS plugin/photolayoutseditor.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
   INSTALL(FILES plugin/photolayoutseditorui.rc DESTINATION ${DATA_INSTALL_DIR}/photolayoutseditor)
   INSTALL(FILES effects/photolayoutseditoreffectplugin.desktop DESTINATION ${SERVICETYPES_INSTALL_DIR})
-  #INSTALL(FILES main/photolayoutseditor.notifyrc DESTINATION ${DATA_INSTALL_DIR}/photolayoutseditor)
+  INSTALL(FILES borders/photolayoutseditorborderplugin.desktop DESTINATION ${SERVICETYPES_INSTALL_DIR})
 
   ADD_SUBDIRECTORY( ./effectplugins )
+  ADD_SUBDIRECTORY( ./borderplugins )

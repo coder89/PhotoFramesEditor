@@ -1,10 +1,13 @@
 #include "SolidBorderDrawer.h"
 #include "SolidBorderDrawer_p.h"
 
+#include <kpluginfactory.h>
 #include <klocalizedstring.h>
-#include <QtCore>
 
-SolidBorderDrawerFactory::SolidBorderDrawerFactory(QObject * parent) :
+K_PLUGIN_FACTORY( SolidBorderDrawerFactoryLoader, registerPlugin<SolidBorderDrawerFactory>(); )
+K_EXPORT_PLUGIN ( SolidBorderDrawerFactoryLoader("photolayoutseditorborderplugin_solid") )
+
+SolidBorderDrawerFactory::SolidBorderDrawerFactory(QObject * parent, const QVariantList&) :
     BorderDrawerFactoryInterface(parent)
 {
 }
@@ -18,5 +21,3 @@ BorderDrawerInterface * SolidBorderDrawerFactory::getDrawerInstance(QObject * pa
 {
     return new SolidBorderDrawer(this, parent);
 }
-
-Q_EXPORT_PLUGIN2(SolidBorderDrawerFactory, SolidBorderDrawerFactory)

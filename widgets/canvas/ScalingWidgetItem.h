@@ -10,8 +10,6 @@ namespace KIPIPhotoFramesEditor
 
     class ScalingWidgetItem : public AbstractItemInterface
     {
-            Q_OBJECT
-
             ScalingWidgetItemPrivate * d;
 
         public:
@@ -29,13 +27,7 @@ namespace KIPIPhotoFramesEditor
             virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
             virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
 
-            void setScaleShape(const QList<AbstractPhoto*> & items);
-
-        signals:
-
-            void scalingChanged(qreal xFactor, qreal yFactor);
-            void scalingChanged(const QTransform & scale);
-            void scalingFinished(qreal xFactor, qreal yFactor);
+            void setScaleItems(const QList<AbstractPhoto*> & items);
 
         friend class ScalingWidgetItemPrivate;
     };

@@ -140,6 +140,18 @@ void PhotoFramesEditor::addUndoCommand(QUndoCommand * command)
     }
 }
 
+void PhotoFramesEditor::beginUndoCommandGroup(const QString & name)
+{
+    if (m_canvas)
+        m_canvas->undoStack()->beginMacro(name);
+}
+
+void PhotoFramesEditor::endUndoCommandGroup()
+{
+    if (m_canvas)
+        m_canvas->undoStack()->endMacro();
+}
+
 void PhotoFramesEditor::setInterface(KIPI::Interface * interface)
 {
     if (interface)
@@ -600,26 +612,19 @@ void PhotoFramesEditor::changeCanvasSize()
 
 void PhotoFramesEditor::loadEffects()
 {
-
-    KServiceType::List t = KServiceType::allServiceTypes();
-    foreach (KServiceType::Ptr serv, t)
-    {
-        qDebug() << serv->name();
-    }
-    qDebug() << "------------------------";
     const KService::List offers = KServiceTypeTrader::self()->query("PhotoLayoutsEditor/EffectPlugin");
     foreach (const KService::Ptr& service, offers)
     {
         if (service)
-            d->effectServiceMap[service->name()] = service;
+            d->effectsServiceMap[service->name()] = service;
     }
 
-    foreach (const QString & name, d->effectServiceMap.keys())
+    foreach (const QString & name, d->effectsServiceMap.keys())
     {
-        KService::Ptr service = d->effectServiceMap.value(name);
+        KService::Ptr service = d->effectsServiceMap.value(name);
         AbstractPhotoEffectFactory * plugin;
 
-        if ( d->effectMap.contains(name) )
+        if ( d->effectsMap.contains(name) )
             continue;
         else
         {
@@ -627,13 +632,13 @@ void PhotoFramesEditor::loadEffects()
             plugin = service->createInstance<AbstractPhotoEffectFactory>(this, QVariantList(), &error);
             if (plugin)
             {
-                d->effectMap[name] = plugin;
+                d->effectsMap[name] = plugin;
                 PhotoEffectsLoader::registerEffect(plugin);
-                kDebug() << "PhotoFramesEditor: Loaded effect " << service->name();
+                kDebug() << "PhotoLayoutsEditor: Loaded effect " << service->name();
             }
             else
             {
-                kWarning() << "PhotoFramesEditor: createInstance returned 0 for "
+                kWarning() << "PhotoLayoutsEditor: createInstance returned 0 for "
                            << service->name()
                            << " (" << service->library() << ")"
                            << " with error: "
@@ -645,33 +650,38 @@ void PhotoFramesEditor::loadEffects()
 
 void PhotoFramesEditor::loadBorders()
 {
-    QDir bordersDir("./borders");
-    QStringList filters;
-    filters << "*.so" << "*.dll";
-    QFileInfoList filesList = bordersDir.entryInfoList(filters, QDir::Files);
-    foreach (QFileInfo fileInfo, filesList)
+    const KService::List offers = KServiceTypeTrader::self()->query("PhotoLayoutsEditor/BorderPlugin");
+    foreach (const KService::Ptr& service, offers)
     {
-        QPluginLoader loader(fileInfo.absoluteFilePath());
-        QObject * plugin = loader.instance();
-        if (plugin)
-        {
-            BorderDrawerFactoryInterface * newBorderFactory = qobject_cast<BorderDrawerFactoryInterface*>(plugin);
-            newBorderFactory->getDrawerInstance();
-            if (newBorderFactory)
-            {
-                BorderDrawersLoader::registerDrawer(newBorderFactory);
-#ifdef QT_DEBUG
-                qDebug() << "LOADED!";
-#endif
-            }
-#ifdef QT_DEBUG
-            else
-                qDebug() << "Invalid class interface!";
-#endif
-        }
-#ifdef QT_DEBUG
+        if (service)
+            d->bordersServiceMap[service->name()] = service;
+    }
+
+    foreach (const QString & name, d->bordersServiceMap.keys())
+    {
+        KService::Ptr service = d->bordersServiceMap.value(name);
+        BorderDrawerFactoryInterface * plugin;
+
+        if ( d->bordersMap.contains(name) )
+            continue;
         else
-            qDebug() << loader.errorString();
-#endif
+        {
+            QString error;
+            plugin = service->createInstance<BorderDrawerFactoryInterface>(this, QVariantList(), &error);
+            if (plugin)
+            {
+                d->bordersMap[name] = plugin;
+                BorderDrawersLoader::registerDrawer(plugin);
+                kDebug() << "PhotoLayoutsEditor: Loaded border:" << service->name();
+            }
+            else
+            {
+                kWarning() << "PhotoLayoutsEditor: createInstance returned 0 for "
+                           << service->name()
+                           << " (" << service->library() << ")"
+                           << " with error: "
+                           << error;
+            }
+        }
     }
 }

@@ -63,7 +63,17 @@ SOURCES += main.cpp\
     widgets/canvas/MousePressListener.cpp \
     settings/PFEConfigDialog.cpp \
     widgets/canvas/CanvasSize.cpp \
-    widgets/dialogs/CanvasSizeDialog.cpp
+    widgets/dialogs/CanvasSizeDialog.cpp \
+    borderplugins/solid/SolidBorderDrawer.cpp \
+    borderplugins/solid/SolidBorderDrawer_p.cpp \
+    effectplugins/blur/BlurPhotoEffect.cpp \
+    effectplugins/blur/BlurPhotoEffect_p.cpp \
+    effectplugins/colorize/ColorizePhotoEffect.cpp \
+    effectplugins/colorize/ColorizePhotoEffect_p.cpp \
+    effectplugins/sepia/SepiaPhotoEffect.cpp \
+    effectplugins/sepia/SepiaPhotoEffect_p.cpp \
+    effectplugins/grayscale/GrayscalePhotoEffect.cpp \
+    effectplugins/grayscale/GrayscalePhotoEffect_p.cpp
 
 HEADERS  += plugin/photoframeseditor.h \
     widgets/photo_context_menu.h \
@@ -123,7 +133,22 @@ HEADERS  += plugin/photoframeseditor.h \
     settings/PFEConfigViewWidget.h \
     settings/PFEConfigDialog.h \
     widgets/canvas/CanvasSize.h \
-    widgets/dialogs/CanvasSizeDialog.h
+    widgets/dialogs/CanvasSizeDialog.h \
+    borderplugins/solid/SolidBorderDrawer.h \
+    borderplugins/solid/SolidBorderDrawer_p.h \
+    borderplugins/solid/SolidBorderDrawer_global.h \
+    effectplugins/blur/BlurPhotoEffect.h \
+    effectplugins/blur/BlurPhotoEffect_p.h \
+    effectplugins/blur/BlurPhotoEffect_global.h \
+    effectplugins/colorize/ColorizePhotoEffect.h \
+    effectplugins/colorize/ColorizePhotoEffect_p.h \
+    effectplugins/colorize/ColorizePhotoEffect_global.h \
+    effectplugins/sepia/SepiaPhotoEffect.h \
+    effectplugins/sepia/SepiaPhotoEffect_p.h \
+    effectplugins/sepia/SepiaPhotoEffect_global.h \
+    effectplugins/grayscale/GrayscalePhotoEffect.h \
+    effectplugins/grayscale/GrayscalePhotoEffect_p.h \
+    effectplugins/grayscale/GrayscalePhotoEffect_global.h
 
 LIBS += \
     -L/usr \
@@ -162,16 +187,20 @@ OTHER_FILES += \
     effectplugins/CMakeLists.txt \
     effectplugins/blur/CMakeLists.txt \
     effectplugins/colorize/CMakeLists.txt \
-    effectplugins/greyscale/CMakeLists.txt \
+    effectplugins/grayscale/CMakeLists.txt \
     effectplugins/sepia/CMakeLists.txt \
     effectplugins/blur/photolayoutseditoreffectplugin_blur.desktop \
     effects/photolayoutseditoreffectplugin.desktop \
     effectplugins/colorize/photolayoutseditoreffectplugin_colorize.desktop \
-    effectplugins/greyscale/photolayoutseditoreffectplugin_grayscale.desktop \
+    effectplugins/grayscale/photolayoutseditoreffectplugin_grayscale.desktop \
     effectplugins/sepia/photolayoutseditoreffectplugin_sepia.desktop \
     plugin/kipiplugin_photolayoutseditor.desktop \
     plugin/photolayoutseditor.desktop \
-    plugin/photolayoutseditorui.rc
+    plugin/photolayoutseditorui.rc \
+    borderplugins/CMakeLists.txt \
+    borderplugins/solid/CMakeLists.txt \
+    borders/photolayoutseditorborderplugin.desktop \
+    borderplugins/solid/photolayoutseditorborderplugin_solid.desktop
 
 RESOURCES += \
     resources/icons.qrc

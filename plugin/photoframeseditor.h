@@ -31,6 +31,8 @@ namespace KIPIPhotoFramesEditor
             ~PhotoFramesEditor();
             static PhotoFramesEditor * instance(QWidget * parent = 0);
             void addUndoCommand(QUndoCommand * command);
+            void beginUndoCommandGroup(const QString & name);
+            void endUndoCommandGroup();
             void setInterface(KIPI::Interface * interface);
             bool hasInterface() const;
             KIPI::Interface * interface() const;

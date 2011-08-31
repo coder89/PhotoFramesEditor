@@ -4,6 +4,8 @@
 #include "SolidBorderDrawer_global.h"
 #include "BorderDrawerFactoryInterface.h"
 
+#include <QVariantList>
+
 using namespace KIPIPhotoFramesEditor;
 
 class SOLIDBORDERDRAWERSHARED_EXPORT SolidBorderDrawerFactory : public BorderDrawerFactoryInterface
@@ -13,7 +15,7 @@ class SOLIDBORDERDRAWERSHARED_EXPORT SolidBorderDrawerFactory : public BorderDra
 
     public:
 
-        SolidBorderDrawerFactory(QObject * parent = 0);
+        SolidBorderDrawerFactory(QObject * parent, const QVariantList&);
 
         virtual QString drawerName() const;
 

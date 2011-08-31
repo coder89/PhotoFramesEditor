@@ -133,8 +133,6 @@ namespace KIPIPhotoFramesEditor
             void calcSelectionBoundingRect();
             void rotateSelectedItems(const QPointF & rotationPoint, qreal angle);
             void rotationCommand(const QPointF & rotationPoint, qreal angle);
-            void scaleSelectedItems(const QTransform & scale);
-            void scalingCommand(qreal xFactor, qreal yFactor);
             void cropSelectedItems(const QPainterPath & shape);
 
         private:

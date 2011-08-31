@@ -136,8 +136,10 @@ namespace KIPIPhotoFramesEditor
             ColorizeTool * toolColorize;
 
             // Plugins
-            QMap<QString, KService::Ptr> effectServiceMap;
-            QMap<QString, AbstractPhotoEffectFactory*> effectMap;
+            QMap<QString, KService::Ptr> effectsServiceMap;
+            QMap<QString, KService::Ptr> bordersServiceMap;
+            QMap<QString, AbstractPhotoEffectFactory*> effectsMap;
+            QMap<QString, BorderDrawerFactoryInterface*> bordersMap;
     };
 }
 

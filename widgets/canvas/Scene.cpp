@@ -770,12 +770,9 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             {
                 // Clear focus from focused items
                 if (this->focusItem())
-                {
                     this->focusItem()->clearFocus();
-                    d->m_pressed_item = 0;
-                }
-                // Or clear this selection
-                else if (!(event->modifiers() & Qt::ControlModifier))
+                // Clear this selection
+                if (!(event->modifiers() & Qt::ControlModifier))
                     d->deselectSelected();
             }
 
@@ -802,7 +799,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent * event)
             setScalingWidgetVisible(m_interaction_mode & Scaling);
             setCropWidgetVisible(m_interaction_mode & Cropping);
         }
-        event->setAccepted(d->m_pressed_item);
+        event->setAccepted(true);
     }
     else if (event->button() == Qt::RightButton)
         this->contextMenuEvent(event);
@@ -1217,15 +1214,11 @@ void Scene::setScalingWidgetVisible(bool isVisible)
     if (isVisible)
     {
         if (!d->m_scale_item)
-        {
             d->m_scale_item = new ScalingWidgetItem();
-            connect(d->m_scale_item, SIGNAL(scalingChanged(QTransform)), this, SLOT(scaleSelectedItems(QTransform)));
-            connect(d->m_scale_item, SIGNAL(scalingFinished(qreal,qreal)), this, SLOT(scalingCommand(qreal,qreal)));
-        }
         d->m_scale_item->setZValue(1.0/0.0);
         this->QGraphicsScene::addItem(d->m_scale_item);
         if (d->m_selected_items.count() == 1)
-            d->m_scale_item->setScaleShape(d->m_selected_items.keys());
+            d->m_scale_item->setScaleItems(d->m_selected_items.keys());
         else
             d->m_scale_item->hide();
     }
@@ -1254,7 +1247,6 @@ void Scene::setCropWidgetVisible(bool isVisible)
         if (d->m_selected_items.count() == 1)
         {
             d->m_crop_item->setItems(d->m_selected_items.keys());
-            d->m_crop_item->setFocus(Qt::MouseFocusReason);
         }
         else
             d->m_crop_item->hide();
@@ -1470,36 +1462,6 @@ void Scene::rotationCommand(const QPointF & rotationPoint, qreal angle)
                                                     angle);
     PFE_PostUndoCommand(command);
 }
-
-//#####################################################################################################
-void Scene::scaleSelectedItems(const QTransform & scale)
-{
-    foreach (AbstractItemInterface * item, d->m_selected_items.keys())
-    {
-        QTransform tr = item->transform();
-        qreal x = item->transform().m31();
-        qreal y = item->transform().m32();
-        QPointF bef = tr.map(item->pos());
-        tr = tr * scale;
-        //tr.setMatrix(tr.m11(), tr.m12(), tr.m13(),
-        //             tr.m21(), tr.m22(), tr.m23(),
-        //             x,        y,        tr.m33());
-        item->setTransform(tr);
-        QPointF aft = tr.map(item->pos());
-        QPointF dif = aft-bef;
-        tr.translate(dif.x(), dif.y());
-        tr.setMatrix(tr.m11(), tr.m12(), tr.m13(),
-                     tr.m21(), tr.m22(), tr.m23(),
-                     tr.m31()+dif.x(), tr.m32()+dif.y(),        tr.m33());
-        item->setTransform(tr);
-        qDebug() << item->scenePos();
-        qDebug() << dif << item->transform() << item->mapToScene(item->pos()) << tr.map(item->pos()) << x << y;
-    }
-}
-
-//#####################################################################################################
-void Scene::scalingCommand(qreal xFactor, qreal yFactor)
-{}
 
 //#####################################################################################################
 void Scene::cropSelectedItems(const QPainterPath & shape)
